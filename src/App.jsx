@@ -5,7 +5,7 @@ function App() {
 
   return (
     <>
-      <h1>Welcome to Frondend</h1>
+      <h1 class="text-red-600">Welcome to Frondend</h1>
     </>
   )
 }
