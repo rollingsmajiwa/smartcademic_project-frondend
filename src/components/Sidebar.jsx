@@ -33,49 +33,51 @@ export default function Sidebar({ userRole, activeTab, setActiveTab, onLogout })
   const menuItems = roleMenus[userRole] || [];
 
   return (
-    <aside >
+    <aside className="w-64 bg-white text-slate-800 flex flex-col justify-between min-h-screen p-4 border-r border-slate-200 shadow-sm">
       <div>
-    
-        <div>
-          <div>
+        {/* Brand */}
+        <div className="flex items-center gap-3 px-2 py-4 mb-6 border-b border-slate-100">
+          <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center font-bold text-xl text-white shadow-md shadow-blue-500/20">
             SA
           </div>
           <div>
-            <h1 className="font-bold text-lg leading-tight">SmartAcademic</h1>
-            <span>{userRole} Portal</span>
+            <h1 className="font-bold text-lg leading-tight text-slate-900">SmartAcademic</h1>
+            <span className="text-xs text-blue-600 font-semibold capitalize">{userRole} Portal</span>
           </div>
         </div>
 
-        {/* Dynamic Navigation Links */}
+        {/* Navigation Links */}
         <nav className="space-y-1">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeTab === item.id;
+          {menuItems.map((link) => {
+            const Icon = link.icon;
+            const isActive = activeTab === link.id;
             return (
               <button
-                key={item.id}
-                onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                key={link.id}
+                onClick={() => setActiveTab(link.id)}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                   isActive
-                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
-                    : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                    ? 'bg-blue-50 text-blue-700 font-semibold'
+                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                 }`}
               >
-                <Icon className="w-5 h-5" />
-                {item.label}
+                <Icon className={`w-5 h-5 ${isActive ? 'text-blue-600' : 'text-slate-400'}`} />
+                {link.label}
               </button>
             );
           })}
         </nav>
       </div>
 
-      <button
-        onClick={onLogout}
-        className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-rose-400 hover:bg-rose-500/10 transition-colors"
-      >
-        <LogOut className="w-5 h-5" />
-        Sign Out
-      </button>
+      <div className="pt-4 border-t border-slate-100">
+        <button
+          onClick={onLogout}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-rose-600 hover:bg-rose-50 transition-colors"
+        >
+          <LogOut className="w-5 h-5" />
+          Sign Out
+        </button>
+      </div>
     </aside>
   );
 }
