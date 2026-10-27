@@ -31,19 +31,19 @@ export default function Sidebar({ userRole, activeTab, setActiveTab, onLogout })
     ],
     student: [
       { id: 'overview', label: 'Student Overview', icon: BookOpen },
-      { id: 'materials', label: 'Revision Materials', icon: BookOpenCheck }, // Maps to api/students/materials/
-      { id: 'assignments', label: 'Assignments Hub', icon: FileText },       // Maps to api/students/assignments/
-      { id: 'exams', label: 'Exams Portal', icon: GraduationCap },           // Maps to api/students/exams/
-      { id: 'results', label: 'My Submissions & Grades', icon: CheckCircle2 }, // Maps to api/students/my-assignment-submissions/
+      { id: 'materials', label: 'Revision Materials', icon: BookOpenCheck }, // Maps to materials
+      { id: 'assignments', label: 'Assignments Hub', icon: FileText },       // Maps to assignments
+      { id: 'exams', label: 'Exams Portal', icon: GraduationCap },           // Maps to exams
+      { id: 'results', label: 'My Submissions & Grades', icon: CheckCircle2 }, // Maps to my-assignment-submissions
     ],
     admin: [
       { id: 'overview', label: 'System Overview', icon: ShieldCheck },
-      { id: 'classrooms', label: 'Manage Classrooms', icon: Building2 },    // Maps to api/admin/classrooms/[cite: 6]
-      { id: 'students', label: 'Manage Students', icon: Users },             // Maps to api/admin/students/[cite: 6]
-      { id: 'teachers', label: 'Manage Teachers', icon: UserCheck },         // Maps to api/admin/teachers/[cite: 6]
-      { id: 'attendance', label: 'Teacher Attendance', icon: MapPin },       // Maps to api/admin/attendance/teachers/[cite: 6]
-      { id: 'posts', label: 'Assignments & Exams', icon: ClipboardList },    // Maps to api/admin/assignments/posts/ & exams/posts/[cite: 6]
-      { id: 'submissions', label: 'All Submissions', icon: FileCheck2 },  // Maps to api/admin/submissions/assignments/ & exams/[cite: 6]
+      { id: 'classrooms', label: 'Manage Classrooms', icon: Building2 },    // Maps to classrooms
+      { id: 'students', label: 'Manage Students', icon: Users },             // Maps to students
+      { id: 'teachers', label: 'Manage Teachers', icon: UserCheck },         // Maps to teachers
+      { id: 'attendance', label: 'Teacher Attendance', icon: MapPin },       // Maps to attendance
+      { id: 'posts', label: 'Assignments & Exams', icon: ClipboardList },    // Maps to assignments & exams posts
+      { id: 'submissions', label: 'All Submissions', icon: FileCheck2 },  
     ]
   };
 

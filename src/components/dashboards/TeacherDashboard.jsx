@@ -1,11 +1,11 @@
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 
 
    function TeacherDashboard() {
-
+   
     return (
         <>
-            <h1 className="text-xl text-black font-black text-center">This is Teacher dashboard</h1>
+            <h1>This is Teacher dashboard</h1>
         </>
     )
 
