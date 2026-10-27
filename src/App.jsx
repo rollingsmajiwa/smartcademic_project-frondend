@@ -19,7 +19,7 @@ function App() {
   
 
   return (
-    <div className="flex bg-slate-100 text-slate-800 min-h-screen">
+    <div className="flex bg-blue-50 text-blue-800 min-h-screen">
       <Sidebar 
         userRole={userRole} 
         activeTab={activeTab} 
@@ -30,13 +30,13 @@ function App() {
       <main className="flex-1 p-8 overflow-y-auto">
         {/* Role Switcher Toolbar */}
         <div className="flex justify-end mb-6">
-          <div className="bg-white border border-slate-200 shadow-sm p-1 rounded-xl flex items-center gap-1">
+          <div className="bg-white border border-blue-300-200 shadow-sm p-1 rounded-xl flex items-center gap-1">
             {['teacher', 'student', 'admin'].map((role) => (
               <button
                 key={role}
                 onClick={() => { setUserRole(role); setActiveTab('overview'); }}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all ${
-                  userRole === role ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                  userRole === role ? 'bg-blue-600 text-white shadow-sm' : 'text-blue-600 hover:text-blue-900'
                 }`}
               >
                 {role}
