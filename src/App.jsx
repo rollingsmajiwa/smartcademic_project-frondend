@@ -19,20 +19,35 @@ function App() {
   
 
   return (
-    <>
-    <div>
-
+    <div className="flex bg-slate-100 text-slate-800 min-h-screen">
       <Sidebar 
         userRole={userRole} 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
-        onLogout={handleLogout} 
+        onLogout={() => alert('Logged out')} 
       />
-      
+
+      <main className="flex-1 p-8 overflow-y-auto">
+        {/* Role Switcher Toolbar */}
+        <div className="flex justify-end mb-6">
+          <div className="bg-white border border-slate-200 shadow-sm p-1 rounded-xl flex items-center gap-1">
+            {['teacher', 'student', 'admin'].map((role) => (
+              <button
+                key={role}
+                onClick={() => { setUserRole(role); setActiveTab('overview'); }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all ${
+                  userRole === role ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                {role}
+              </button>
+            ))}
+          </div>
+        </div>
+
+       
+      </main>
     </div>
-
-    </>
-  )
+  );
 }
-
 export default App
