@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from "../../components/Sidebar";
+import AdminDashboard from "./AdminDashboard";
+import TeacherDashboard from "./TeacherDashboard";
+import StudentDashboard from "./StudentDashboard";
+
+
 
 function MainDashboard() {
   //  userRole tracks who is logged in ('teacher', 'student', or 'admin')
@@ -44,7 +49,16 @@ function MainDashboard() {
             ))}
           </div>
         </div>
-
+          {/* Dynamic role dashboard */}
+         
+        {userRole === 'teacher' && (
+          <TeacherDashboard />
+        )}
+        {userRole === 'student' && (
+          <StudentDashboard />
+        )}
+        {userRole === 'admin' && 
+          <AdminDashboard /> }
        
       </main>
     </div>
