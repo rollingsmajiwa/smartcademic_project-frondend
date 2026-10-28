@@ -8,6 +8,7 @@ import Contact from "./pages/Contact"
 import About from "./pages/About"
 import SignIn from "./pages/SignIn"
 import SignUp from "./pages/SignUP"
+import ProtectedRoute from "./components/ProtectedRoute"
 
 
 function App() {
@@ -15,17 +16,28 @@ function App() {
      return (
     <>
      <Routes>
-       <Route element={<MainLayout />}>
-            <Route path="/contact" element={<Contact />}/>
-            <Route path="/" element={<Home />}/>
-            <Route path="/about" element={<About />}/>
-            <Route path="/services" element={<Services />}/>
-            <Route path="/signin" element={<SignIn />}/>
-            <Route path="/signup" element={<SignUp />}/>
-        </Route>
-        <Route path="/dashboard/*" element={<MainDashboard />}/>
-       
-     </Routes>
+      {/* Public Pages */}
+      <Route element={<MainLayout />}>
+        <Route path="/" element={<Home />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/services" element={<Services />} />
+      </Route>
+
+      {/* Auth Pages */}
+      <Route path="/signin" element={<SignIn />} />
+      <Route path="/signup" element={<SignUp />} />
+
+      {/* Protected Dashboard */}
+      <Route 
+        path="/dashboard/*" 
+        element={
+          <ProtectedRoute>
+            <MainDashboard />
+          </ProtectedRoute>
+        } 
+      />
+    </Routes>
          
     </>
   )
