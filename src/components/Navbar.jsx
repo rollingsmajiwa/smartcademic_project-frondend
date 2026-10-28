@@ -22,8 +22,8 @@ function Navbar() {
                 </ul>
             </div>
             <div>
-              <button type="submit" className=" font-bold text-sm rounded-lg p-1.5"><Link to="/login">Sign Up</Link></button>  
-            <button type="submit" className=" font-bold text-sm rounded-lg p-1.5"><Link to="/login">Sign In</Link></button>
+              <button type="submit" className=" font-bold text-sm rounded-lg p-1.5"><Link to="/signup">Register</Link></button>  
+            <button type="submit" className=" font-bold text-sm rounded-lg p-1.5"><Link to="/signin">Sign In</Link></button>
                 
             </div>
         </div>
