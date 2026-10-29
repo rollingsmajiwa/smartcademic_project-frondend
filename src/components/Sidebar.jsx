@@ -24,6 +24,7 @@ export default function Sidebar({ userRole, baseRole, activeTab, setActiveTab, o
   const location = useLocation()
   const roleMenus = {
     teacher: [
+      { id: 'home', label: 'Home', icon: Home },
       { id: 'overview', label: 'Overview Dashboard', icon: BookOpen },
       {id: 'revisions', label: 'Revision Materials', icon: BookOpenCheck},
       { id: 'assignments', label: 'Assignments Hub', icon: FileText },
@@ -33,6 +34,7 @@ export default function Sidebar({ userRole, baseRole, activeTab, setActiveTab, o
       { id: 'analytics', label: 'Class Analytics', icon: BarChart3 },
     ],
     student: [
+      { id: 'home', label: 'Home', icon: Home },
       { id: 'overview', label: 'Student Overview', icon: BookOpen },
       { id: 'materials', label: 'Revision Materials', icon: BookOpenCheck }, // Maps to materials
       { id: 'assignments', label: 'Assignments Hub', icon: FileText },       // Maps to assignments
@@ -40,6 +42,7 @@ export default function Sidebar({ userRole, baseRole, activeTab, setActiveTab, o
       { id: 'results', label: 'My Submissions & Grades', icon: CheckCircle2 }, // Maps to my-assignment-submissions
     ],
     admin: [
+      { id: 'home', label: 'Home', icon: Home },
       { id: 'overview', label: 'System Overview', icon: ShieldCheck },
       { id: 'classrooms', label: 'Manage Classrooms', icon: Building2 },    // Maps to classrooms
       { id: 'students', label: 'Manage Students', icon: Users },             // Maps to students
@@ -68,24 +71,30 @@ export default function Sidebar({ userRole, baseRole, activeTab, setActiveTab, o
 
         {/* Navigation Links */}
         <nav className="space-y-1.5">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeTab === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
-                  isActive
-                    ? 'bg-blue-50 text-blue-700 shadow-sm'
-                    : 'text-blue-600 hover:bg-blue-50 hover:text-blue-900'
-                }`}
-              >
-                <Icon className={`w-5 h-5 ${isActive ? 'text-blue-600' : 'text-blue-400'}`} />
-                {item.label}
-              </button>
-            );
-          })}
+          {menuItems.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => 
+                {if (tab.id === 'home' || tab.id === 'overview') {
+                    navigate(`/dashboard/${userRole}`);}
+                else {
+                    navigate(`/dashboard/${userRole}/${tab.id}`);
+                    }}}
+                    
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition ${
+                isActive 
+                  ? 'bg-blue-600 text-white shadow' 
+                  : 'text-blue-700 hover:bg-blue-50'
+              }`}
+            >
+              <Icon size={16} />
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
         </nav>
       </div>
 
