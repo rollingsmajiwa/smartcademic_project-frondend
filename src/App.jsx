@@ -1,6 +1,6 @@
 import React from "react"
 import { Routes, Route } from "react-router-dom"
-import MainDashboard from "./components/dashboards/MainDasboard"
+import MainDashboard from "./components/dashboards/MainDashboard"
 import MainLayout from "./components/MainLayout"
 import Home from "./pages/Home"
 import Services from "./pages/Services"

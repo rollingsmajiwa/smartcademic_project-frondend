@@ -5,7 +5,7 @@ import React, { useState } from "react"
 
     return (
         <>
-            <h1 className="text-xl text-black font-black text-center">This is Student dashboard</h1>
+            <h1 className="text-x text-black font-black text-center">This is Student dashboard</h1>
         </>
     )
 

@@ -15,7 +15,7 @@ export default function ProtectedRoute({ children, allowedRoles }) {
 
     if (allowedRoles && !allowedRoles.includes(userRole)) {
       // Redirect unauthorized roles back to their authorized workspace
-      return <Navigate to={`/dashboards/${userRole}`} replace />;
+      return <Navigate to={`/dashboard/${userRole}`} replace />;
     }
 
     return children;

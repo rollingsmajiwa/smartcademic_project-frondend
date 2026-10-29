@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Home,
   BookOpen, 
@@ -18,7 +19,9 @@ import {
   FileCheck2 
 } from 'lucide-react';
 
-export default function Sidebar({ userRole, activeTab, setActiveTab, onLogout }) {
+export default function Sidebar({ userRole, baseRole, activeTab, setActiveTab, onLogout }) {
+  const navigate = useNavigate()
+  const location = useLocation()
   const roleMenus = {
     teacher: [
       { id: 'overview', label: 'Overview Dashboard', icon: BookOpen },
@@ -86,6 +89,41 @@ export default function Sidebar({ userRole, activeTab, setActiveTab, onLogout })
         </nav>
       </div>
 
+      {/* UNIVERSAL RETURN / SWITCH BUTTONS FOR ADMINS & TEACHERS */}
+        {baseRole && baseRole !== 'student' && (
+          <div className="mb-6 p-2  space-y-1">
+            <span className="px-1">Switch Dashboard</span>
+            
+            {baseRole === 'admin' && (
+              <button 
+                onClick={() => navigate('/dashboard/admin')}
+                className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition ${
+                  userRole === 'admin' ? 'bg-blue-600 text-white shadow-sm' : 'text-blue-700 hover:bg-blue-100'
+                }`}
+              >
+                Back to Admin
+              </button>
+            )}
+
+            <button 
+              onClick={() => navigate('/dashboard/teacher')}
+              className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition ${
+                userRole === 'teacher' ? 'bg-blue-600 text-white shadow-sm' : 'text-blue-700 hover:bg-blue-100'
+              }`}
+            >
+              Teacher Dashboard
+            </button>
+
+            <button 
+              onClick={() => navigate('/dashboard/student')}
+              className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition ${
+                userRole === 'student' ? 'bg-blue-600 text-white shadow-sm' : 'text-blue-700 hover:bg-blue-100'
+              }`}
+            >
+              Student Dashboard
+            </button>
+          </div>
+        )}
       {/* Logout Action */}
       <div className="pt-4 border-t border-blue-100">
         <button
