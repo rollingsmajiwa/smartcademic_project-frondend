@@ -52,7 +52,11 @@ export default function Sidebar({ userRole, baseRole, activeTab, setActiveTab, o
       { id: 'submissions', label: 'All Submissions', icon: FileCheck2 },  
     ]
   };
-
+  const handleSignOut = () => {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    navigate('/signin');
+  };
   const menuItems = roleMenus[userRole] || [];
 
   return (
@@ -136,7 +140,7 @@ export default function Sidebar({ userRole, baseRole, activeTab, setActiveTab, o
       {/* Logout Action */}
       <div className="pt-4 border-t border-blue-100">
         <button
-          onClick={onLogout}
+          onClick={handleSignOut}
           className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors"
         >
           <LogOut className="w-5 h-5" />

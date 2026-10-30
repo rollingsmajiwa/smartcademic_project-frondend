@@ -44,7 +44,7 @@ export default function SignIn() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div>
-        <h2 className='font-black text-2xl'>SmartAcademic Sign In</h2>
+        <h2 className='font-black text-2xl'>SmartAcademic</h2>
         {error && <p>{error}</p>}
         
         <form onSubmit={handleSignIn} className="space-y-4">
