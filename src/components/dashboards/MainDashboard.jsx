@@ -27,35 +27,38 @@ export default function MainDashboard() {
   }
   return (
   <>
-  <Sidebar userRole={displayRole} baseRole = {userRole} />
-    <Routes>
-     
-      
-        <Route 
-          path="student/*" 
-          element={
-            <ProtectedRoute allowedRoles={['student', 'admin', 'teacher']}>
-              <StudentDashboard />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="teacher/*" 
-          element={
-            <ProtectedRoute allowedRoles={['teacher', 'admin']}>
-              <TeacherDashboard />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="admin/*" 
-          element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <AdminDashboard />
-            </ProtectedRoute>
-          } 
-        />
-    </Routes>
-    </>
+  <div className='flex h-screen'>
+    <Sidebar userRole={displayRole} baseRole = {userRole} />
+      <Routes>
+    
+    
+          <Route
+            path="student/*"
+            element={
+              <ProtectedRoute allowedRoles={['student', 'admin', 'teacher']}>
+                <StudentDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="teacher/*"
+            element={
+              <ProtectedRoute allowedRoles={['teacher', 'admin']}>
+                <TeacherDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="admin/*"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+      </Routes>
+      </div>
+      </>
+  
   );
 }
