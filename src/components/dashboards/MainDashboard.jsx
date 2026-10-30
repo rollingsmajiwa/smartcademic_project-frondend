@@ -33,7 +33,16 @@ export default function MainDashboard() {
     
     
           <Route
-            path="student/*"
+            path="student/:subpage"
+            element={
+              <ProtectedRoute allowedRoles={['student', 'admin', 'teacher']}>
+                <StudentDashboard />
+              </ProtectedRoute>
+            }
+          />
+          # a default route 
+          <Route
+            path="student"
             element={
               <ProtectedRoute allowedRoles={['student', 'admin', 'teacher']}>
                 <StudentDashboard />

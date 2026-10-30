@@ -24,6 +24,8 @@ export default function StudentDashboard() {
   // Submission text state for specific assignment handling
   const [submittingId, setSubmittingId] = useState(null);
   const [submissionContent, setSubmissionContent] = useState('');
+// submission of files
+  const [selectedFile, setSelectedFile] = useState(null);
 
   const token = localStorage.getItem('access_token');
   const apiConfig = {
@@ -63,13 +65,24 @@ export default function StudentDashboard() {
     }
   };
 
+
   // Live submit handler for assignments
   const handleAssignmentSubmit = async (assignmentId) => {
     try {
+      const formData = new FormData();
+      formData.append('assignment', assignmentId);
+      formData.append('content', submissionContent);
+      if (selectedFile) {
+        formData.append('file', selectedFile);
+      }
       await axios.post(
-        `http://127.0.0.1:8000/api/assignments/${assignmentId}/submit/`, 
-        { content: submissionContent }, 
-        apiConfig
+        `http://127.0.0.1:8000/api/students/assignments/submit/`, formData,
+        { headers: {
+          ...apiConfig.headers,
+          'Content-Type': 'multipart/formData',
+        } 
+
+        },
       );
       alert('Assignment submitted successfully!');
       setSubmittingId(null);
@@ -209,6 +222,24 @@ export default function StudentDashboard() {
                         <h3 className="font-bold mt-2 text-base">{asg.title}</h3>
                         <p className="text-xs mt-1">{asg.description}</p>
                       </div>
+
+                      {asg.file && (
+                        <div className='mt-3'>
+                          <button type='button'
+                          onClick={()=> {const file_url = asg.file.startsWith('http')? asg.file : `http://127.0.0.1:8000${asg.file}`
+                            window.open(file_url, '_blank')
+                          } }
+                          className='text-xs flex items-center gap-1 hover:underline'>
+                            <Download size={14}/>View Posted Assignments
+                        
+                  
+
+                          </button>
+
+                        </div>
+                      )
+
+                      }
                       <div className="mt-4 pt-3 border-t">
                         {submittingId === asg.id ? (
                           <div className="space-y-2">
@@ -219,6 +250,11 @@ export default function StudentDashboard() {
                               onChange={(e) => setSubmissionContent(e.target.value)}
                               className="w-full p-2.5 text-xs  rounded-xl "
                             />
+
+                            <div>
+                              <label className='block font-bold'>Upload PDF solution</label>
+                              <input type="file" accept='.pdf' onChange={(e) => setSelectedFile(e.target.files[0]) } className='w-full text-xs file:mr-4 file:py-1.5 file:px-3 file:rounded-xl'/>
+                            </div>
                             <div className="flex gap-2">
                               <button onClick={() => handleAssignmentSubmit(asg.id)} className=" px-3 py-1.5 rounded-lg text-xs font-semibold shadow transition">
                                 Confirm & Submit
