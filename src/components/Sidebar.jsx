@@ -58,7 +58,9 @@ export default function Sidebar({ userRole, baseRole, activeTab, setActiveTab, o
     navigate('/signin');
   };
   const menuItems = roleMenus[userRole] || [];
-
+  const handleGoHome = () => {
+    navigate('/')
+  }
   return (
     <aside className="w-64 bg-white text-blue-800 flex flex-col justify-between min-h-screen p-5 border-r border-slate-200/80 shadow-sm">
       <div>
@@ -82,8 +84,8 @@ export default function Sidebar({ userRole, baseRole, activeTab, setActiveTab, o
             <button
               key={tab.id}
               onClick={() => 
-                {if (tab.id === 'home' || tab.id === 'overview') {
-                    navigate(`/dashboard/${userRole}`);}
+                {if (tab.id === 'home') {
+                    handleGoHome() }
                 else {
                     navigate(`/dashboard/${userRole}/${tab.id}`);
                     }}}
