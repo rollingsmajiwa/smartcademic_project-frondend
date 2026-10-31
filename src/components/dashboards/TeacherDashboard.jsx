@@ -104,23 +104,26 @@ useEffect(() => {
   };
 
   const handlePostExam = async (e) => {
-    e.preventDefault();
-    const formData = new FormData();
-    formData.append('title', examForm.title);
-    formData.append('term', examForm.term);
-    if (examForm.file) formData.append('file', examForm.file);
+  e.preventDefault();
+  const formData = new FormData();
+  formData.append('title', examForm.title);
+  formData.append('description', examForm.description || ''); // match backend model field
+  formData.append('duration_mins', examForm.duration_mins || 60); // timer duration
+  formData.append('start_time', examForm.start_time || new Date().toISOString());
+  formData.append('end_time', examForm.end_time || new Date().toISOString());
+  if (examForm.file) formData.append('file', examForm.file);
 
-    try {
-      await axios.post('http://127.0.0.1:8000/api/teachers/exam/', formData, {
-        headers: { ...apiConfig.headers, 'Content-Type': 'multipart/form-data' },
-      });
-      alert('Exam posted successfully!');
-      setExamForm({ title: '', term: '', file: null });
-    } catch (err) {
-      console.error('Error posting exam:', err);
-      alert('Failed to post exam.');
-    }
-  };
+  try {
+    await axios.post('http://127.0.0.1:8000/api/teachers/exam/', formData, {
+      headers: { ...apiConfig.headers, 'Content-Type': 'multipart/form-data' },
+    });
+    alert('Exam posted successfully!');
+    setExamForm({ title: '', description: '', duration_mins: 60, start_time: '', end_time: '', file: null });
+  } catch (err) {
+    console.error('Error posting exam:', err.response?.data || err);
+    alert(JSON.stringify(err.response?.data) || 'Failed to post exam.');
+  }
+};
 
   const handleGradeSubmit = async (submissionId) => {
     const gradeVal = grades[submissionId];
@@ -259,6 +262,16 @@ useEffect(() => {
               className="w-full p-2.5 text-xs rounded-xl border"
               required
             />
+            <div className="mb-4">
+        <label className="block text-sm font-medium">Exam Description / Term</label>
+        <input 
+        type="text" 
+        value={examForm.description} 
+        onChange={(e) => setExamForm({ ...examForm, description: e.target.value })}
+        placeholder="Enter description or term..."
+        className="w-full border p-2 rounded"
+        />
+        </div>
             <div>
               <label className="block text-xs font-bold mb-1">Attach Exam Paper PDF</label>
               <input
