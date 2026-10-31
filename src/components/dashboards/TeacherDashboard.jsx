@@ -19,6 +19,8 @@ export default function TeacherDashboard() {
 
   const activeTab = getActiveTab();
 
+  const [teachersList, setTeachersList] = useState([]);
+
   const [overview, setOverview] = useState(null);
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -29,9 +31,24 @@ export default function TeacherDashboard() {
 
   const apiConfig = {
     headers: {
-      Authorization: `Bearer ${localStorage.getItem('token')}`,
+      Authorization: `Bearer ${localStorage.getItem('access_token')}`,
     },
   };
+
+  const fetchTeachers = async () => {
+  try {
+    const res = await axios.get('http://127.0.0.1:8000/api/teachers/list/', apiConfig);
+    setTeachersList(res.data);
+  } catch (err) {
+    console.error('Failed to load teachers list:', err);
+  }
+};
+
+useEffect(() => {
+  if (activeTab === 'assignments') {
+    fetchTeachers();
+  }
+}, [activeTab]);
 
   const fetchOverview = async () => {
     try {
@@ -65,6 +82,7 @@ export default function TeacherDashboard() {
     formData.append('title', assignmentForm.title);
     formData.append('description', assignmentForm.description);
     formData.append('class_name', assignmentForm.class_name);
+    formData.append('deadline', assignmentForm.deadline);
     if (assignmentForm.file) formData.append('file', assignmentForm.file);
 
     try {
@@ -72,10 +90,10 @@ export default function TeacherDashboard() {
         headers: { ...apiConfig.headers, 'Content-Type': 'multipart/form-data' },
       });
       alert('Assignment posted successfully!');
-      setAssignmentForm({ title: '', description: '', class_name: '', file: null });
+      setAssignmentForm({ title: '', description: '', class_name: '', deadline: '', file: null });
     } catch (err) {
-      console.error('Error posting assignment:', err);
-      alert('Failed to post assignment.');
+      console.error('Error posting assignment:', err.response?.data || err);
+      alert(JSON.stringify(err.response?.data) || 'Failed to post assignment.');
     }
   };
 
@@ -173,6 +191,7 @@ export default function TeacherDashboard() {
               onChange={(e) => setAssignmentForm({ ...assignmentForm, description: e.target.value })}
               className="w-full p-2.5 text-xs rounded-xl border"
             />
+            <input type="datetime-local" value={assignmentForm.deadline} onChange={(e) => setAssignmentForm({...assignmentForm, deadline: e.target.value })} placeholder='enter deadline' required className='w-full p-2.5 text-xs'/>
             <input
               type="text"
               placeholder="Target Class (e.g. Grade 8)"
