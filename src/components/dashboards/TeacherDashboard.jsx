@@ -37,7 +37,11 @@ export default function TeacherDashboard() {
 
   const fetchTeachers = async () => {
   try {
-    const res = await axios.get('http://127.0.0.1:8000/api/teachers/list/', apiConfig);
+    const res = await axios.get('http://127.0.0.1:8000/api/teachers/list/', {
+        headers: {
+            Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+        },
+    });
     setTeachersList(res.data);
   } catch (err) {
     console.error('Failed to load teachers list:', err);
@@ -52,7 +56,8 @@ useEffect(() => {
 
   const fetchOverview = async () => {
     try {
-      const res = await axios.get('http://127.0.0.1:8000/api/teachers/overview/', apiConfig);
+      const res = await axios.get('http://127.0.0.1:8000/api/teachers/overview/', apiConfig
+      );
       setOverview(res.data);
     } catch (err) {
       console.error('Failed to load overview:', err);
@@ -83,6 +88,7 @@ useEffect(() => {
     formData.append('description', assignmentForm.description);
     formData.append('class_name', assignmentForm.class_name);
     formData.append('deadline', assignmentForm.deadline);
+    formData.append('teacher', assignmentForm.teacher);
     if (assignmentForm.file) formData.append('file', assignmentForm.file);
 
     try {
@@ -90,7 +96,7 @@ useEffect(() => {
         headers: { ...apiConfig.headers, 'Content-Type': 'multipart/form-data' },
       });
       alert('Assignment posted successfully!');
-      setAssignmentForm({ title: '', description: '', class_name: '', deadline: '', file: null });
+      setAssignmentForm({ title: '', description: '', class_name: '', deadline: '', teacher: '', file: null });
     } catch (err) {
       console.error('Error posting assignment:', err.response?.data || err);
       alert(JSON.stringify(err.response?.data) || 'Failed to post assignment.');
@@ -176,6 +182,23 @@ useEffect(() => {
         <div className="max-w-xl mx-auto p-6 rounded-2xl border space-y-4">
           <h2 className="text-lg font-bold">Post New Assignment</h2>
           <form onSubmit={handlePostAssignment} className="space-y-3">
+
+            <div>
+            <label className="block text-xs font-bold mb-1">Assign Teacher</label>
+            <select
+                value={assignmentForm.teacher}
+                onChange={(e) => setAssignmentForm({ ...assignmentForm, teacher: e.target.value })}
+                className="w-full p-2.5 text-xs rounded-xl border"
+                required
+            >
+            <option value="">Select Teacher...</option>
+            {teachersList.map((t) => (
+                <option key={t.id} value={t.id}>
+                {t.name}
+            </option>
+            ))}
+            </select>
+            </div>
             <input
               type="text"
               placeholder="Title (e.g. Grade 8 Maths)"
