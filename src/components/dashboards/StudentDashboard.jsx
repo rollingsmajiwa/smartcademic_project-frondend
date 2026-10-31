@@ -26,6 +26,9 @@ export default function StudentDashboard() {
   const [submissionContent, setSubmissionContent] = useState('');
 // submission of files
   const [selectedFile, setSelectedFile] = useState(null);
+// submission state
+  const [submittedIds, setsubmittedIds] = useState([])
+
 
   const token = localStorage.getItem('access_token');
   const apiConfig = {
@@ -71,7 +74,10 @@ export default function StudentDashboard() {
     try {
       const formData = new FormData();
       formData.append('assignment', assignmentId);
-      formData.append('content', submissionContent);
+      if (submissionContent) {
+        formData.append('content', submissionContent);
+      }
+      
       if (selectedFile) {
         formData.append('file', selectedFile);
       }
@@ -87,10 +93,13 @@ export default function StudentDashboard() {
       alert('Assignment submitted successfully!');
       setSubmittingId(null);
       setSubmissionContent('');
+      setSelectedFile(null)
+      setsubmittedIds(prev => [...prev, assignmentId]);
       fetchTabData('assignments'); // Refresh list
     } catch (err) {
       console.error('Submission failed:', err);
-      alert(err.response?.data?.detail || 'Failed to submit assignment.');
+      alert(JSON.stringify(err.response?.data) || 'Failed to submit assignment.');
+
     }
   };
 
@@ -241,7 +250,10 @@ export default function StudentDashboard() {
 
                       }
                       <div className="mt-4 pt-3 border-t">
-                        {submittingId === asg.id ? (
+                        {submittedIds.includes(asg.id) ? (
+                          <div><p>Submitted Successfully</p></div>
+                        ):
+                        submittingId === asg.id ? (
                           <div className="space-y-2">
                             <textarea
                               rows="3"
