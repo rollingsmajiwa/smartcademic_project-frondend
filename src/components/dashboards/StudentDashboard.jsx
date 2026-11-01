@@ -202,7 +202,7 @@ export default function StudentDashboard() {
     }
   };
 
-  const handleExamSubmit = async (examIdToSubmit) => {
+ const handleExamSubmit = async (examIdToSubmit) => {
     const targetExamId = examIdToSubmit || activeExamRef.current?.id;
     if (!targetExamId) return;
 
@@ -213,8 +213,16 @@ export default function StudentDashboard() {
       const textVal = examTextAnswerRef.current;
       const fileVal = examAnswerFileRef.current;
 
+      // Format plain text into a valid JSON string structure
+      const structuredAnswers = JSON.stringify({ response: textVal || "" });
+      formData.append('answers_json', structuredAnswers);
+      
       if (textVal) formData.append('content', textVal);
-      if (fileVal) formData.append('file', fileVal);
+      
+      // Only append file if the student actually selected one
+      if (fileVal) {
+        formData.append('file', fileVal);
+      }
       
       await axios.post(
         'http://127.0.0.1:8000/api/teachers/exam-submissions/', 
@@ -232,7 +240,6 @@ export default function StudentDashboard() {
       alert(JSON.stringify(err.response?.data) || 'Failed to submit exam.');
     }
   };
-
   return (
     <div className="space-y-6 max-w-7xl mx-auto p-4">
       {loading && (
