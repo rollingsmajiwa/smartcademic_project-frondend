@@ -246,6 +246,7 @@ useEffect(() => {
         <div className="max-w-xl mx-auto p-6 rounded-2xl border space-y-4">
           <h2 className="text-lg font-bold">Create New Exam</h2>
           <form onSubmit={handlePostExam} className="space-y-3">
+            <label className="block text-sm font-medium">Exam Title</label>
             <input
               type="text"
               placeholder="Exam Title (e.g. Midterm Physics)"
@@ -254,6 +255,7 @@ useEffect(() => {
               className="w-full p-2.5 text-xs rounded-xl border"
               required
             />
+            <label className="block text-sm font-medium">Term</label>
             <input
               type="text"
               placeholder="Term (e.g. Term 1)"
@@ -263,13 +265,13 @@ useEffect(() => {
               required
             />
             <div className="mb-4">
-        <label className="block text-sm font-medium">Exam Description / Term</label>
-        <input 
-        type="text" 
-        value={examForm.description} 
-        onChange={(e) => setExamForm({ ...examForm, description: e.target.value })}
-        placeholder="Enter description or term..."
-        className="w-full border p-2 rounded"
+        <label className="block text-sm font-medium">Exam Description</label>
+            <input 
+            type="text" 
+            value={examForm.description} 
+            onChange={(e) => setExamForm({ ...examForm, description: e.target.value })}
+            placeholder="Enter description..."
+            className="w-full border p-2 rounded"
         />
         </div>
             <div>
@@ -294,7 +296,7 @@ useEffect(() => {
           <div className="flex justify-between items-center">
             <h2 className="text-lg font-bold">Student Submissions & Grading</h2>
             <button onClick={fetchSubmissions} className="px-3 py-1.5 text-xs font-semibold rounded-lg border">
-              🔄 Refresh
+              Refresh
             </button>
           </div>
 
@@ -320,7 +322,7 @@ useEffect(() => {
                       onClick={() => window.open(`http://127.0.0.1:8000${sub.file}`, '_blank')}
                       className="text-xs font-semibold underline block mt-1"
                     >
-                      📄 Open Student PDF
+                      Open Student PDF
                     </button>
                   )}
                 </div>
