@@ -11,7 +11,7 @@ export default function TeacherDashboard() {
     if (path.includes('/assignments')) return 'assignments';
     if (path.includes('/exams')) return 'exams';
     if (path.includes('/submissions') || path.includes('/grading')) return 'submissions';
-    if (path.includes('/attendance')) return 'attendance';
+    if (path.includes('/attendance') || path.includes('/geo')) return 'attendance';
     if (path.includes('/analytics')) return 'analytics';
     return 'overview';
   };
@@ -27,7 +27,6 @@ export default function TeacherDashboard() {
 
   const [grades, setGrades] = useState({});
   const [examGrades, setExamGrades] = useState({});
-  const [examReviews, setExamReviews] = useState({});
 
   const [pdfBlobs, setPdfBlobs] = useState({});
 
@@ -49,6 +48,11 @@ export default function TeacherDashboard() {
     end_time: '', 
     file: null 
   });
+
+  // Geofence Attendance states
+  const [teacherId, setTeacherId] = useState('');
+  const [statusText, setStatusText] = useState('Click the button to check');
+  const [geoLoading, setGeoLoading] = useState(false);
 
   const apiConfig = {
     headers: {
@@ -209,7 +213,7 @@ export default function TeacherDashboard() {
       alert(JSON.stringify(err.response?.data) || 'Failed to save exam score.');
     }
   };
-  // Helper parser to clearly display structured JSON or plain text answers
+
   const renderStudentAnswers = (sub) => {
     let rawText = sub.content;
     if (!rawText && sub.answers_json) {
@@ -221,6 +225,73 @@ export default function TeacherDashboard() {
       }
     }
     return rawText || 'No text answers provided.';
+  };
+
+  // Run Geofence Check fetching location and sending directly to backend
+  const runGeoFence = (statusDirect) => {
+    if (!teacherId) {
+      setStatusText('Please enter your TSC Number!');
+      return;
+    }
+
+    setStatusText('Checking School location..');
+    setGeoLoading(true);
+
+    if (!navigator.geolocation) {
+      setStatusText('Geolocation is not supported by your browser.');
+      setGeoLoading(false);
+      return;
+    }
+
+    const geoOptions = {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
+    };
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          let userLat = position.coords.latitude;
+          let userLon = position.coords.longitude;
+
+          console.log('my exact location', userLat, userLon);
+
+          // Sending position to backend which handles fence validation
+          const response = await axios.post(
+            'http://127.0.0.1:8000/api/teachers/attendance/',
+            {
+              tsc_number: teacherId,
+              direction: statusDirect,
+              latitude: userLat,
+              longitude: userLon
+            },
+            apiConfig
+          );
+
+          if (response.status === 200 || response.status === 201) {
+            setStatusText(`Success! Clocked ${statusDirect}`);
+            console.log('Data saved', response.data);
+          }
+        } catch (error) {
+          console.error('API Error:', error.response?.data || error);
+          const backendMsg = error.response?.data?.message || error.response?.data?.error;
+          if (backendMsg) {
+            setStatusText(backendMsg);
+          } else {
+            setStatusText('You are outside the school compound');
+          }
+        } finally {
+          setGeoLoading(false);
+        }
+      },
+      (gpsError) => {
+        setStatusText('GPS ERROR! permission blocked');
+        console.log('Hardware GPS Code Error', gpsError);
+        setGeoLoading(false);
+      },
+      geoOptions
+    );
   };
 
   return (
@@ -405,8 +476,7 @@ export default function TeacherDashboard() {
                           </span>
                           <p className="text-xs font-bold">Student ID: {sub.student}</p>
                           
-                          {/* Clearly Displayed Student Typed Response Box */}
-                          <div className="p-3 rounded-xl border text-xs space-y-1 bg-gray-50">
+                          <div className="p-3 rounded-xl border text-xs space-y-1">
                             <span className="font-bold block">Student Typed Response:</span>
                             <p className="whitespace-pre-wrap">{sub.content || 'No text content provided.'}</p>
                           </div>
@@ -473,8 +543,7 @@ export default function TeacherDashboard() {
                           </span>
                           <p className="text-xs font-bold">Student ID: {sub.student}</p>
                           
-                          {/* Clearly Displayed Student Typed Exam Answers Box */}
-                          <div className="p-3 rounded-xl border text-xs space-y-1 bg-gray-50">
+                          <div className="p-3 rounded-xl border text-xs space-y-1">
                             <span className="font-bold block">Student Typed Exam Answers:</span>
                             <p className="whitespace-pre-wrap">{renderStudentAnswers(sub)}</p>
                           </div>
@@ -529,6 +598,38 @@ export default function TeacherDashboard() {
 
             </div>
           )}
+        </div>
+      )}
+
+      {/* Geofence Attendance Tab */}
+      {activeTab === 'attendance' && (
+        <div className="flex justify-center items-center p-6">
+          <div>
+            <h2 className="font-bold text-xl mb-4">Teacher Attendance Checker</h2>
+            <div className="mt-5 mb-4">
+              <label htmlFor="teacherId" className="block text-xs font-bold mb-1">
+                Enter your TSC Number
+              </label>
+              <input
+                className="w-full border rounded-sm p-2 text-xs"
+                type="text"
+                id="teacherId"
+                placeholder="e.g, 8000"
+                value={teacherId}
+                onChange={(e) => setTeacherId(e.target.value)}
+              />
+            </div>
+            <div className="flex justify-center items-center flex-col space-y-4">
+              <button
+                onClick={() => runGeoFence('in')}
+                disabled={geoLoading}
+                className="border font-bold rounded-full px-6 py-3 text-xs"
+              >
+                {geoLoading ? 'Checking...' : 'Clock In'}
+              </button>
+              <h3 id="status" className="text-xs font-semibold">{statusText}</h3>
+            </div>
+          </div>
         </div>
       )}
     </div>
