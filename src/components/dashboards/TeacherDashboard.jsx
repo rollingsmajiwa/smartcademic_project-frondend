@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 export default function TeacherDashboard() {
   const location = useLocation();
+  const navigate = useNavigate();
 
   const getActiveTab = () => {
     const path = location.pathname;
@@ -23,6 +24,7 @@ export default function TeacherDashboard() {
   
   const [submissions, setSubmissions] = useState([]);
   const [examSubmissions, setExamSubmissions] = useState([]);
+  const [revisionsList, setRevisionsList] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const [grades, setGrades] = useState({});
@@ -49,6 +51,13 @@ export default function TeacherDashboard() {
     file: null 
   });
 
+  const [revisionForm, setRevisionForm] = useState({
+    title: '',
+    description: '',
+    class_name: '',
+    file: null
+  });
+
   // Geofence Attendance states
   const [teacherId, setTeacherId] = useState('');
   const [statusText, setStatusText] = useState('Click the button to check');
@@ -69,9 +78,26 @@ export default function TeacherDashboard() {
     }
   };
 
+  const fetchRevisions = async () => {
+    try {
+      const res = await axios.get('http://127.0.0.1:8000/api/teachers/revisions/', apiConfig);
+      setRevisionsList(res.data);
+    } catch (err) {
+      console.error('Failed to load revision materials:', err);
+    }
+  };
+
   useEffect(() => {
     if (activeTab === 'assignments') {
       fetchTeachers();
+    }
+    if (activeTab === 'materials') {
+      fetchRevisions();
+    }
+    if (activeTab === 'overview') {
+      fetchOverview();
+      fetchAllSubmissions();
+      fetchRevisions();
     }
   }, [activeTab]);
 
@@ -123,7 +149,6 @@ export default function TeacherDashboard() {
   };
 
   useEffect(() => {
-    if (activeTab === 'overview') fetchOverview();
     if (activeTab === 'submissions') fetchAllSubmissions();
   }, [activeTab, location.pathname]);
 
@@ -172,6 +197,27 @@ export default function TeacherDashboard() {
     }
   };
 
+  const handlePostRevision = async (e) => {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append('title', revisionForm.title);
+    formData.append('description', revisionForm.description || '');
+    if (revisionForm.class_name) formData.append('class_name', revisionForm.class_name);
+    if (revisionForm.file) formData.append('file', revisionForm.file);
+
+    try {
+      await axios.post('http://127.0.0.1:8000/api/teachers/revisions/', formData, {
+        headers: { ...apiConfig.headers, 'Content-Type': 'multipart/form-data' },
+      });
+      alert('Revision material uploaded successfully!');
+      setRevisionForm({ title: '', description: '', class_name: '', file: null });
+      fetchRevisions();
+    } catch (err) {
+      console.error('Error posting revision:', err.response?.data || err);
+      alert(JSON.stringify(err.response?.data) || 'Failed to upload revision material.');
+    }
+  };
+
   const handleGradeSubmit = async (submissionId) => {
     const gradeVal = grades[submissionId];
     if (!gradeVal) {
@@ -179,7 +225,7 @@ export default function TeacherDashboard() {
       return;
     }
     try {
-      await axios.post(
+      await axios.patch(
         `http://127.0.0.1:8000/api/teachers/submissions/${submissionId}/grade/`,
         { grade: gradeVal },
         apiConfig
@@ -227,7 +273,6 @@ export default function TeacherDashboard() {
     return rawText || 'No text answers provided.';
   };
 
-  // Run Geofence Check fetching location and sending directly to backend
   const runGeoFence = (statusDirect) => {
     if (!teacherId) {
       setStatusText('Please enter your TSC Number!');
@@ -255,9 +300,6 @@ export default function TeacherDashboard() {
           let userLat = position.coords.latitude;
           let userLon = position.coords.longitude;
 
-          console.log('my exact location', userLat, userLon);
-
-          // Sending position to backend which handles fence validation
           const response = await axios.post(
             'http://127.0.0.1:8000/api/teachers/attendance/',
             {
@@ -271,7 +313,6 @@ export default function TeacherDashboard() {
 
           if (response.status === 200 || response.status === 201) {
             setStatusText(`Success! Clocked ${statusDirect}`);
-            console.log('Data saved', response.data);
           }
         } catch (error) {
           console.error('API Error:', error.response?.data || error);
@@ -287,7 +328,6 @@ export default function TeacherDashboard() {
       },
       (gpsError) => {
         setStatusText('GPS ERROR! permission blocked');
-        console.log('Hardware GPS Code Error', gpsError);
         setGeoLoading(false);
       },
       geoOptions
@@ -296,9 +336,11 @@ export default function TeacherDashboard() {
 
   return (
     <div className="flex-1 p-8 overflow-y-auto min-h-screen">
+      {/* Overview Tab */}
       {activeTab === 'overview' && (
-        <div className="space-y-6 max-w-4xl mx-auto">
+        <div className="space-y-8 max-w-4xl mx-auto">
           <h2 className="text-xl font-bold">Teacher Overview Dashboard</h2>
+          
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="p-5 rounded-2xl border">
               <p className="text-[10px] font-bold uppercase">Assignments Posted</p>
@@ -313,20 +355,137 @@ export default function TeacherDashboard() {
               <p className="text-xl font-extrabold mt-1">{overview?.total_submissions_received || 0}</p>
             </div>
             <div className="p-5 rounded-2xl border">
-              <p className="text-[10px] font-bold uppercase">Pending Grades</p>
-              <p className="text-xl font-extrabold mt-1">{overview?.pending_grades || 0}</p>
+              <p className="text-[10px] font-bold uppercase">Revision Materials</p>
+              <p className="text-xl font-extrabold mt-1">{revisionsList.length}</p>
             </div>
+          </div>
+
+          {/* Quick Actions Bar */}
+          <div className="p-5 rounded-2xl border space-y-3">
+            <h3 className="text-xs font-bold uppercase">Quick Actions</h3>
+            <div className="flex flex-wrap gap-3">
+              <button onClick={() => navigate('/dashboard/teacher/assignments')} className="px-4 py-2 text-xs font-semibold rounded-xl border">
+                Post Assignment
+              </button>
+              <button onClick={() => navigate('/dashboard/teacher/exams')} className="px-4 py-2 text-xs font-semibold rounded-xl border">
+                Create Exam
+              </button>
+              <button onClick={() => navigate('/dashboard/teacher/revisions')} className="px-4 py-2 text-xs font-semibold rounded-xl border">
+                Upload Revision Material
+              </button>
+              <button onClick={() => navigate('/dashboard/teacher/submissions')} className="px-4 py-2 text-xs font-semibold rounded-xl border">
+                Grade Submissions
+              </button>
+            </div>
+          </div>
+
+          {/* Recent Activity List */}
+          <div className="p-5 rounded-2xl border space-y-3">
+            <h3 className="text-xs font-bold uppercase">Recent Student Submissions</h3>
+            {submissions.length === 0 && examSubmissions.length === 0 ? (
+              <p className="text-xs">No recent student submissions found.</p>
+            ) : (
+              <div className="space-y-2">
+                {[...submissions, ...examSubmissions].slice(0, 4).map((sub, idx) => (
+                  <div key={idx} className="flex justify-between items-center text-xs p-2 rounded-lg border">
+                    <span>
+                      <strong className="font-semibold">Student ID {sub.student}</strong> submitted {sub.assignment ? `Assignment ID${sub.assignment}` : `Exam ID${sub.exam}`}
+                    </span>
+                    <span className="text-[10px] opacity-70">
+                      {sub.submitted_at ? new Date(sub.submitted_at).toLocaleDateString() : 'Recent'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
 
+      {/* Revision Materials Tab */}
       {activeTab === 'materials' && (
-        <div className="max-w-xl mx-auto p-6 rounded-2xl border space-y-4">
-          <h2 className="text-lg font-bold">Revision Materials</h2>
-          <p className="text-xs">Upload revision guides and documents for students.</p>
+        <div className="max-w-xl mx-auto space-y-6">
+          <div className="p-6 rounded-2xl border space-y-4">
+            <h2 className="text-lg font-bold">Upload Revision Material</h2>
+            <p className="text-xs">Upload study guides and revision documents for students.</p>
+            <form onSubmit={handlePostRevision} className="space-y-3">
+              <div>
+                <label className="block text-xs font-bold mb-1">Title</label>
+                <input
+                  type="text"
+                  placeholder="Title (e.g. Grade 8 Maths Revision Guide)"
+                  value={revisionForm.title}
+                  onChange={(e) => setRevisionForm({ ...revisionForm, title: e.target.value })}
+                  className="w-full p-2.5 text-xs rounded-xl border"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold mb-1">Description</label>
+                <textarea
+                  rows="3"
+                  placeholder="Instructions or topic summary..."
+                  value={revisionForm.description}
+                  onChange={(e) => setRevisionForm({ ...revisionForm, description: e.target.value })}
+                  className="w-full p-2.5 text-xs rounded-xl border"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold mb-1">Target Class</label>
+                <input
+                  type="text"
+                  placeholder="Target Class (e.g. Grade 8)"
+                  value={revisionForm.class_name}
+                  onChange={(e) => setRevisionForm({ ...revisionForm, class_name: e.target.value })}
+                  className="w-full p-2.5 text-xs rounded-xl border"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold mb-1">Attach Material Document</label>
+                <input
+                  type="file"
+                  onChange={(e) => setRevisionForm({ ...revisionForm, file: e.target.files[0] })}
+                  className="w-full text-xs"
+                />
+              </div>
+              <button type="submit" className="w-full py-2.5 font-semibold text-xs rounded-xl border">
+                Upload Revision Material
+              </button>
+            </form>
+          </div>
+
+          {/* List of uploaded revisions */}
+          <div className="p-6 rounded-2xl border space-y-4">
+            <h3 className="text-md font-bold">Uploaded Revision Materials</h3>
+            {revisionsList.length === 0 ? (
+              <p className="text-xs">No revision materials uploaded yet.</p>
+            ) : (
+              <div className="space-y-3">
+                {revisionsList.map((rev) => (
+                  <div key={rev.id} className="p-4 rounded-xl border flex justify-between items-center text-xs">
+                    <div>
+                      <p className="font-bold">{rev.title}</p>
+                      <p className="text-[10px] opacity-70">{rev.description}</p>
+                    </div>
+                    {rev.file && (
+                      <a
+                        href={rev.file.startsWith('http') ? rev.file : `http://127.0.0.1:8000${rev.file}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3 py-1 text-xs rounded-lg border font-semibold"
+                      >
+                        View File
+                      </a>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
+      {/* Assignments Tab */}
       {activeTab === 'assignments' && (
         <div className="max-w-xl mx-auto p-6 rounded-2xl border space-y-4">
           <h2 className="text-lg font-bold">Post New Assignment</h2>
@@ -349,7 +508,7 @@ export default function TeacherDashboard() {
             </div>
             <input
               type="text"
-              placeholder="Title (e.g. Grade 8 Maths)"
+              placeholder="Title (e.g. Maths)"
               value={assignmentForm.title}
               onChange={(e) => setAssignmentForm({ ...assignmentForm, title: e.target.value })}
               className="w-full p-2.5 text-xs rounded-xl border"
@@ -357,7 +516,7 @@ export default function TeacherDashboard() {
             />
             <textarea
               rows="3"
-              placeholder="Instructions / description..."
+              placeholder="Instructions..."
               value={assignmentForm.description}
               onChange={(e) => setAssignmentForm({ ...assignmentForm, description: e.target.value })}
               className="w-full p-2.5 text-xs rounded-xl border"
@@ -395,6 +554,7 @@ export default function TeacherDashboard() {
         </div>
       )}
 
+      {/* Exams Tab */}
       {activeTab === 'exams' && (
         <div className="max-w-xl mx-auto p-6 rounded-2xl border space-y-4">
           <h2 className="text-lg font-bold">Create New Exam</h2>
@@ -447,6 +607,7 @@ export default function TeacherDashboard() {
         </div>
       )}
 
+      {/* Submissions & Grading Tab */}
       {activeTab === 'submissions' && (
         <div className="max-w-4xl mx-auto space-y-6">
           <div className="flex justify-between items-center">
@@ -460,7 +621,6 @@ export default function TeacherDashboard() {
             <p className="text-xs">Loading submissions...</p>
           ) : (
             <div className="space-y-6">
-              
               {/* Assignment Submissions */}
               <div className="space-y-3">
                 <h3 className="text-md font-semibold border-b pb-1">Assignment Submissions</h3>
@@ -595,7 +755,6 @@ export default function TeacherDashboard() {
                   ))
                 )}
               </div>
-
             </div>
           )}
         </div>
