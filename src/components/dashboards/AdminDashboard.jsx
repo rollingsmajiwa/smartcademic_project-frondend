@@ -208,7 +208,6 @@ export default function AdminDashboard() {
                 <tr>
                   <th className="p-3 font-bold">TSC Number</th>
                   <th className="p-3 font-bold">Name</th>
-                  <th className="p-3 font-bold">Email</th>
                   <th className="p-3 font-bold text-right">Actions</th>
                 </tr>
               </thead>
@@ -227,7 +226,7 @@ export default function AdminDashboard() {
                       </button>
                       <button
                         onClick={() => handleDeleteUser(t.id, 'teacher')}
-                        className="px-3 py-1 text-[10px] rounded border font-semibold text-red-600 hover:bg-red-50"
+                        className="px-3 py-1 text-[10px] rounded border font-semibold"
                       >
                         Delete
                       </button>
@@ -259,7 +258,6 @@ export default function AdminDashboard() {
                 <tr>
                   <th className="p-3 font-bold">Student ID</th>
                   <th className="p-3 font-bold">Name</th>
-                  <th className="p-3 font-bold">Username</th>
                   <th className="p-3 font-bold text-right">Actions</th>
                 </tr>
               </thead>
@@ -278,7 +276,7 @@ export default function AdminDashboard() {
                       </button>
                       <button
                         onClick={() => handleDeleteUser(s.id, 'student')}
-                        className="px-3 py-1 text-[10px] rounded border font-semibold text-red-600 hover:bg-red-50"
+                        className="px-3 py-1 text-[10px] rounded border font-semibold"
                       >
                         Delete
                       </button>
@@ -299,8 +297,8 @@ export default function AdminDashboard() {
             <table className="w-full text-left text-xs">
               <thead className="bg-gray-50 border-b">
                 <tr>
-                  <th className="p-3 font-bold">TSC / Teacher Number</th>
-                  <th className="p-3 font-bold">Status / Direction</th>
+                  <th className="p-3 font-bold">Teacher ID</th>
+                  <th className="p-3 font-bold">Status</th>
                   <th className="p-3 font-bold">Day of Week</th>
                   <th className="p-3 font-bold">Exact Time</th>
                 </tr>
@@ -312,8 +310,8 @@ export default function AdminDashboard() {
                     <tr key={idx} className="border-b">
                       <td className="p-3 font-mono font-bold">{att.tsc_number || att.teacher}</td>
                       <td className="p-3">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${att.direction === 'in' ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'}`}>
-                          Clocked {att.direction}
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${att.direction === 'in' ? 'bg-white text-black' : 'bg-white text-black'}`}>
+                          Clocked In {att.direction}
                         </span>
                       </td>
                       <td className="p-3 font-semibold">
