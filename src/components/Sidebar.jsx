@@ -62,16 +62,16 @@ export default function Sidebar({ userRole, baseRole, activeTab, setActiveTab, o
     navigate('/')
   }
   return (
-    <aside className="w-64 bg-white text-blue-800 flex flex-col justify-between min-h-screen p-5 border-r border-slate-200/80 shadow-sm">
+    <aside className="w-64 bg-white flex flex-col justify-between min-h-screen p-5 border-r border-slate-200/80 shadow-sm">
       <div>
         {/* Brand Header */}
-        <div className="flex items-center gap-3 px-2 py-3 mb-6 border-b border-blue-100">
-          <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center font-bold text-xl text-white shadow-md shadow-blue-500/20">
+        <div className="flex items-center gap-3 px-2 py-3 mb-6 border-b">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-xl text-black shadow-md">
             SA
           </div>
           <div>
-            <h1 className="font-bold text-base leading-tight text-blue-900">SmartAcademic</h1>
-            <span className="text-xs text-blue-600 font-semibold uppercase tracking-wider">{userRole} Portal</span>
+            <h1 className="font-bold text-base leading-tight">SmartAcademic</h1>
+            <span className="text-xs font-semibold uppercase tracking-wider">{userRole} Portal</span>
           </div>
         </div>
 
@@ -92,8 +92,8 @@ export default function Sidebar({ userRole, baseRole, activeTab, setActiveTab, o
                     
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition ${
                 isActive 
-                  ? 'bg-blue-600 text-white shadow' 
-                  : 'text-blue-700 hover:bg-blue-50'
+                  ? ' text-white shadow' 
+                  : 'text-blue-700'
               }`}
             >
               <Icon size={16} />

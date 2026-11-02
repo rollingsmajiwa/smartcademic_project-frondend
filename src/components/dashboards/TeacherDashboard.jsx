@@ -632,7 +632,7 @@ export default function TeacherDashboard() {
                       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <div className="space-y-2 w-full max-w-lg">
                           <span className="px-2 py-0.5 text-[10px] font-bold rounded border">
-                            Assignment #{sub.assignment}
+                            Assignment ID{sub.assignment}
                           </span>
                           <p className="text-xs font-bold">Student ID: {sub.student}</p>
                           
