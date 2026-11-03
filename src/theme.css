@@ -20,7 +20,7 @@
   --sa-shadow-hover: 0 12px 28px -4px rgba(0, 0, 0, 0.08);
 }
 
-/* Base Body Styles */
+/* Base Body Styles for Dashboards */
 body {
   background-color: var(--sa-bg);
   color: var(--sa-text);
@@ -29,8 +29,144 @@ body {
   padding: 0;
 }
 
-/* Layout Containers */
+/* =========================================================
+   Authentication & Landing Pages (Gradient & Glassmorphism)
+   ========================================================= */
+
+.auth-page {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  position: relative;
+  /* 225deg flows explicitly from top-right to bottom-left */
+  background: linear-gradient(225deg, #1E293B, #2E7D32, #0284C7);
+  background-size: 400% 400%;
+  animation: breathe 12s ease infinite;
+}
+
+@keyframes breathe {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Background Glowing Blobs */
+.blob-1 {
+  width: 350px;
+  height: 350px;
+  background-color: rgba(56, 189, 248, 0.35); /* Light Blue Blob */
+  top: 10%;
+  left: 15%;
+  z-index: 1;
+  position: absolute;
+  filter: blur(80px);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.blob-2 {
+  width: 300px;
+  height: 300px;
+  background: rgba(46, 125, 50, 0.35); /* Deep Green Blob */
+  bottom: 10%;
+  right: 15%;
+  z-index: 1;
+  position: absolute;
+  filter: blur(80px);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* Glassmorphism Card (Login / Register) */
+.glass-card {
+  position: relative;
+  z-index: 2;
+  border-radius: var(--sa-radius-xl);
+  width: 100%;
+  max-width: 420px;
+  padding: 2.5rem;
+  text-align: center;
+  backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(200, 230, 201, 0.6);
+  box-shadow: 0px 20px 50px rgba(0, 0, 0, 0.2);
+}
+
+.glass-card h1 {
+  font-family: 'Montserrat', sans-serif;
+  color: var(--sa-green-dark);
+  letter-spacing: 2px;
+  line-height: 1.2;
+  font-size: 1.75rem;
+  font-weight: 800;
+  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.05);
+  margin-bottom: 1.75rem;
+}
+
+.glass-card label {
+  font-family: 'Open Sans', sans-serif;
+  display: block;
+  text-align: left;
+  margin-bottom: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--sa-text);
+}
+
+.input-group {
+  margin-bottom: 1.25rem;
+  text-align: left;
+}
+
+.glass-card input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 50px;
+  box-sizing: border-box;
+  background: rgba(248, 250, 252, 0.9);
+  color: var(--sa-text);
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+  border: 1px solid var(--sa-border);
+  outline: none;
+}
+
+.glass-card input:focus {
+  border-color: var(--sa-blue);
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25);
+  background: #FFFFFF;
+}
+
+.glass-card button[type="submit"], 
+.glass-card .sa-btn-login {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 50px;
+  border: none;
+  background: linear-gradient(90deg, var(--sa-blue), var(--sa-blue-hover));
+  color: #FFFFFF;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+}
+
+.glass-card button[type="submit"]:hover,
+.glass-card .sa-btn-login:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(56, 189, 248, 0.5);
+}
+
+/* =========================================================
+   Dashboard UI Layouts & Components (Full Width)
+   ========================================================= */
+
 .sa-container {
+  width: 100%;
   padding: 2rem;
   min-height: 100vh;
   box-sizing: border-box;
@@ -41,6 +177,7 @@ body {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
+  width: 100%;
 }
 
 .sa-flex-between {
@@ -49,14 +186,15 @@ body {
   align-items: center;
 }
 
-/* Cards & Banners */
 .sa-card {
+  width: 100%;
+  box-sizing: border-box;
   background-color: var(--sa-surface);
   border: 1px solid var(--sa-green-soft);
   border-radius: var(--sa-radius-xl);
   padding: 1.75rem;
   box-shadow: var(--sa-shadow);
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  transition: box-shadow 0.2s ease;
 }
 
 .sa-card:hover {
@@ -64,6 +202,8 @@ body {
 }
 
 .sa-banner {
+  width: 100%;
+  box-sizing: border-box;
   background-color: var(--sa-green-light);
   border: 1px solid var(--sa-green-soft);
   border-radius: var(--sa-radius-xl);
@@ -87,7 +227,7 @@ body {
   margin: 0;
 }
 
-/* Light Blue & Secondary Buttons */
+/* Dashboard Action Buttons */
 .sa-btn-primary {
   background-color: var(--sa-blue);
   color: #FFFFFF;
@@ -120,7 +260,7 @@ body {
   background-color: #F1F5F9;
 }
 
-/* Table Styling */
+/* Tables */
 .sa-table-wrapper {
   width: 100%;
   overflow-x: auto;

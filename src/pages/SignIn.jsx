@@ -42,28 +42,61 @@ export default function SignIn() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div>
-        <h2 className='font-black text-2xl'>SmartAcademic</h2>
-        {error && <p>{error}</p>}
-        
-        <form onSubmit={handleSignIn} className="space-y-4">
-          <div>
-            <label className="block mb-1">Username</label>
-            <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} required 
-              className="w-full px-4 py-2.5" />
+    <div className="auth-page min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden font-sans">
+      
+      {/* Background Animated Glowing Blobs */}
+      <div className="blob-1"></div>
+      <div className="blob-2"></div>
+
+      {/* Glassmorphism Sign In Card */}
+      <main className="glass-card">
+        <h1>SmartAcademic</h1>
+
+        {/* Error Notification Alert */}
+        {error && (
+          <div className="mb-4 p-3 rounded-2xl bg-red-500/10 border border-red-400/30 text-red-600 text-xs font-bold text-center">
+            {error}
           </div>
-          <div>
-            <label className="block mb-1">Password</label>
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required 
-              className="w-full" />
+        )}
+
+        <form onSubmit={handleSignIn}>
+          <div className="input-group">
+            <label htmlFor="username">Username</label>
+            <input 
+              type="text" 
+              id="username" 
+              placeholder="Enter your username (eg. Mary)"
+              value={username} 
+              onChange={(e) => setUsername(e.target.value)} 
+              required 
+            />
           </div>
-          <button type="submit" className="w-full">
+
+          <div className="input-group">
+            <label htmlFor="password">Password</label>
+            <input 
+              type="password" 
+              id="password" 
+              placeholder=""
+              value={password} 
+              onChange={(e) => setPassword(e.target.value)} 
+              required 
+            />
+          </div>
+
+          <button type="submit" className="sa-btn-login mt-2">
             Sign In
           </button>
-          <p>Dont have account? <Link to="/signup">Register</Link> </p>
+
+          <p className="mt-6 text-xs text-slate-600 font-semibold">
+            Don't have an account?{' '}
+            <Link to="/signup" className="text-sky-600 hover:underline font-bold">
+              Register
+            </Link>
+          </p>
         </form>
-      </div>
+      </main>
+
     </div>
   );
 }
