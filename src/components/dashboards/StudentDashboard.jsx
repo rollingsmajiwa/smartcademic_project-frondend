@@ -284,13 +284,13 @@ export default function StudentDashboard() {
                     onClick={() => navigate('/dashboard/student/assignments')} 
                     className="px-4 py-2 rounded-xl text-xs font-semibold shadow-sm flex items-center gap-2 border"
                   >
-                    <Send size={14} /> Submit Pending Task
+                    Submit Pending Task
                   </button>
                   <button 
                     onClick={() => navigate('/dashboard/student/materials')} 
                     className="px-4 py-2 rounded-xl text-xs font-semibold border flex items-center gap-2"
                   >
-                    <Download size={14} /> Download Revision Materials
+                     Download Revision Materials
                   </button>
                 </div>
               </div>
@@ -304,7 +304,7 @@ export default function StudentDashboard() {
                 <div className="p-5 rounded-2xl shadow-sm border">
                   <span className="text-xs font-semibold uppercase">Task Completion</span>
                   <h3 className="text-3xl font-bold mt-2">{completedTasks} / {totalTasks}</h3>
-                  <span className="text-xs font-medium mt-1 block">{handInRate}% hand-in rate</span>
+                  <span className="text-xs font-medium mt-1 block">{handInRate}% done</span>
                 </div>
                 <div className="p-5 rounded-2xl shadow-sm border">
                   <span className="text-xs font-semibold uppercase">Urgent Action Items</span>

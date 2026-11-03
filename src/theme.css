@@ -1,0 +1,157 @@
+:root {
+  /* Brand Colors */
+  --sa-green-light: #E8F5E9;   /* Soft background highlight & banners */
+  --sa-green-soft: #C8E6C9;    /* Gentle green borders */
+  --sa-green-dark: #2E7D32;    /* Deep green for headers & text */
+  
+  --sa-blue: #38BDF8;          /* Light blue primary action buttons */
+  --sa-blue-hover: #0284C7;    /* Primary button hover state */
+  
+  --sa-bg: #F8FAFC;            /* Clean canvas background */
+  --sa-surface: #FFFFFF;       /* Pure white card container background */
+  --sa-text: #1E293B;          /* Dark body text */
+  --sa-muted: #64748B;         /* Secondary label text */
+  --sa-border: #E2E8F0;        /* General border color */
+
+  /* Radii & Shadows */
+  --sa-radius-lg: 1rem;
+  --sa-radius-xl: 1.5rem;
+  --sa-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04);
+  --sa-shadow-hover: 0 12px 28px -4px rgba(0, 0, 0, 0.08);
+}
+
+/* Base Body Styles */
+body {
+  background-color: var(--sa-bg);
+  color: var(--sa-text);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* Layout Containers */
+.sa-container {
+  padding: 2rem;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.sa-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.sa-flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Cards & Banners */
+.sa-card {
+  background-color: var(--sa-surface);
+  border: 1px solid var(--sa-green-soft);
+  border-radius: var(--sa-radius-xl);
+  padding: 1.75rem;
+  box-shadow: var(--sa-shadow);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.sa-card:hover {
+  box-shadow: var(--sa-shadow-hover);
+}
+
+.sa-banner {
+  background-color: var(--sa-green-light);
+  border: 1px solid var(--sa-green-soft);
+  border-radius: var(--sa-radius-xl);
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.sa-card-title {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--sa-muted);
+  margin: 0 0 0.5rem 0;
+}
+
+.sa-card-value {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: var(--sa-text);
+  margin: 0;
+}
+
+/* Light Blue & Secondary Buttons */
+.sa-btn-primary {
+  background-color: var(--sa-blue);
+  color: #FFFFFF;
+  padding: 0.65rem 1.25rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: var(--sa-radius-lg);
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.sa-btn-primary:hover {
+  background-color: var(--sa-blue-hover);
+}
+
+.sa-btn-secondary {
+  background-color: var(--sa-surface);
+  color: var(--sa-text);
+  border: 1px solid var(--sa-border);
+  padding: 0.65rem 1.25rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: var(--sa-radius-lg);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.sa-btn-secondary:hover {
+  background-color: #F1F5F9;
+}
+
+/* Table Styling */
+.sa-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--sa-green-soft);
+  border-radius: var(--sa-radius-lg);
+  background-color: var(--sa-surface);
+}
+
+.sa-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.75rem;
+}
+
+.sa-table thead th {
+  background-color: var(--sa-green-light);
+  color: var(--sa-green-dark);
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 1rem;
+  border-bottom: 1px solid var(--sa-green-soft);
+}
+
+.sa-table tbody td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--sa-border);
+}
+
+.sa-table tbody tr:hover {
+  background-color: rgba(232, 245, 233, 0.3);
+}

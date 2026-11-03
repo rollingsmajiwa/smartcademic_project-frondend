@@ -37,7 +37,7 @@ export default function Sidebar({ userRole, baseRole, activeTab, setActiveTab, o
       { id: 'home', label: 'Home', icon: Home },
       { id: 'overview', label: 'Student Overview', icon: BookOpen },
       { id: 'materials', label: 'Revision Materials', icon: BookOpenCheck }, // Maps to materials
-      { id: 'assignments', label: 'Assignments Hub', icon: FileText },       // Maps to assignments
+      { id: 'assignments', label: 'My Assignments', icon: FileText },       // Maps to assignments
       { id: 'exams', label: 'Exams Portal', icon: GraduationCap },           // Maps to exams
       { id: 'results', label: 'My Submissions & Grades', icon: CheckCircle2 }, // Maps to my-assignment-submissions
     ],
@@ -93,7 +93,7 @@ export default function Sidebar({ userRole, baseRole, activeTab, setActiveTab, o
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition ${
                 isActive 
                   ? ' text-white shadow' 
-                  : 'text-blue-700'
+                  : 'text-black'
               }`}
             >
               <Icon size={16} />
@@ -113,7 +113,7 @@ export default function Sidebar({ userRole, baseRole, activeTab, setActiveTab, o
               <button 
                 onClick={() => navigate('/dashboard/admin')}
                 className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition ${
-                  userRole === 'admin' ? 'bg-blue-600 text-white shadow-sm' : 'text-blue-700 hover:bg-blue-100'
+                  userRole === 'admin' ? 'bg-black text-white shadow-sm' : 'text-black'
                 }`}
               >
                 Back to Admin
