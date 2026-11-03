@@ -161,243 +161,282 @@ export default function AdminDashboard() {
     });
   };
 
-  return (
-    <div className="flex-1 p-8 overflow-y-auto min-h-screen bg-white">
-      {/* Overview Tab */}
-      {activeTab === 'overview' && (
-        <div className="space-y-8 max-w-5xl mx-auto">
-          <h2 className="text-xl font-bold">Admin Central Overview</h2>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="p-5 rounded-2xl border">
-              <p className="text-[10px] font-bold uppercase text-gray-500">Teachers</p>
-              <p className="text-xl font-extrabold mt-1">{teachers.length}</p>
-            </div>
-            <div className="p-5 rounded-2xl border">
-              <p className="text-[10px] font-bold uppercase text-gray-500">Students</p>
-              <p className="text-xl font-extrabold mt-1">{students.length}</p>
-            </div>
-            <div className="p-5 rounded-2xl border">
-              <p className="text-[10px] font-bold uppercase text-gray-500">Classrooms</p>
-              <p className="text-xl font-extrabold mt-1">{classrooms.length}</p>
-            </div>
-            <div className="p-5 rounded-2xl border">
-              <p className="text-[10px] font-bold uppercase text-gray-500">Weekly Attendance Logs</p>
-              <p className="text-xl font-extrabold mt-1">{filterWeeklyLogs(attendanceLogs).length}</p>
-            </div>
+ return (
+  <div className="w-full min-h-screen p-6 lg:p-8 space-y-6 font-sans">
+    
+    {/* OVERVIEW TAB */}
+    {activeTab === 'overview' && (
+      <div className="space-y-6 w-full">
+        {/* Banner Header */}
+        <div className="sa-banner sa-flex-between">
+          <div>
+            <span 
+              className="text-[10px] uppercase font-extrabold px-3 py-1 rounded-lg border tracking-wider"
+              style={{ backgroundColor: 'var(--sa-surface)', borderColor: 'var(--sa-green-soft)', color: 'var(--sa-green-dark)' }}
+            >
+              System Administrator Portal
+            </span>
+            <h1 className="text-2xl font-extrabold mt-2 text-slate-800">Admin Central Overview</h1>
+            <p className="text-xs mt-1" style={{ color: 'var(--sa-muted)' }}>
+              Manage system users, classrooms, and monitor real-time weekly teacher attendance.
+            </p>
           </div>
         </div>
-      )}
-
-      {/* Teachers CRUD Management Tab */}
-      {activeTab === 'teachers' && (
-        <div className="max-w-5xl mx-auto space-y-6">
-          <div className="flex justify-between items-center">
-            <h2 className="text-lg font-bold">Manage Teachers</h2>
-            <button
-              onClick={() => openCreateModal('teacher')}
-              className="px-4 py-2 text-xs font-semibold rounded-xl border text-black"
-            >
-              Add New Teacher
-            </button>
+        
+        {/* Stat Cards Grid */}
+        <div className="sa-grid">
+          <div className="sa-card">
+            <p className="sa-card-title">Teachers</p>
+            <p className="sa-card-value">{teachers.length}</p>
           </div>
+          <div className="sa-card">
+            <p className="sa-card-title">Students</p>
+            <p className="sa-card-value">{students.length}</p>
+          </div>
+          <div className="sa-card">
+            <p className="sa-card-title">Classrooms</p>
+            <p className="sa-card-value">{classrooms.length}</p>
+          </div>
+          <div className="sa-card">
+            <p className="sa-card-title">Weekly Attendance Logs</p>
+            <p className="sa-card-value" style={{ color: 'var(--sa-green-dark)' }}>
+              {filterWeeklyLogs(attendanceLogs).length}
+            </p>
+          </div>
+        </div>
+      </div>
+    )}
 
-          <div className="border rounded-2xl overflow-hidden">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-gray-50 border-b">
-                <tr>
-                  <th className="p-3 font-bold">TSC Number</th>
-                  <th className="p-3 font-bold">Name</th>
-                  <th className="p-3 font-bold text-right">Actions</th>
+    {/* TEACHERS CRUD MANAGEMENT TAB */}
+    {activeTab === 'teachers' && (
+      <div className="w-full space-y-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-lg font-extrabold text-slate-800">Manage Teachers</h2>
+          <button
+            onClick={() => openCreateModal('teacher')}
+            className="sa-btn-primary"
+          >
+             Add New Teacher
+          </button>
+        </div>
+
+        <div className="sa-table-wrapper">
+          <table className="sa-table">
+            <thead>
+              <tr>
+                <th className="p-4">TSC Number</th>
+                <th className="p-4">Name</th>
+                <th className="p-4">Email / Username</th>
+                <th className="p-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {teachers.map((t) => (
+                <tr key={t.id} className="hover:bg-slate-50 transition-colors">
+                  <td className="p-4 font-mono font-bold text-slate-800">{t.tsc_number || t.id}</td>
+                  <td className="p-4 font-bold text-slate-900">{t.name || `${t.first_name || ''} ${t.last_name || ''}`}</td>
+                  <td className="p-4" style={{ color: 'var(--sa-muted)' }}>{t.email || t.username}</td>
+                  <td className="p-4 text-right space-x-2">
+                    <button
+                      onClick={() => openEditModal(t, 'teacher')}
+                      className="sa-btn-secondary py-1 px-3 text-[11px]"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeleteUser(t.id, 'teacher')}
+                      className="py-1 px-3 text-[11px] font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg border border-red-200 transition-colors"
+                    >
+                      Delete
+                    </button>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {teachers.map((t) => (
-                  <tr key={t.id} className="border-b">
-                    <td className="p-3 font-mono">{t.tsc_number || t.id}</td>
-                    <td className="p-3 font-bold">{t.name || `${t.first_name || ''} ${t.last_name || ''}`}</td>
-                    <td className="p-3">{t.email || t.username}</td>
-                    <td className="p-3 text-right space-x-2">
-                      <button
-                        onClick={() => openEditModal(t, 'teacher')}
-                        className="px-3 py-1 text-[10px] rounded border font-semibold hover:bg-gray-50"
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    )}
+
+    {/* STUDENTS CRUD MANAGEMENT TAB */}
+    {activeTab === 'students' && (
+      <div className="w-full space-y-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-lg font-extrabold text-slate-800">Manage Students</h2>
+          <button
+            onClick={() => openCreateModal('student')}
+            className="sa-btn-primary"
+          >
+            Add New Student
+          </button>
+        </div>
+
+        <div className="sa-table-wrapper">
+          <table className="sa-table">
+            <thead>
+              <tr>
+                <th className="p-4">Student ID</th>
+                <th className="p-4">Name</th>
+                <th className="p-4">Email / Username</th>
+                <th className="p-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {students.map((s) => (
+                <tr key={s.id} className="hover:bg-slate-50 transition-colors">
+                  <td className="p-4 font-mono font-bold text-slate-800">{s.student_id_number || s.id}</td>
+                  <td className="p-4 font-bold text-slate-900">{s.name || `${s.first_name || ''} ${s.last_name || ''}`}</td>
+                  <td className="p-4" style={{ color: 'var(--sa-muted)' }}>{s.email || s.username}</td>
+                  <td className="p-4 text-right space-x-2">
+                    <button
+                      onClick={() => openEditModal(s, 'student')}
+                      className="sa-btn-secondary py-1 px-3 text-[11px]"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeleteUser(s.id, 'student')}
+                      className="py-1 px-3 text-[11px] font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg border border-red-200 transition-colors"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    )}
+
+    {/* WEEKLY TEACHER GEOFENCE ATTENDANCE LOGS (MONDAY - FRIDAY) */}
+    {activeTab === 'attendance' && (
+      <div className="w-full space-y-6">
+        <h2 className="text-lg font-extrabold text-slate-800">Weekly Teacher Attendance Logs (Mon - Fri)</h2>
+        <div className="sa-table-wrapper">
+          <table className="sa-table">
+            <thead>
+              <tr>
+                <th className="p-4">Teacher ID</th>
+                <th className="p-4">Status</th>
+                <th className="p-4">Day of Week</th>
+                <th className="p-4">Exact Time</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {filterWeeklyLogs(attendanceLogs).map((att, idx) => {
+                const dateObj = att.timestamp ? new Date(att.timestamp) : new Date();
+                return (
+                  <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                    <td className="p-4 font-mono font-bold text-slate-800">{att.tsc_number || att.teacher}</td>
+                    <td className="p-4">
+                      <span 
+                        className="px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider border"
+                        style={{ backgroundColor: 'var(--sa-green-light)', borderColor: 'var(--sa-green-soft)', color: 'var(--sa-green-dark)' }}
                       >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDeleteUser(t.id, 'teacher')}
-                        className="px-3 py-1 text-[10px] rounded border font-semibold"
-                      >
-                        Delete
-                      </button>
+                        Clocked In {att.direction}
+                      </span>
+                    </td>
+                    <td className="p-4 font-bold text-slate-700">
+                      {dateObj.toLocaleDateString('en-US', { weekday: 'long' })}
+                    </td>
+                    <td className="p-4 font-mono text-slate-500">
+                      {dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} ({dateObj.toLocaleDateString()})
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
-      )}
+      </div>
+    )}
 
-      {/* Students CRUD Management Tab */}
-      {activeTab === 'students' && (
-        <div className="max-w-5xl mx-auto space-y-6">
-          <div className="flex justify-between items-center">
-            <h2 className="text-lg font-bold">Manage Students</h2>
-            <button
-              onClick={() => openCreateModal('student')}
-              className="px-4 py-2 text-xs font-semibold rounded-xl border text-black"
-            >
-                Add New Student
-            </button>
-          </div>
-
-          <div className="border rounded-2xl overflow-hidden">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-gray-50 border-b">
-                <tr>
-                  <th className="p-3 font-bold">Student ID</th>
-                  <th className="p-3 font-bold">Name</th>
-                  <th className="p-3 font-bold text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {students.map((s) => (
-                  <tr key={s.id} className="border-b">
-                    <td className="p-3 font-mono">{s.student_id_number || s.id}</td>
-                    <td className="p-3 font-bold">{s.name || `${s.first_name || ''} ${s.last_name || ''}`}</td>
-                    <td className="p-3">{s.email || s.username}</td>
-                    <td className="p-3 text-right space-x-2">
-                      <button
-                        onClick={() => openEditModal(s, 'student')}
-                        className="px-3 py-1 text-[10px] rounded border font-semibold hover:bg-gray-50"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDeleteUser(s.id, 'student')}
-                        className="px-3 py-1 text-[10px] rounded border font-semibold"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* Weekly Teacher Geofence Attendance Logs (Monday - Friday) */}
-      {activeTab === 'attendance' && (
-        <div className="max-w-5xl mx-auto space-y-6">
-          <h2 className="text-lg font-bold">Weekly Teacher Attendance Logs (Mon - Fri)</h2>
-          <div className="border rounded-2xl overflow-hidden">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-gray-50 border-b">
-                <tr>
-                  <th className="p-3 font-bold">Teacher ID</th>
-                  <th className="p-3 font-bold">Status</th>
-                  <th className="p-3 font-bold">Day of Week</th>
-                  <th className="p-3 font-bold">Exact Time</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filterWeeklyLogs(attendanceLogs).map((att, idx) => {
-                  const dateObj = att.timestamp ? new Date(att.timestamp) : new Date();
-                  return (
-                    <tr key={idx} className="border-b">
-                      <td className="p-3 font-mono font-bold">{att.tsc_number || att.teacher}</td>
-                      <td className="p-3">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${att.direction === 'in' ? 'bg-white text-black' : 'bg-white text-black'}`}>
-                          Clocked In {att.direction}
-                        </span>
-                      </td>
-                      <td className="p-3 font-semibold">
-                        {dateObj.toLocaleDateString('en-US', { weekday: 'long' })}
-                      </td>
-                      <td className="p-3 font-mono opacity-80">
-                        {dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} ({dateObj.toLocaleDateString()})
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* Shared Create/Edit Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex justify-center items-center p-4 z-50">
-          <div className="bg-white p-6 rounded-2xl border max-w-md w-full space-y-4 shadow-xl">
-            <h3 className="font-bold text-md">
-              {modalMode === 'create' ? `Add New ${userRoleType}` : `Edit ${userRoleType}`}
-            </h3>
-            <form onSubmit={handleSaveUser} className="space-y-3 text-xs">
+    {/* SHARED CREATE/EDIT MODAL */}
+    {showModal && (
+      <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex justify-center items-center p-4 z-50">
+        <div className="sa-card max-w-md w-full space-y-4 shadow-xl border border-slate-200">
+          <h3 className="font-extrabold text-base text-slate-800">
+            {modalMode === 'create' ? `Add New ${userRoleType}` : `Edit ${userRoleType}`}
+          </h3>
+          <form onSubmit={handleSaveUser} className="space-y-3 text-xs">
+            <div>
+              <label className="block font-bold mb-1 text-slate-700">Username</label>
               <input
                 type="text"
                 placeholder="Username"
                 value={formData.username}
                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                className="w-full p-2.5 rounded-xl border"
+                className="w-full p-3 rounded-xl border border-slate-200 focus:outline-none focus:border-sky-400"
                 required
               />
+            </div>
+            <div>
+              <label className="block font-bold mb-1 text-slate-700">Email Address</label>
               <input
                 type="email"
                 placeholder="Email Address"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full p-2.5 rounded-xl border"
+                className="w-full p-3 rounded-xl border border-slate-200 focus:outline-none focus:border-sky-400"
               />
-              {modalMode === 'create' && (
+            </div>
+            {modalMode === 'create' && (
+              <div>
+                <label className="block font-bold mb-1 text-slate-700">Password</label>
                 <input
                   type="password"
                   placeholder="Password"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full p-2.5 rounded-xl border"
+                  className="w-full p-3 rounded-xl border border-slate-200 focus:outline-none focus:border-sky-400"
                   required
                 />
-              )}
-              {userRoleType === 'teacher' ? (
+              </div>
+            )}
+            {userRoleType === 'teacher' ? (
+              <div>
+                <label className="block font-bold mb-1 text-slate-700">TSC Number</label>
                 <input
                   type="text"
                   placeholder="TSC Number"
                   value={formData.tsc_number}
                   onChange={(e) => setFormData({ ...formData, tsc_number: e.target.value })}
-                  className="w-full p-2.5 rounded-xl border"
+                  className="w-full p-3 rounded-xl border border-slate-200 focus:outline-none focus:border-sky-400 font-mono"
                 />
-              ) : (
+              </div>
+            ) : (
+              <div>
+                <label className="block font-bold mb-1 text-slate-700">Student ID Number</label>
                 <input
                   type="text"
                   placeholder="Student ID Number"
                   value={formData.student_id_number}
                   onChange={(e) => setFormData({ ...formData, student_id_number: e.target.value })}
-                  className="w-full p-2.5 rounded-xl border"
+                  className="w-full p-3 rounded-xl border border-slate-200 focus:outline-none focus:border-sky-400 font-mono"
                 />
-              )}
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="px-4 py-2 border rounded-xl"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 text-black font-semibold rounded-xl"
-                >
-                  Save
-                </button>
               </div>
-            </form>
-          </div>
+            )}
+            <div className="flex justify-end gap-3 pt-3">
+              <button
+                type="button"
+                onClick={() => setShowModal(false)}
+                className="sa-btn-secondary py-2 px-4"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="sa-btn-primary py-2 px-5"
+              >
+                Save
+              </button>
+            </div>
+          </form>
         </div>
-      )}
-    </div>
-  );
+      </div>
+    )}
+
+  </div>
+);
 }

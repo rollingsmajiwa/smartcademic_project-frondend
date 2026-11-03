@@ -249,340 +249,380 @@ export default function StudentDashboard() {
   const handInRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto p-4">
-      {loading && (
-        <div className="flex flex-col justify-center items-center h-64 gap-3">
-          <Loader2 className="w-8 h-8 animate-spin" />
-          <span className="font-medium text-sm">Loading portal records...</span>
-        </div>
-      )}
+  <div className="space-y-6 max-w-7xl mx-auto p-4 font-sans">
+    {/* LOADING STATE */}
+    {loading && (
+      <div className="flex flex-col justify-center items-center h-64 gap-3 sa-card my-8">
+        <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'var(--sa-green-dark)' }} />
+        <span className="font-semibold text-sm text-slate-700">Loading portal records...</span>
+      </div>
+    )}
 
-      {error && (
-        <div className="flex items-center gap-3 p-4 border rounded-xl">
-          <AlertCircle size={20} />
-          <span>{error}</span>
-        </div>
-      )}
+    {/* ERROR STATE */}
+    {error && (
+      <div className="flex items-center gap-3 p-4 border rounded-2xl bg-red-50 text-red-700 border-red-200 text-xs font-semibold">
+        <AlertCircle size={20} />
+        <span>{error}</span>
+      </div>
+    )}
 
-      {!loading && !error && (
-        <>
-          {/* OVERVIEW TAB */}
-          {(activeTab === 'overview' || activeTab === 'home') && overview && (
-            <div className="space-y-6">
-              <div className="rounded-2xl p-6 shadow-sm border flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                  <span className="text-xs px-3 py-1 rounded-full font-semibold border">
-                    {overview.term_info || 'Term 1, 2026 • Current Week'}
-                  </span>
-                  <h1 className="text-2xl font-bold mt-2">Hello, {overview.student_name || 'Student'}!</h1>
-                  <p className="text-sm mt-1 max-w-xl">
-                    {overview.status_message || 'Your profile is updated live from your academic records.'}
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <button 
-                    onClick={() => navigate('/dashboard/student/assignments')} 
-                    className="px-4 py-2 rounded-xl text-xs font-semibold shadow-sm flex items-center gap-2 border"
-                  >
-                    Submit Pending Task
-                  </button>
-                  <button 
-                    onClick={() => navigate('/dashboard/student/materials')} 
-                    className="px-4 py-2 rounded-xl text-xs font-semibold border flex items-center gap-2"
-                  >
-                     Download Revision Materials
-                  </button>
-                </div>
+    {!loading && !error && (
+      <>
+        {/* OVERVIEW TAB */}
+        {(activeTab === 'overview' || activeTab === 'home') && overview && (
+          <div className="space-y-6">
+            {/* Banner Header */}
+            <div className="sa-banner sa-flex-between flex-col md:flex-row gap-4">
+              <div>
+                <span 
+                  className="text-[10px] uppercase font-extrabold px-3 py-1 rounded-lg border tracking-wider"
+                  style={{ backgroundColor: 'var(--sa-surface)', borderColor: 'var(--sa-green-soft)', color: 'var(--sa-green-dark)' }}
+                >
+                  {overview.term_info || 'Term 1, 2026 • Current Week'}
+                </span>
+                <h1 className="text-2xl font-extrabold mt-3 text-slate-800">
+                  Hello, {overview.student_name || 'Student'}!
+                </h1>
+                <p className="text-xs mt-1 max-w-xl" style={{ color: 'var(--sa-muted)' }}>
+                  {overview.status_message || 'Your profile is updated live from your academic records.'}
+                </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div className="p-5 rounded-2xl shadow-sm border">
-                  <span className="text-xs font-semibold uppercase">Overall Mean Grade</span>
-                  <h3 className="text-3xl font-bold mt-2">{overview.mean_grade || 'Active'}</h3>
-                  <span className="text-xs font-medium mt-1 block">{overview.grade_description || 'Calculated from submissions'}</span>
-                </div>
-                <div className="p-5 rounded-2xl shadow-sm border">
-                  <span className="text-xs font-semibold uppercase">Task Completion</span>
-                  <h3 className="text-3xl font-bold mt-2">{completedTasks} / {totalTasks}</h3>
-                  <span className="text-xs font-medium mt-1 block">{handInRate}% done</span>
-                </div>
-                <div className="p-5 rounded-2xl shadow-sm border">
-                  <span className="text-xs font-semibold uppercase">Urgent Action Items</span>
-                  <h3 className="text-3xl font-bold mt-2">{overview.urgent_deadlines ?? 0} Deadlines</h3>
-                  <span className="text-xs font-medium mt-1 block">{overview.urgent_notes || '0 pending deadlines due soon'}</span>
-                </div>
+              <div className="flex flex-wrap gap-3">
+                <button 
+                  onClick={() => navigate('/dashboard/student/assignments')} 
+                  className="sa-btn-primary"
+                >
+                  Submit Pending Task
+                </button>
+                <button 
+                  onClick={() => navigate('/dashboard/student/materials')} 
+                  className="sa-btn-secondary"
+                >
+                  Download Revision Materials
+                </button>
               </div>
             </div>
-          )}
 
-          {/* REVISION MATERIALS TAB */}
-          {activeTab === 'materials' && (
-            <div className="space-y-4">
-              <h2 className="text-xl font-bold">Revision Materials</h2>
-              {materials.length === 0 ? (
-                <p className="text-sm py-12 text-center rounded-2xl border">
-                  No revision materials available at this time.
+            {/* Overview Stat Cards Grid */}
+            <div className="sa-grid">
+              <div className="sa-card">
+                <p className="sa-card-title">Overall Mean Grade</p>
+                <p className="sa-card-value" style={{ color: 'var(--sa-green-dark)' }}>
+                  {overview.mean_grade || 'Active'}
                 </p>
-              ) : (
-                <div className="rounded-2xl border divide-y shadow-sm">
-                  {materials.map((mat) => {
-                    const fileUrl = getFullUrl(mat.file_url || mat.file);
-                    return (
-                      <div key={mat.id} className="p-4 flex items-center justify-between">
-                        <div>
-                          <h4 className="font-bold text-sm">{mat.title}</h4>
-                          <p className="text-xs mt-0.5">
-                            Course/Subject: {mat.course_name || mat.subject || 'General'} | Uploaded: {mat.created_at || mat.uploaded_at || 'Recently'}
-                          </p>
-                          {mat.description && <p className="text-xs mt-1">{mat.description}</p>}
-                        </div>
-                        {fileUrl && (
-                          <a 
-                            href={fileUrl} 
-                            target="_blank" 
-                            rel="noopener noreferrer" 
-                            className="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition border"
-                          >
-                            <Download size={14} /> Download Notes
-                          </a>
+                <span className="text-[11px] font-medium mt-2 block" style={{ color: 'var(--sa-muted)' }}>
+                  {overview.grade_description || 'Calculated from submissions'}
+                </span>
+              </div>
+
+              <div className="sa-card">
+                <p className="sa-card-title">Task Completion</p>
+                <p className="sa-card-value">
+                  {completedTasks} / {totalTasks}
+                </p>
+                <span className="text-[11px] font-medium mt-2 block" style={{ color: 'var(--sa-muted)' }}>
+                  {handInRate}% done
+                </span>
+              </div>
+
+              <div className="sa-card">
+                <p className="sa-card-title">Urgent Action Items</p>
+                <p className="sa-card-value text-amber-600">
+                  {overview.urgent_deadlines ?? 0} Deadlines
+                </p>
+                <span className="text-[11px] font-medium mt-2 block" style={{ color: 'var(--sa-muted)' }}>
+                  {overview.urgent_notes || '0 pending deadlines due soon'}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* REVISION MATERIALS TAB */}
+        {activeTab === 'materials' && (
+          <div className="space-y-4">
+            <h2 className="text-lg font-extrabold text-slate-800">Revision Materials</h2>
+            {materials.length === 0 ? (
+              <p className="text-xs py-12 text-center sa-card" style={{ color: 'var(--sa-muted)' }}>
+                No revision materials available at this time.
+              </p>
+            ) : (
+              <div className="sa-card p-0 overflow-hidden divide-y divide-slate-100">
+                {materials.map((mat) => {
+                  const fileUrl = getFullUrl(mat.file_url || mat.file);
+                  return (
+                    <div key={mat.id} className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                      <div>
+                        <h4 className="font-bold text-xs text-slate-800">{mat.title}</h4>
+                        <p className="text-[11px] mt-0.5" style={{ color: 'var(--sa-muted)' }}>
+                          Course/Subject: {mat.course_name || mat.subject || 'General'} | Uploaded: {mat.created_at || mat.uploaded_at || 'Recently'}
+                        </p>
+                        {mat.description && (
+                          <p className="text-[11px] mt-1 text-slate-600">{mat.description}</p>
                         )}
                       </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ASSIGNMENTS TAB */}
-          {activeTab === 'assignments' && (
-            <div className="space-y-4">
-              <h2 className="text-xl font-bold">Assignments</h2>
-              {assignments.length === 0 ? (
-                <p className="text-sm py-12 text-center rounded-2xl border">
-                  No assignments posted yet.
-                </p>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {assignments.map((asg) => {
-                    const fileUrl = getFullUrl(asg.file);
-                    return (
-                      <div key={asg.id} className="p-5 rounded-2xl shadow-sm flex flex-col justify-between border space-y-3">
-                        <div>
-                          <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded border">
-                            Due: {asg.due_date || asg.deadline}
-                          </span>
-                          <h3 className="font-bold mt-2 text-base">{asg.title}</h3>
-                          <p className="text-xs mt-1">{asg.description}</p>
-                        </div>
-
-                        {fileUrl && (
-                          <div>
-                            <button 
-                              type="button" 
-                              onClick={() => window.open(fileUrl, '_blank')} 
-                              className="text-xs flex items-center gap-1 font-semibold underline"
-                            >
-                              <Download size={14} /> View Posted Assignment PDF
-                            </button>
-                          </div>
-                        )}
-
-                        <div className="pt-3 border-t">
-                          {submittedIds.includes(asg.id) ? (
-                            <div className="text-xs font-semibold flex items-center gap-1">
-                              <CheckCircle2 size={14} /> Submitted Successfully
-                            </div>
-                          ) : submittingId === asg.id ? (
-                            <div className="space-y-2">
-                              <textarea 
-                                rows="3" 
-                                placeholder="Enter notes or answers..." 
-                                value={submissionContent} 
-                                onChange={(e) => setSubmissionContent(e.target.value)} 
-                                className="w-full p-2.5 text-xs rounded-xl border focus:outline-none" 
-                              />
-                              <input 
-                                type="file" 
-                                accept=".pdf" 
-                                onChange={(e) => setSelectedFile(e.target.files[0])} 
-                                className="w-full text-xs file:mr-4 file:py-1.5 file:px-3 file:rounded-xl file:border-0" 
-                              />
-                              <div className="flex gap-2 pt-1">
-                                <button 
-                                  onClick={() => handleAssignmentSubmit(asg.id)} 
-                                  className="px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm border"
-                                >
-                                  Confirm & Submit
-                                </button>
-                                <button 
-                                  onClick={() => setSubmittingId(null)} 
-                                  className="px-3 py-1.5 rounded-lg text-xs font-semibold border"
-                                >
-                                  Cancel
-                                </button>
-                              </div>
-                            </div>
-                          ) : (
-                            <button 
-                              onClick={() => setSubmittingId(asg.id)} 
-                              className="px-3 py-1.5 rounded-lg text-xs font-semibold border shadow-sm"
-                            >
-                              Submit Assignment
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* EXAMS PORTAL TAB */}
-          {activeTab === 'exams' && (
-            <div className="space-y-4">
-              <h2 className="text-xl font-bold">Exams Portal</h2>
-              {exams.length === 0 ? (
-                <p className="text-sm py-12 text-center rounded-2xl border">
-                  No upcoming exams scheduled.
-                </p>
-              ) : activeExam ? (
-                <div className="p-6 rounded-2xl border shadow-sm space-y-6">
-                  <div className="flex justify-between items-center border-b pb-4">
-                    <div>
-                      <h3 className="text-lg font-bold">{activeExam.title}</h3>
-                      <p className="text-xs mt-1">Instructions: {activeExam.description}</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <ExamTimer 
-                        durationMins={activeExam.duration_mins} 
-                        onTimeUp={() => {
-                          alert("Time is up! Your exam is auto-submitting now.");
-                          handleExamSubmit(activeExam.id);
-                        }} 
-                      />
-                      <button 
-                        onClick={() => setActiveExam(null)} 
-                        className="text-xs px-3 py-1.5 rounded-lg font-semibold border"
-                      >
-                        Exit Exam
-                      </button>
-                    </div>
-                  </div>
-
-                  {activeExam.file && (
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <h4 className="font-semibold text-xs uppercase">Exam Question Paper</h4>
+                      {fileUrl && (
                         <a 
-                          href={getFullUrl(activeExam.file)} 
+                          href={fileUrl} 
                           target="_blank" 
                           rel="noopener noreferrer" 
-                          className="text-xs font-semibold underline flex items-center gap-1"
+                          className="sa-btn-secondary text-xs flex items-center gap-1.5 py-1.5 px-3"
                         >
-                          <Download size={14} /> Open PDF in New Tab
+                          <Download size={14} /> Download Notes
                         </a>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ASSIGNMENTS TAB */}
+        {activeTab === 'assignments' && (
+          <div className="space-y-4">
+            <h2 className="text-lg font-extrabold text-slate-800">Assignments</h2>
+            {assignments.length === 0 ? (
+              <p className="text-xs py-12 text-center sa-card" style={{ color: 'var(--sa-muted)' }}>
+                No assignments posted yet.
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {assignments.map((asg) => {
+                  const fileUrl = getFullUrl(asg.file);
+                  return (
+                    <div key={asg.id} className="sa-card flex flex-col justify-between space-y-4">
+                      <div>
+                        <span 
+                          className="text-[10px] uppercase font-extrabold tracking-wider px-2.5 py-1 rounded-lg border"
+                          style={{ backgroundColor: 'var(--sa-green-light)', borderColor: 'var(--sa-green-soft)', color: 'var(--sa-green-dark)' }}
+                        >
+                          Due: {asg.due_date || asg.deadline}
+                        </span>
+                        <h3 className="font-bold mt-3 text-sm text-slate-800">{asg.title}</h3>
+                        <p className="text-xs mt-1 text-slate-600">{asg.description}</p>
                       </div>
-                      <PdfCanvasViewer fileUrl={getFullUrl(activeExam.file)} />
-                    </div>
-                  )}
 
-                  <div className="pt-4 border-t space-y-4">
-                    <div>
-                      <label className="block text-xs font-bold mb-1">Option A: Type Your Answers Here</label>
-                      <textarea 
-                        rows="6" 
-                        placeholder="Type your exam responses here..." 
-                        value={examTextAnswer} 
-                        onChange={(e) => setExamTextAnswer(e.target.value)} 
-                        className="w-full p-3 text-xs rounded-xl border focus:outline-none" 
-                      />
-                    </div>
+                      {fileUrl && (
+                        <div>
+                          <button 
+                            type="button" 
+                            onClick={() => window.open(fileUrl, '_blank')} 
+                            className="text-xs flex items-center gap-1.5 font-bold text-sky-600 hover:underline"
+                          >
+                            <Download size={14} /> View Posted Assignment PDF
+                          </button>
+                        </div>
+                      )}
 
-                    <div>
-                      <label className="block text-xs font-bold mb-1">Option B: Upload Answer Sheet (PDF)</label>
-                      <input 
-                        type="file" 
-                        accept=".pdf" 
-                        onChange={(e) => setExamAnswerFile(e.target.files[0])} 
-                        className="w-full text-xs file:mr-4 file:py-1.5 file:px-3 file:rounded-xl file:border-0" 
-                      />
+                      <div className="pt-3 border-t border-slate-100">
+                        {submittedIds.includes(asg.id) ? (
+                          <div className="text-xs font-bold text-emerald-700 flex items-center gap-1.5 p-2 rounded-xl bg-emerald-50 border border-emerald-100">
+                            <CheckCircle2 size={16} /> Submitted Successfully
+                          </div>
+                        ) : submittingId === asg.id ? (
+                          <div className="space-y-3">
+                            <textarea 
+                              rows="3" 
+                              placeholder="Enter notes or answers..." 
+                              value={submissionContent} 
+                              onChange={(e) => setSubmissionContent(e.target.value)} 
+                              className="w-full p-3 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-sky-400" 
+                            />
+                            <input 
+                              type="file" 
+                              accept=".pdf" 
+                              onChange={(e) => setSelectedFile(e.target.files[0])} 
+                              className="w-full text-xs text-slate-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:bg-slate-100 file:text-slate-700 font-semibold" 
+                            />
+                            <div className="flex gap-2 pt-1">
+                              <button 
+                                onClick={() => handleAssignmentSubmit(asg.id)} 
+                                className="sa-btn-primary py-2 px-3 text-xs"
+                              >
+                                Confirm & Submit
+                              </button>
+                              <button 
+                                onClick={() => setSubmittingId(null)} 
+                                className="sa-btn-secondary py-2 px-3 text-xs"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <button 
+                            onClick={() => setSubmittingId(asg.id)} 
+                            className="sa-btn-primary py-2 px-4 text-xs"
+                          >
+                            Submit Assignment
+                          </button>
+                        )}
+                      </div>
                     </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
 
+        {/* EXAMS PORTAL TAB */}
+        {activeTab === 'exams' && (
+          <div className="space-y-4">
+            <h2 className="text-lg font-extrabold text-slate-800">Exams Portal</h2>
+            {exams.length === 0 ? (
+              <p className="text-xs py-12 text-center sa-card" style={{ color: 'var(--sa-muted)' }}>
+                No upcoming exams scheduled.
+              </p>
+            ) : activeExam ? (
+              <div className="sa-card space-y-6">
+                <div className="flex justify-between items-center border-b border-slate-100 pb-4">
+                  <div>
+                    <h3 className="text-base font-bold text-slate-800">{activeExam.title}</h3>
+                    <p className="text-xs mt-1" style={{ color: 'var(--sa-muted)' }}>
+                      Instructions: {activeExam.description}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <ExamTimer 
+                      durationMins={activeExam.duration_mins} 
+                      onTimeUp={() => {
+                        alert("Time is up! Your exam is auto-submitting now.");
+                        handleExamSubmit(activeExam.id);
+                      }} 
+                    />
                     <button 
-                      onClick={() => handleExamSubmit(activeExam.id)} 
-                      className="px-6 py-2.5 rounded-xl text-xs font-semibold shadow-sm border w-full"
+                      onClick={() => setActiveExam(null)} 
+                      className="sa-btn-secondary py-1.5 px-3 text-xs"
                     >
-                      Finalize & Submit Exam
+                      Exit Exam
                     </button>
                   </div>
                 </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {exams.map((exam) => (
-                    <div key={exam.id} className="p-5 rounded-2xl border shadow-sm flex flex-col justify-between space-y-3">
-                      <div>
-                        <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded border">
-                          Duration: {exam.duration_mins} Mins
-                        </span>
-                        <h3 className="font-bold mt-2 text-base">{exam.title}</h3>
-                        <p className="text-xs mt-1">{exam.description}</p>
-                      </div>
 
-                      <div className="pt-3 border-t flex items-center justify-between">
-                        {exam.file && (
-                          <button 
-                            type="button" 
-                            onClick={() => window.open(getFullUrl(exam.file), '_blank')} 
-                            className="text-xs flex items-center gap-1 font-semibold underline"
-                          >
-                            <Download size={14} /> View Paper PDF
-                          </button>
-                        )}
+                {activeExam.file && (
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <h4 className="font-extrabold text-xs uppercase tracking-wider text-slate-700">Exam Question Paper</h4>
+                      <a 
+                        href={getFullUrl(activeExam.file)} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="text-xs font-bold text-sky-600 hover:underline flex items-center gap-1"
+                      >
+                        <Download size={14} /> Open PDF in New Tab
+                      </a>
+                    </div>
+                    <PdfCanvasViewer fileUrl={getFullUrl(activeExam.file)} />
+                  </div>
+                )}
+
+                <div className="pt-4 border-t border-slate-100 space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold mb-1 text-slate-700">Option A: Type Your Answers Here</label>
+                    <textarea 
+                      rows="6" 
+                      placeholder="Type your exam responses here..." 
+                      value={examTextAnswer} 
+                      onChange={(e) => setExamTextAnswer(e.target.value)} 
+                      className="w-full p-3 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-sky-400" 
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold mb-1 text-slate-700">Option B: Upload Answer Sheet (PDF)</label>
+                    <input 
+                      type="file" 
+                      accept=".pdf" 
+                      onChange={(e) => setExamAnswerFile(e.target.files[0])} 
+                      className="w-full text-xs text-slate-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:bg-slate-100 file:text-slate-700 font-semibold" 
+                    />
+                  </div>
+
+                  <button 
+                    onClick={() => handleExamSubmit(activeExam.id)} 
+                    className="sa-btn-primary w-full py-3 text-xs"
+                  >
+                    Finalize & Submit Exam
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {exams.map((exam) => (
+                  <div key={exam.id} className="sa-card flex flex-col justify-between space-y-4">
+                    <div>
+                      <span 
+                        className="text-[10px] uppercase font-extrabold tracking-wider px-2.5 py-1 rounded-lg border"
+                        style={{ backgroundColor: 'var(--sa-green-light)', borderColor: 'var(--sa-green-soft)', color: 'var(--sa-green-dark)' }}
+                      >
+                        Duration: {exam.duration_mins} Mins
+                      </span>
+                      <h3 className="font-bold mt-3 text-base text-slate-800">{exam.title}</h3>
+                      <p className="text-xs mt-1 text-slate-600">{exam.description}</p>
+                    </div>
+
+                    <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+                      {exam.file && (
                         <button 
-                          onClick={() => setActiveExam(exam)} 
-                          className="px-3 py-1.5 rounded-xl text-xs font-semibold border shadow-sm ml-auto"
+                          type="button" 
+                          onClick={() => window.open(getFullUrl(exam.file), '_blank')} 
+                          className="text-xs flex items-center gap-1 font-bold text-sky-600 hover:underline"
                         >
-                          Start Exam
+                          <Download size={14} /> View Paper PDF
                         </button>
-                      </div>
+                      )}
+                      <button 
+                        onClick={() => setActiveExam(exam)} 
+                        className="sa-btn-primary py-2 px-4 text-xs ml-auto"
+                      >
+                        Start Exam
+                      </button>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
-          {/* RESULTS TAB */}
-          {activeTab === 'results' && (
-            <div className="space-y-4">
-              <h2 className="text-xl font-bold">My Submissions & Grades</h2>
-              {submissions.length === 0 ? (
-                <p className="text-sm py-12 text-center rounded-2xl border">
-                  No graded submissions found yet.
-                </p>
-              ) : (
-                <div className="rounded-2xl border divide-y shadow-sm">
-                  {submissions.map((sub) => (
-                    <div key={sub.id} className="p-4 flex items-center justify-between">
-                      <div>
-                        <h4 className="font-bold text-sm">{sub.assignment_title || sub.title || 'Submission'}</h4>
-                        <p className="text-xs mt-0.5">Submitted: {sub.submitted_at || 'Recently'}</p>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-sm font-extrabold">{sub.score ?? sub.grade ?? sub.marks ?? 'Pending'}</span>
-                        <p className="text-[10px]">{sub.feedback ? 'Feedback available' : 'Pending review'}</p>
-                      </div>
+        {/* RESULTS TAB */}
+        {activeTab === 'results' && (
+          <div className="space-y-4">
+            <h2 className="text-lg font-extrabold text-slate-800">My Submissions & Grades</h2>
+            {submissions.length === 0 ? (
+              <p className="text-xs py-12 text-center sa-card" style={{ color: 'var(--sa-muted)' }}>
+                No graded submissions found yet.
+              </p>
+            ) : (
+              <div className="sa-card p-0 overflow-hidden divide-y divide-slate-100">
+                {submissions.map((sub) => (
+                  <div key={sub.id} className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                    <div>
+                      <h4 className="font-bold text-xs text-slate-800">{sub.assignment_title || sub.title || 'Submission'}</h4>
+                      <p className="text-[11px] mt-0.5" style={{ color: 'var(--sa-muted)' }}>
+                        Submitted: {sub.submitted_at || 'Recently'}
+                      </p>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </>
-      )}
-    </div>
-  );
+                    <div className="text-right">
+                      <span className="text-sm font-extrabold" style={{ color: 'var(--sa-green-dark)' }}>
+                        {sub.score ?? sub.grade ?? sub.marks ?? 'Pending'}
+                      </span>
+                      <p className="text-[10px]" style={{ color: 'var(--sa-muted)' }}>
+                        {sub.feedback ? 'Feedback available' : 'Pending review'}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </>
+    )}
+  </div>
+);
 }
