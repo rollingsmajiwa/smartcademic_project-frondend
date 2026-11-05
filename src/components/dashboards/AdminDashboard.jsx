@@ -162,22 +162,21 @@ export default function AdminDashboard() {
   };
 
  return (
-  <div className="w-full min-h-screen p-6 lg:p-8 space-y-6 font-sans">
+  <div className="w-full min-h-screen p-6 lg:p-8 space-y-6 font-sans" style={{ backgroundColor: 'var(--sa-bg)', color: 'var(--sa-text)' }}>
     
     {/* OVERVIEW TAB */}
     {activeTab === 'overview' && (
       <div className="space-y-6 w-full">
         {/* Banner Header */}
-        <div className="sa-banner sa-flex-between">
+        <div className="sa-banner sa-flex-between bg-[#dff8eb] border border-[#cdcdcd] shadow-xs">
           <div>
             <span 
-              className="text-[10px] uppercase font-extrabold px-3 py-1 rounded-lg border tracking-wider"
-              style={{ backgroundColor: 'var(--sa-surface)', borderColor: 'var(--sa-green-soft)', color: 'var(--sa-green-dark)' }}
+              className="text-[10px] uppercase font-extrabold px-3 py-1 rounded-lg border tracking-wider bg-white border-[#cdcdcd] text-[#214e34]"
             >
               System Administrator Portal
             </span>
-            <h1 className="text-2xl font-extrabold mt-2 text-slate-800">Admin Central Overview</h1>
-            <p className="text-xs mt-1" style={{ color: 'var(--sa-muted)' }}>
+            <h1 className="text-2xl font-extrabold mt-2 text-[#011638]">Admin Central Overview</h1>
+            <p className="text-xs mt-1 text-[#364156]">
               Manage system users, classrooms, and monitor real-time weekly teacher attendance.
             </p>
           </div>
@@ -185,21 +184,21 @@ export default function AdminDashboard() {
         
         {/* Stat Cards Grid */}
         <div className="sa-grid">
-          <div className="sa-card">
-            <p className="sa-card-title">Teachers</p>
-            <p className="sa-card-value">{teachers.length}</p>
+          <div className="sa-card bg-[#dff8eb] border border-[#cdcdcd] shadow-xs">
+            <p className="sa-card-title text-[#214e34]">Teachers</p>
+            <p className="sa-card-value text-[#011638]">{teachers.length}</p>
           </div>
-          <div className="sa-card">
-            <p className="sa-card-title">Students</p>
-            <p className="sa-card-value">{students.length}</p>
+          <div className="sa-card bg-[#dff8eb] border border-[#cdcdcd] shadow-xs">
+            <p className="sa-card-title text-[#214e34]">Students</p>
+            <p className="sa-card-value text-[#011638]">{students.length}</p>
           </div>
-          <div className="sa-card">
-            <p className="sa-card-title">Classrooms</p>
-            <p className="sa-card-value">{classrooms.length}</p>
+          <div className="sa-card bg-[#dff8eb] border border-[#cdcdcd] shadow-xs">
+            <p className="sa-card-title text-[#214e34]">Classrooms</p>
+            <p className="sa-card-value text-[#011638]">{classrooms.length}</p>
           </div>
-          <div className="sa-card">
-            <p className="sa-card-title">Weekly Attendance Logs</p>
-            <p className="sa-card-value" style={{ color: 'var(--sa-green-dark)' }}>
+          <div className="sa-card bg-[#dff8eb] border border-[#cdcdcd] shadow-xs">
+            <p className="sa-card-title text-[#214e34]">Weekly Attendance Logs</p>
+            <p className="sa-card-value text-[#214e34]">
               {filterWeeklyLogs(attendanceLogs).length}
             </p>
           </div>
@@ -211,35 +210,35 @@ export default function AdminDashboard() {
     {activeTab === 'teachers' && (
       <div className="w-full space-y-6">
         <div className="flex justify-between items-center">
-          <h2 className="text-lg font-extrabold text-slate-800">Manage Teachers</h2>
+          <h2 className="text-lg font-extrabold text-[#011638]">Manage Teachers</h2>
           <button
             onClick={() => openCreateModal('teacher')}
-            className="sa-btn-primary"
+            className="sa-btn-primary bg-[#214e34] text-[#dff8eb] hover:bg-[#011638]"
           >
              Add New Teacher
           </button>
         </div>
 
-        <div className="sa-table-wrapper">
+        <div className="sa-table-wrapper border border-[#cdcdcd] shadow-xs">
           <table className="sa-table">
             <thead>
               <tr>
-                <th className="p-4">TSC Number</th>
-                <th className="p-4">Name</th>
-                <th className="p-4">Email / Username</th>
-                <th className="p-4 text-right">Actions</th>
+                <th className="p-4 bg-[#364156] text-white">TSC Number</th>
+                <th className="p-4 bg-[#364156] text-white">Name</th>
+                <th className="p-4 bg-[#364156] text-white">Email / Username</th>
+                <th className="p-4 text-right bg-[#364156] text-white">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-[#cdcdcd]">
               {teachers.map((t) => (
-                <tr key={t.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="p-4 font-mono font-bold text-slate-800">{t.tsc_number || t.id}</td>
-                  <td className="p-4 font-bold text-slate-900">{t.name || `${t.first_name || ''} ${t.last_name || ''}`}</td>
-                  <td className="p-4" style={{ color: 'var(--sa-muted)' }}>{t.email || t.username}</td>
+                <tr key={t.id} className="bg-white hover:bg-[#dff8eb]/60 transition-colors">
+                  <td className="p-4 font-mono font-bold text-[#011638]">{t.tsc_number || t.id}</td>
+                  <td className="p-4 font-bold text-[#011638]">{t.name || `${t.first_name || ''} ${t.last_name || ''}`}</td>
+                  <td className="p-4 text-[#364156]">{t.email || t.username}</td>
                   <td className="p-4 text-right space-x-2">
                     <button
                       onClick={() => openEditModal(t, 'teacher')}
-                      className="sa-btn-secondary py-1 px-3 text-[11px]"
+                      className="sa-btn-secondary py-1 px-3 text-[11px] bg-[#364156] text-white border border-[#364156] hover:bg-[#011638]"
                     >
                       Edit
                     </button>
@@ -262,35 +261,35 @@ export default function AdminDashboard() {
     {activeTab === 'students' && (
       <div className="w-full space-y-6">
         <div className="flex justify-between items-center">
-          <h2 className="text-lg font-extrabold text-slate-800">Manage Students</h2>
+          <h2 className="text-lg font-extrabold text-[#011638]">Manage Students</h2>
           <button
             onClick={() => openCreateModal('student')}
-            className="sa-btn-primary"
+            className="sa-btn-primary bg-[#214e34] text-[#dff8eb] hover:bg-[#011638]"
           >
             Add New Student
           </button>
         </div>
 
-        <div className="sa-table-wrapper">
+        <div className="sa-table-wrapper border border-[#cdcdcd] shadow-xs">
           <table className="sa-table">
             <thead>
               <tr>
-                <th className="p-4">Student ID</th>
-                <th className="p-4">Name</th>
-                <th className="p-4">Email / Username</th>
-                <th className="p-4 text-right">Actions</th>
+                <th className="p-4 bg-[#364156] text-white">Student ID</th>
+                <th className="p-4 bg-[#364156] text-white">Name</th>
+                <th className="p-4 bg-[#364156] text-white">Email / Username</th>
+                <th className="p-4 text-right bg-[#364156] text-white">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-[#cdcdcd]">
               {students.map((s) => (
-                <tr key={s.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="p-4 font-mono font-bold text-slate-800">{s.student_id_number || s.id}</td>
-                  <td className="p-4 font-bold text-slate-900">{s.name || `${s.first_name || ''} ${s.last_name || ''}`}</td>
-                  <td className="p-4" style={{ color: 'var(--sa-muted)' }}>{s.email || s.username}</td>
+                <tr key={s.id} className="bg-white hover:bg-[#dff8eb]/60 transition-colors">
+                  <td className="p-4 font-mono font-bold text-[#011638]">{s.student_id_number || s.id}</td>
+                  <td className="p-4 font-bold text-[#011638]">{s.name || `${s.first_name || ''} ${s.last_name || ''}`}</td>
+                  <td className="p-4 text-[#364156]">{s.email || s.username}</td>
                   <td className="p-4 text-right space-x-2">
                     <button
                       onClick={() => openEditModal(s, 'student')}
-                      className="sa-btn-secondary py-1 px-3 text-[11px]"
+                      className="sa-btn-secondary py-1 px-3 text-[11px] bg-[#364156] text-white border border-[#364156] hover:bg-[#011638]"
                     >
                       Edit
                     </button>
@@ -312,35 +311,34 @@ export default function AdminDashboard() {
     {/* WEEKLY TEACHER GEOFENCE ATTENDANCE LOGS (MONDAY - FRIDAY) */}
     {activeTab === 'attendance' && (
       <div className="w-full space-y-6">
-        <h2 className="text-lg font-extrabold text-slate-800">Weekly Teacher Attendance Logs (Mon - Fri)</h2>
-        <div className="sa-table-wrapper">
+        <h2 className="text-lg font-extrabold text-[#011638]">Weekly Teacher Attendance Logs (Mon - Fri)</h2>
+        <div className="sa-table-wrapper border border-[#cdcdcd] shadow-xs">
           <table className="sa-table">
             <thead>
               <tr>
-                <th className="p-4">Teacher ID</th>
-                <th className="p-4">Status</th>
-                <th className="p-4">Day of Week</th>
-                <th className="p-4">Exact Time</th>
+                <th className="p-4 bg-[#364156] text-white">Teacher ID</th>
+                <th className="p-4 bg-[#364156] text-white">Status</th>
+                <th className="p-4 bg-[#364156] text-white">Day of Week</th>
+                <th className="p-4 bg-[#364156] text-white">Exact Time</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-[#cdcdcd]">
               {filterWeeklyLogs(attendanceLogs).map((att, idx) => {
                 const dateObj = att.timestamp ? new Date(att.timestamp) : new Date();
                 return (
-                  <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                    <td className="p-4 font-mono font-bold text-slate-800">{att.tsc_number || att.teacher}</td>
+                  <tr key={idx} className="bg-white hover:bg-[#dff8eb]/60 transition-colors">
+                    <td className="p-4 font-mono font-bold text-[#011638]">{att.tsc_number || att.teacher}</td>
                     <td className="p-4">
                       <span 
-                        className="px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider border"
-                        style={{ backgroundColor: 'var(--sa-green-light)', borderColor: 'var(--sa-green-soft)', color: 'var(--sa-green-dark)' }}
+                        className="px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider border bg-[#214e34] text-[#dff8eb] border-[#214e34]"
                       >
                         Clocked In {att.direction}
                       </span>
                     </td>
-                    <td className="p-4 font-bold text-slate-700">
+                    <td className="p-4 font-bold text-[#011638]">
                       {dateObj.toLocaleDateString('en-US', { weekday: 'long' })}
                     </td>
-                    <td className="p-4 font-mono text-slate-500">
+                    <td className="p-4 font-mono text-[#364156]">
                       {dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} ({dateObj.toLocaleDateString()})
                     </td>
                   </tr>
@@ -354,66 +352,66 @@ export default function AdminDashboard() {
 
     {/* SHARED CREATE/EDIT MODAL */}
     {showModal && (
-      <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex justify-center items-center p-4 z-50">
-        <div className="sa-card max-w-md w-full space-y-4 shadow-xl border border-slate-200">
-          <h3 className="font-extrabold text-base text-slate-800">
+      <div className="fixed inset-0 bg-[#011638]/50 backdrop-blur-xs flex justify-center items-center p-4 z-50">
+        <div className="sa-card max-w-md w-full space-y-4 shadow-xl border border-[#cdcdcd] bg-[#dff8eb]">
+          <h3 className="font-extrabold text-base text-[#011638]">
             {modalMode === 'create' ? `Add New ${userRoleType}` : `Edit ${userRoleType}`}
           </h3>
           <form onSubmit={handleSaveUser} className="space-y-3 text-xs">
             <div>
-              <label className="block font-bold mb-1 text-slate-700">Username</label>
+              <label className="block font-bold mb-1 text-[#011638]">Username</label>
               <input
                 type="text"
                 placeholder="Username"
                 value={formData.username}
                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                className="w-full p-3 rounded-xl border border-slate-200 focus:outline-none focus:border-sky-400"
+                className="w-full p-3 rounded-xl border border-[#cdcdcd] bg-white text-[#011638] focus:outline-none focus:border-[#214e34]"
                 required
               />
             </div>
             <div>
-              <label className="block font-bold mb-1 text-slate-700">Email Address</label>
+              <label className="block font-bold mb-1 text-[#011638]">Email Address</label>
               <input
                 type="email"
                 placeholder="Email Address"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full p-3 rounded-xl border border-slate-200 focus:outline-none focus:border-sky-400"
+                className="w-full p-3 rounded-xl border border-[#cdcdcd] bg-white text-[#011638] focus:outline-none focus:border-[#214e34]"
               />
             </div>
             {modalMode === 'create' && (
               <div>
-                <label className="block font-bold mb-1 text-slate-700">Password</label>
+                <label className="block font-bold mb-1 text-[#011638]">Password</label>
                 <input
                   type="password"
                   placeholder="Password"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full p-3 rounded-xl border border-slate-200 focus:outline-none focus:border-sky-400"
+                  className="w-full p-3 rounded-xl border border-[#cdcdcd] bg-white text-[#011638] focus:outline-none focus:border-[#214e34]"
                   required
                 />
               </div>
             )}
             {userRoleType === 'teacher' ? (
               <div>
-                <label className="block font-bold mb-1 text-slate-700">TSC Number</label>
+                <label className="block font-bold mb-1 text-[#011638]">TSC Number</label>
                 <input
                   type="text"
                   placeholder="TSC Number"
                   value={formData.tsc_number}
                   onChange={(e) => setFormData({ ...formData, tsc_number: e.target.value })}
-                  className="w-full p-3 rounded-xl border border-slate-200 focus:outline-none focus:border-sky-400 font-mono"
+                  className="w-full p-3 rounded-xl border border-[#cdcdcd] bg-white text-[#011638] focus:outline-none focus:border-[#214e34] font-mono"
                 />
               </div>
             ) : (
               <div>
-                <label className="block font-bold mb-1 text-slate-700">Student ID Number</label>
+                <label className="block font-bold mb-1 text-[#011638]">Student ID Number</label>
                 <input
                   type="text"
                   placeholder="Student ID Number"
                   value={formData.student_id_number}
                   onChange={(e) => setFormData({ ...formData, student_id_number: e.target.value })}
-                  className="w-full p-3 rounded-xl border border-slate-200 focus:outline-none focus:border-sky-400 font-mono"
+                  className="w-full p-3 rounded-xl border border-[#cdcdcd] bg-white text-[#011638] focus:outline-none focus:border-[#214e34] font-mono"
                 />
               </div>
             )}
@@ -421,13 +419,13 @@ export default function AdminDashboard() {
               <button
                 type="button"
                 onClick={() => setShowModal(false)}
-                className="sa-btn-secondary py-2 px-4"
+                className="sa-btn-secondary py-2 px-4 bg-white text-[#011638] border border-[#cdcdcd] hover:bg-[#dff8eb]"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="sa-btn-primary py-2 px-5"
+                className="sa-btn-primary py-2 px-5 bg-[#214e34] text-[#dff8eb] hover:bg-[#011638]"
               >
                 Save
               </button>
@@ -437,6 +435,6 @@ export default function AdminDashboard() {
       </div>
     )}
 
-  </div>
+</div>
 );
 }

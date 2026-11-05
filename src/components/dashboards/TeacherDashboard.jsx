@@ -335,19 +335,19 @@ export default function TeacherDashboard() {
   };
 
   return (
-  <div className="flex-1 p-6 lg:p-8 overflow-y-auto min-h-screen font-sans space-y-6">
+  <div className="flex-1 p-6 lg:p-8 overflow-y-auto min-h-screen font-sans space-y-6" style={{ backgroundColor: 'var(--sa-bg)' }}>
     
     {/* OVERVIEW TAB */}
     {activeTab === 'overview' && (
       <div className="space-y-6 max-w-5xl mx-auto">
         
         {/* Banner Header */}
-        <div className="sa-banner sa-flex-between">
+        <div className="sa-banner sa-flex-between border border-[#cdcdcd] shadow-xs" style={{ backgroundColor: '#dff8eb' }}>
           <div>
-            <h2 className="text-xl font-extrabold" style={{ color: 'var(--sa-green-dark)' }}>
+            <h2 className="text-xl font-extrabold" style={{ color: '#011638' }}>
               Teacher Overview Dashboard
             </h2>
-            <p className="text-xs mt-1" style={{ color: 'var(--sa-muted)' }}>
+            <p className="text-xs mt-1" style={{ color: '#364156' }}>
               Quick summary of your assignments, exams, and student submissions.
             </p>
           </div>
@@ -355,51 +355,51 @@ export default function TeacherDashboard() {
 
         {/* Stat Cards Grid */}
         <div className="sa-grid">
-          <div className="sa-card">
-            <p className="sa-card-title">Assignments Posted</p>
-            <p className="sa-card-value">{overview?.total_assignments_posted || 0}</p>
+          <div className="sa-card bg-[#dff8eb] border border-[#cdcdcd] shadow-xs">
+            <p className="sa-card-title text-[#214e34]">Assignments Posted</p>
+            <p className="sa-card-value text-[#011638]">{overview?.total_assignments_posted || 0}</p>
           </div>
-          <div className="sa-card">
-            <p className="sa-card-title">Exams Created</p>
-            <p className="sa-card-value">{overview?.total_exams_created || 0}</p>
+          <div className="sa-card bg-[#dff8eb] border border-[#cdcdcd] shadow-xs">
+            <p className="sa-card-title text-[#214e34]">Exams Created</p>
+            <p className="sa-card-value text-[#011638]">{overview?.total_exams_created || 0}</p>
           </div>
-          <div className="sa-card">
-            <p className="sa-card-title">Submissions Received</p>
-            <p className="sa-card-value">{overview?.total_submissions_received || 0}</p>
+          <div className="sa-card bg-[#dff8eb] border border-[#cdcdcd] shadow-xs">
+            <p className="sa-card-title text-[#214e34]">Submissions Received</p>
+            <p className="sa-card-value text-[#011638]">{overview?.total_submissions_received || 0}</p>
           </div>
-          <div className="sa-card">
-            <p className="sa-card-title">Revision Materials</p>
-            <p className="sa-card-value">{revisionsList.length}</p>
+          <div className="sa-card bg-[#dff8eb] border border-[#cdcdcd] shadow-xs">
+            <p className="sa-card-title text-[#214e34]">Revision Materials</p>
+            <p className="sa-card-value text-[#011638]">{revisionsList.length}</p>
           </div>
         </div>
 
         {/* Quick Actions Bar */}
-        <div className="sa-card space-y-4">
-          <h3 className="text-xs font-extrabold uppercase tracking-wider" style={{ color: 'var(--sa-muted)' }}>
+        <div className="sa-card bg-[#dff8eb] border border-[#cdcdcd] space-y-4 shadow-xs">
+          <h3 className="text-xs font-extrabold uppercase tracking-wider text-[#364156]">
             Quick Actions
           </h3>
           <div className="flex flex-wrap gap-3">
             <button 
               onClick={() => navigate('/dashboard/teacher/assignments')} 
-              className="sa-btn-primary"
+              className="sa-btn-primary bg-[#214e34] text-[#dff8eb] hover:bg-[#011638]"
             >
               Post Assignment
             </button>
             <button 
               onClick={() => navigate('/dashboard/teacher/exams')} 
-              className="sa-btn-primary"
+              className="sa-btn-primary bg-[#214e34] text-[#dff8eb] hover:bg-[#011638]"
             >
               Create Exam
             </button>
             <button 
               onClick={() => navigate('/dashboard/teacher/revisions')} 
-              className="sa-btn-secondary"
+              className="sa-btn-secondary bg-white text-[#011638] border border-[#cdcdcd] hover:bg-[#dff8eb]"
             >
               Upload Revision Material
             </button>
             <button 
               onClick={() => navigate('/dashboard/teacher/submissions')} 
-              className="sa-btn-secondary"
+              className="sa-btn-secondary bg-white text-[#011638] border border-[#cdcdcd] hover:bg-[#dff8eb]"
             >
               Grade Submissions
             </button>
@@ -407,20 +407,20 @@ export default function TeacherDashboard() {
         </div>
 
         {/* Recent Student Submissions */}
-        <div className="sa-card space-y-4">
-          <h3 className="text-xs font-extrabold uppercase tracking-wider" style={{ color: 'var(--sa-muted)' }}>
+        <div className="sa-card bg-[#dff8eb] border border-[#cdcdcd] space-y-4 shadow-xs">
+          <h3 className="text-xs font-extrabold uppercase tracking-wider text-[#364156]">
             Recent Student Submissions
           </h3>
           {submissions.length === 0 && examSubmissions.length === 0 ? (
-            <p className="text-xs" style={{ color: 'var(--sa-muted)' }}>No recent student submissions found.</p>
+            <p className="text-xs text-[#364156]">No recent student submissions found.</p>
           ) : (
             <div className="space-y-2">
               {[...submissions, ...examSubmissions].slice(0, 4).map((sub, idx) => (
-                <div key={idx} className="flex justify-between items-center text-xs p-3.5 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors">
+                <div key={idx} className="flex justify-between items-center text-xs p-3.5 rounded-xl border border-[#cdcdcd] bg-white hover:bg-[#dff8eb]/60 transition-colors">
                   <span>
-                    <strong className="font-bold text-slate-800">Student ID {sub.student}</strong> submitted {sub.assignment ? `Assignment ID ${sub.assignment}` : `Exam ID ${sub.exam}`}
+                    <strong className="font-bold text-[#011638]">Student ID {sub.student}</strong> submitted {sub.assignment ? `Assignment ID ${sub.assignment}` : `Exam ID ${sub.exam}`}
                   </span>
-                  <span className="text-[10px] font-bold px-2 py-1 rounded-lg" style={{ backgroundColor: 'var(--sa-green-light)', color: 'var(--sa-green-dark)' }}>
+                  <span className="text-[10px] font-bold px-2 py-1 rounded-lg bg-[#214e34] text-[#dff8eb]">
                     {sub.submitted_at ? new Date(sub.submitted_at).toLocaleDateString() : 'Recent'}
                   </span>
                 </div>
@@ -434,77 +434,77 @@ export default function TeacherDashboard() {
     {/* REVISION MATERIALS TAB */}
     {activeTab === 'materials' && (
       <div className="max-w-2xl mx-auto space-y-6">
-        <div className="sa-card space-y-4">
-          <h2 className="text-lg font-bold text-slate-800">Upload Revision Material</h2>
-          <p className="text-xs" style={{ color: 'var(--sa-muted)' }}>
+        <div className="sa-card bg-[#dff8eb] border border-[#cdcdcd] space-y-4 shadow-xs">
+          <h2 className="text-lg font-bold text-[#011638]">Upload Revision Material</h2>
+          <p className="text-xs text-[#364156]">
             Upload study guides and revision documents for your students.
           </p>
 
           <form onSubmit={handlePostRevision} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold mb-1 text-slate-700">Title</label>
+              <label className="block text-xs font-bold mb-1 text-[#011638]">Title</label>
               <input
                 type="text"
                 placeholder="Title (e.g. Grade 8 Maths Revision Guide)"
                 value={revisionForm.title}
                 onChange={(e) => setRevisionForm({ ...revisionForm, title: e.target.value })}
-                className="w-full p-3 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-sky-400"
+                className="w-full p-3 text-xs rounded-xl border border-[#cdcdcd] bg-white text-[#011638] focus:outline-none focus:border-[#214e34]"
                 required
               />
             </div>
             <div>
-              <label className="block text-xs font-bold mb-1 text-slate-700">Description</label>
+              <label className="block text-xs font-bold mb-1 text-[#011638]">Description</label>
               <textarea
                 rows="3"
                 placeholder="Instructions or topic summary..."
                 value={revisionForm.description}
                 onChange={(e) => setRevisionForm({ ...revisionForm, description: e.target.value })}
-                className="w-full p-3 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-sky-400"
+                className="w-full p-3 text-xs rounded-xl border border-[#cdcdcd] bg-white text-[#011638] focus:outline-none focus:border-[#214e34]"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold mb-1 text-slate-700">Target Class</label>
+              <label className="block text-xs font-bold mb-1 text-[#011638]">Target Class</label>
               <input
                 type="text"
                 placeholder="Target Class (e.g. Grade 8)"
                 value={revisionForm.class_name}
                 onChange={(e) => setRevisionForm({ ...revisionForm, class_name: e.target.value })}
-                className="w-full p-3 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-sky-400"
+                className="w-full p-3 text-xs rounded-xl border border-[#cdcdcd] bg-white text-[#011638] focus:outline-none focus:border-[#214e34]"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold mb-1 text-slate-700">Attach Material Document</label>
+              <label className="block text-xs font-bold mb-1 text-[#011638]">Attach Material Document</label>
               <input
                 type="file"
                 onChange={(e) => setRevisionForm({ ...revisionForm, file: e.target.files[0] })}
-                className="w-full text-xs text-slate-500"
+                className="w-full text-xs text-[#364156] file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#214e34] file:text-[#dff8eb] hover:file:bg-[#011638]"
               />
             </div>
-            <button type="submit" className="sa-btn-primary w-full py-3">
+            <button type="submit" className="sa-btn-primary w-full py-3 bg-[#214e34] text-[#dff8eb] hover:bg-[#011638]">
               Upload Revision Material
             </button>
           </form>
         </div>
 
         {/* Uploaded Revisions List */}
-        <div className="sa-card space-y-4">
-          <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Uploaded Revision Materials</h3>
+        <div className="sa-card bg-[#dff8eb] border border-[#cdcdcd] space-y-4 shadow-xs">
+          <h3 className="text-sm font-bold text-[#011638] uppercase tracking-wider">Uploaded Revision Materials</h3>
           {revisionsList.length === 0 ? (
-            <p className="text-xs" style={{ color: 'var(--sa-muted)' }}>No revision materials uploaded yet.</p>
+            <p className="text-xs text-[#364156]">No revision materials uploaded yet.</p>
           ) : (
             <div className="space-y-3">
               {revisionsList.map((rev) => (
-                <div key={rev.id} className="p-4 rounded-xl border border-slate-100 flex justify-between items-center text-xs hover:bg-slate-50 transition-colors">
+                <div key={rev.id} className="p-4 rounded-xl border border-[#cdcdcd] bg-white flex justify-between items-center text-xs hover:bg-[#dff8eb]/60 transition-colors">
                   <div>
-                    <p className="font-bold text-slate-800">{rev.title}</p>
-                    <p className="text-[10px]" style={{ color: 'var(--sa-muted)' }}>{rev.description}</p>
+                    <p className="font-bold text-[#011638]">{rev.title}</p>
+                    <p className="text-[10px] text-[#364156]">{rev.description}</p>
                   </div>
                   {rev.file && (
                     <a
                       href={rev.file.startsWith('http') ? rev.file : `http://127.0.0.1:8000${rev.file}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="sa-btn-secondary py-1 px-3 text-xs"
+                      className="sa-btn-secondary py-1 px-3 text-xs bg-[#364156] text-white hover:bg-[#011638]"
                     >
                       View File
                     </a>
@@ -519,15 +519,15 @@ export default function TeacherDashboard() {
 
     {/* ASSIGNMENTS TAB */}
     {activeTab === 'assignments' && (
-      <div className="max-w-xl mx-auto sa-card space-y-4">
-        <h2 className="text-lg font-bold text-slate-800">Post New Assignment</h2>
+      <div className="max-w-xl mx-auto sa-card bg-[#dff8eb] border border-[#cdcdcd] space-y-4 shadow-xs">
+        <h2 className="text-lg font-bold text-[#011638]">Post New Assignment</h2>
         <form onSubmit={handlePostAssignment} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold mb-1 text-slate-700">Assign Teacher</label>
+            <label className="block text-xs font-bold mb-1 text-[#011638]">Assign Teacher</label>
             <select
               value={assignmentForm.teacher}
               onChange={(e) => setAssignmentForm({ ...assignmentForm, teacher: e.target.value })}
-              className="w-full p-3 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-sky-400"
+              className="w-full p-3 text-xs rounded-xl border border-[#cdcdcd] bg-white text-[#011638] focus:outline-none focus:border-[#214e34]"
               required
             >
               <option value="">Select Teacher...</option>
@@ -539,56 +539,56 @@ export default function TeacherDashboard() {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-bold mb-1 text-slate-700">Title</label>
+            <label className="block text-xs font-bold mb-1 text-[#011638]">Title</label>
             <input
               type="text"
               placeholder="Title (e.g. Maths Assignment 1)"
               value={assignmentForm.title}
               onChange={(e) => setAssignmentForm({ ...assignmentForm, title: e.target.value })}
-              className="w-full p-3 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-sky-400"
+              className="w-full p-3 text-xs rounded-xl border border-[#cdcdcd] bg-white text-[#011638] focus:outline-none focus:border-[#214e34]"
               required
             />
           </div>
           <div>
-            <label className="block text-xs font-bold mb-1 text-slate-700">Instructions</label>
+            <label className="block text-xs font-bold mb-1 text-[#011638]">Instructions</label>
             <textarea
               rows="3"
               placeholder="Instructions..."
               value={assignmentForm.description}
               onChange={(e) => setAssignmentForm({ ...assignmentForm, description: e.target.value })}
-              className="w-full p-3 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-sky-400"
+              className="w-full p-3 text-xs rounded-xl border border-[#cdcdcd] bg-white text-[#011638] focus:outline-none focus:border-[#214e34]"
             />
           </div>
           <div>
-            <label className="block text-xs font-bold mb-1 text-slate-700">Deadline</label>
+            <label className="block text-xs font-bold mb-1 text-[#011638]">Deadline</label>
             <input 
               type="datetime-local" 
               value={assignmentForm.deadline} 
               onChange={(e) => setAssignmentForm({...assignmentForm, deadline: e.target.value })} 
               required 
-              className='w-full p-3 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-sky-400'
+              className="w-full p-3 text-xs rounded-xl border border-[#cdcdcd] bg-white text-[#011638] focus:outline-none focus:border-[#214e34]"
             />
           </div>
           <div>
-            <label className="block text-xs font-bold mb-1 text-slate-700">Target Class</label>
+            <label className="block text-xs font-bold mb-1 text-[#011638]">Target Class</label>
             <input
               type="text"
               placeholder="Target Class (e.g. Grade 8)"
               value={assignmentForm.class_name}
               onChange={(e) => setAssignmentForm({ ...assignmentForm, class_name: e.target.value })}
-              className="w-full p-3 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-sky-400"
+              className="w-full p-3 text-xs rounded-xl border border-[#cdcdcd] bg-white text-[#011638] focus:outline-none focus:border-[#214e34]"
             />
           </div>
           <div>
-            <label className="block text-xs font-bold mb-1 text-slate-700">Attach Reference File / PDF</label>
+            <label className="block text-xs font-bold mb-1 text-[#011638]">Attach Reference File / PDF</label>
             <input
               type="file"
               accept=".pdf"
               onChange={(e) => setAssignmentForm({ ...assignmentForm, file: e.target.files[0] })}
-              className="w-full text-xs text-slate-500"
+              className="w-full text-xs text-[#364156] file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#214e34] file:text-[#dff8eb] hover:file:bg-[#011638]"
             />
           </div>
-          <button type="submit" className="sa-btn-primary w-full py-3">
+          <button type="submit" className="sa-btn-primary w-full py-3 bg-[#214e34] text-[#dff8eb] hover:bg-[#011638]">
             Publish Assignment
           </button>
         </form>
@@ -597,51 +597,51 @@ export default function TeacherDashboard() {
 
     {/* EXAMS TAB */}
     {activeTab === 'exams' && (
-      <div className="max-w-xl mx-auto sa-card space-y-4">
-        <h2 className="text-lg font-bold text-slate-800">Create New Exam</h2>
+      <div className="max-w-xl mx-auto sa-card bg-[#dff8eb] border border-[#cdcdcd] space-y-4 shadow-xs">
+        <h2 className="text-lg font-bold text-[#011638]">Create New Exam</h2>
         <form onSubmit={handlePostExam} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold mb-1 text-slate-700">Exam Title</label>
+            <label className="block text-xs font-bold mb-1 text-[#011638]">Exam Title</label>
             <input
               type="text"
               placeholder="Exam Title (e.g. Midterm Physics)"
               value={examForm.title}
               onChange={(e) => setExamForm({ ...examForm, title: e.target.value })}
-              className="w-full p-3 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-sky-400"
+              className="w-full p-3 text-xs rounded-xl border border-[#cdcdcd] bg-white text-[#011638] focus:outline-none focus:border-[#214e34]"
               required
             />
           </div>
           <div>
-            <label className="block text-xs font-bold mb-1 text-slate-700">Term</label>
+            <label className="block text-xs font-bold mb-1 text-[#011638]">Term</label>
             <input
               type="text"
               placeholder="Term (e.g. Term 1)"
               value={examForm.term}
               onChange={(e) => setExamForm({ ...examForm, term: e.target.value })}
-              className="w-full p-3 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-sky-400"
+              className="w-full p-3 text-xs rounded-xl border border-[#cdcdcd] bg-white text-[#011638] focus:outline-none focus:border-[#214e34]"
               required
             />
           </div>
           <div>
-            <label className="block text-xs font-bold mb-1 text-slate-700">Exam Description</label>
+            <label className="block text-xs font-bold mb-1 text-[#011638]">Exam Description</label>
             <input 
               type="text" 
               value={examForm.description} 
               onChange={(e) => setExamForm({ ...examForm, description: e.target.value })}
               placeholder="Enter description..."
-              className="w-full p-3 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-sky-400"
+              className="w-full p-3 text-xs rounded-xl border border-[#cdcdcd] bg-white text-[#011638] focus:outline-none focus:border-[#214e34]"
             />
           </div>
           <div>
-            <label className="block text-xs font-bold mb-1 text-slate-700">Attach Exam Paper PDF</label>
+            <label className="block text-xs font-bold mb-1 text-[#011638]">Attach Exam Paper PDF</label>
             <input
               type="file"
               accept=".pdf"
               onChange={(e) => setExamForm({ ...examForm, file: e.target.files[0] })}
-              className="w-full text-xs text-slate-500"
+              className="w-full text-xs text-[#364156] file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#214e34] file:text-[#dff8eb] hover:file:bg-[#011638]"
             />
           </div>
-          <button type="submit" className="sa-btn-primary w-full py-3">
+          <button type="submit" className="sa-btn-primary w-full py-3 bg-[#214e34] text-[#dff8eb] hover:bg-[#011638]">
             Publish Exam
           </button>
         </form>
@@ -652,54 +652,54 @@ export default function TeacherDashboard() {
     {activeTab === 'submissions' && (
       <div className="max-w-5xl mx-auto space-y-6">
         <div className="flex justify-between items-center">
-          <h2 className="text-lg font-extrabold text-slate-800">Student Submissions & Grading</h2>
-          <button onClick={fetchAllSubmissions} className="sa-btn-secondary">
+          <h2 className="text-lg font-extrabold text-[#011638]">Student Submissions & Grading</h2>
+          <button onClick={fetchAllSubmissions} className="sa-btn-secondary bg-[#364156] text-white hover:bg-[#011638]">
             Refresh Submissions
           </button>
         </div>
 
         {loading ? (
-          <p className="text-xs" style={{ color: 'var(--sa-muted)' }}>Loading submissions...</p>
+          <p className="text-xs text-[#364156]">Loading submissions...</p>
         ) : (
           <div className="space-y-6">
             
             {/* Assignment Submissions */}
             <div className="space-y-4">
-              <h3 className="text-xs font-extrabold uppercase tracking-wider pb-1 border-b border-slate-200" style={{ color: 'var(--sa-muted)' }}>
+              <h3 className="text-xs font-extrabold uppercase tracking-wider pb-1 border-b border-[#cdcdcd] text-[#364156]">
                 Assignment Submissions
               </h3>
               {submissions.length === 0 ? (
-                <p className="text-xs" style={{ color: 'var(--sa-muted)' }}>No assignment submissions found.</p>
+                <p className="text-xs text-[#364156]">No assignment submissions found.</p>
               ) : (
                 submissions.map((sub) => (
-                  <div key={`assignment-sub-${sub.id}`} className="sa-card space-y-4">
+                  <div key={`assignment-sub-${sub.id}`} className="sa-card bg-[#dff8eb] border border-[#cdcdcd] space-y-4 shadow-xs">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                       <div className="space-y-2 w-full max-w-lg">
-                        <span className="px-2.5 py-1 text-[10px] font-extrabold rounded-lg uppercase tracking-wider" style={{ backgroundColor: 'var(--sa-green-light)', color: 'var(--sa-green-dark)' }}>
+                        <span className="px-2.5 py-1 text-[10px] font-extrabold rounded-lg uppercase tracking-wider bg-[#214e34] text-[#dff8eb]">
                           Assignment ID: {sub.assignment}
                         </span>
-                        <p className="text-xs font-bold text-slate-800 mt-1">Student ID: {sub.student}</p>
+                        <p className="text-xs font-bold text-[#011638] mt-1">Student ID: {sub.student}</p>
                         
-                        <div className="p-3.5 rounded-xl border border-slate-100 text-xs bg-slate-50 space-y-1">
-                          <span className="font-bold block text-slate-700">Student Typed Response:</span>
-                          <p className="whitespace-pre-wrap text-slate-600">{sub.content || 'No text content provided.'}</p>
+                        <div className="p-3.5 rounded-xl border border-[#cdcdcd] text-xs bg-white space-y-1">
+                          <span className="font-bold block text-[#011638]">Student Typed Response:</span>
+                          <p className="whitespace-pre-wrap text-[#364156]">{sub.content || 'No text content provided.'}</p>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3 p-3 rounded-xl border border-slate-100 bg-white shadow-xs">
+                      <div className="flex items-center gap-3 p-3 rounded-xl border border-[#cdcdcd] bg-white shadow-xs">
                         <div>
-                          <label className="block text-[10px] font-bold mb-1 text-slate-500">Score</label>
+                          <label className="block text-[10px] font-bold mb-1 text-[#364156]">Score</label>
                           <input
                             type="text"
                             placeholder={sub.grade || 'Score'}
                             value={grades[sub.id] || ''}
                             onChange={(e) => setGrades({ ...grades, [sub.id]: e.target.value })}
-                            className="w-20 p-2 text-xs rounded-lg border border-slate-200 focus:outline-none focus:border-sky-400"
+                            className="w-20 p-2 text-xs rounded-lg border border-[#cdcdcd] text-[#011638] focus:outline-none focus:border-[#214e34]"
                           />
                         </div>
                         <button
                           onClick={() => handleGradeSubmit(sub.id)}
-                          className="mt-4 sa-btn-primary py-2 px-3 text-xs"
+                          className="mt-4 sa-btn-primary py-2 px-3 text-xs bg-[#214e34] text-[#dff8eb] hover:bg-[#011638]"
                         >
                           Save
                         </button>
@@ -707,23 +707,23 @@ export default function TeacherDashboard() {
                     </div>
 
                     {sub.file && (
-                      <div className="mt-2 border border-slate-100 rounded-xl overflow-hidden p-3 bg-slate-50">
-                        <p className="text-xs font-bold mb-2 text-slate-700">Attached Student PDF:</p>
+                      <div className="mt-2 border border-[#cdcdcd] rounded-xl overflow-hidden p-3 bg-white">
+                        <p className="text-xs font-bold mb-2 text-[#011638]">Attached Student PDF:</p>
                         {pdfBlobs[sub.id] ? (
                           <object
                             data={pdfBlobs[sub.id]}
                             type="application/pdf"
-                            className="w-full h-96 rounded-lg border border-slate-200"
+                            className="w-full h-96 rounded-lg border border-[#cdcdcd]"
                           >
                             <p className="text-xs p-4">
                               PDF preview unavailable.{' '}
-                              <a href={pdfBlobs[sub.id]} target="_blank" rel="noopener noreferrer" className="underline font-bold text-sky-600">
+                              <a href={pdfBlobs[sub.id]} target="_blank" rel="noopener noreferrer" className="underline font-bold text-[#214e34]">
                                 Download PDF
                               </a>
                             </p>
                           </object>
                         ) : (
-                          <p className="text-xs p-4 text-slate-400">Loading PDF preview...</p>
+                          <p className="text-xs p-4 text-[#364156]">Loading PDF preview...</p>
                         )}
                       </div>
                     )}
@@ -734,41 +734,41 @@ export default function TeacherDashboard() {
 
             {/* Exam Submissions */}
             <div className="space-y-4 pt-4">
-              <h3 className="text-xs font-extrabold uppercase tracking-wider pb-1 border-b border-slate-200" style={{ color: 'var(--sa-muted)' }}>
+              <h3 className="text-xs font-extrabold uppercase tracking-wider pb-1 border-b border-[#cdcdcd] text-[#364156]">
                 Exam Submissions
               </h3>
               {examSubmissions.length === 0 ? (
-                <p className="text-xs" style={{ color: 'var(--sa-muted)' }}>No exam submissions found.</p>
+                <p className="text-xs text-[#364156]">No exam submissions found.</p>
               ) : (
                 examSubmissions.map((sub) => (
-                  <div key={`exam-sub-${sub.id}`} className="sa-card space-y-4">
+                  <div key={`exam-sub-${sub.id}`} className="sa-card bg-[#dff8eb] border border-[#cdcdcd] space-y-4 shadow-xs">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                       <div className="space-y-2 w-full max-w-lg">
-                        <span className="px-2.5 py-1 text-[10px] font-extrabold rounded-lg uppercase tracking-wider" style={{ backgroundColor: 'var(--sa-green-light)', color: 'var(--sa-green-dark)' }}>
+                        <span className="px-2.5 py-1 text-[10px] font-extrabold rounded-lg uppercase tracking-wider bg-[#214e34] text-[#dff8eb]">
                           Exam ID: {sub.exam}
                         </span>
-                        <p className="text-xs font-bold text-slate-800 mt-1">Student ID: {sub.student}</p>
+                        <p className="text-xs font-bold text-[#011638] mt-1">Student ID: {sub.student}</p>
                         
-                        <div className="p-3.5 rounded-xl border border-slate-100 text-xs bg-slate-50 space-y-1">
-                          <span className="font-bold block text-slate-700">Student Typed Exam Answers:</span>
-                          <p className="whitespace-pre-wrap text-slate-600">{renderStudentAnswers(sub)}</p>
+                        <div className="p-3.5 rounded-xl border border-[#cdcdcd] text-xs bg-white space-y-1">
+                          <span className="font-bold block text-[#011638]">Student Typed Exam Answers:</span>
+                          <p className="whitespace-pre-wrap text-[#364156]">{renderStudentAnswers(sub)}</p>
                         </div>
                       </div>
 
-                      <div className="flex flex-col sm:flex-row items-center gap-3 p-3 rounded-xl border border-slate-100 bg-white shadow-xs">
+                      <div className="flex flex-col sm:flex-row items-center gap-3 p-3 rounded-xl border border-[#cdcdcd] bg-white shadow-xs">
                         <div>
-                          <label className="block text-[10px] font-bold mb-1 text-slate-500">Score</label>
+                          <label className="block text-[10px] font-bold mb-1 text-[#364156]">Score</label>
                           <input
                             type="text"
                             placeholder={sub.grade || 'Score'}
                             value={examGrades[sub.id] || ''}
                             onChange={(e) => setExamGrades({ ...examGrades, [sub.id]: e.target.value })}
-                            className="w-20 p-2 text-xs rounded-lg border border-slate-200 focus:outline-none focus:border-sky-400"
+                            className="w-20 p-2 text-xs rounded-lg border border-[#cdcdcd] text-[#011638] focus:outline-none focus:border-[#214e34]"
                           />
                         </div>
                         <button
                           onClick={() => handleExamGradeSubmit(sub.id)}
-                          className="mt-4 sa-btn-primary py-2 px-3 text-xs"
+                          className="mt-4 sa-btn-primary py-2 px-3 text-xs bg-[#214e34] text-[#dff8eb] hover:bg-[#011638]"
                         >
                           Send Score
                         </button>
@@ -776,23 +776,23 @@ export default function TeacherDashboard() {
                     </div>
 
                     {sub.file && (
-                      <div className="mt-2 border border-slate-100 rounded-xl overflow-hidden p-3 bg-slate-50">
-                        <p className="text-xs font-bold mb-2 text-slate-700">Attached Answer Sheet PDF:</p>
+                      <div className="mt-2 border border-[#cdcdcd] rounded-xl overflow-hidden p-3 bg-white">
+                        <p className="text-xs font-bold mb-2 text-[#011638]">Attached Answer Sheet PDF:</p>
                         {pdfBlobs[sub.id] ? (
                           <object
                             data={pdfBlobs[sub.id]}
                             type="application/pdf"
-                            className="w-full h-96 rounded-lg border border-slate-200"
+                            className="w-full h-96 rounded-lg border border-[#cdcdcd]"
                           >
                             <p className="text-xs p-4">
                               PDF preview unavailable.{' '}
-                              <a href={pdfBlobs[sub.id]} target="_blank" rel="noopener noreferrer" className="underline font-bold text-sky-600">
+                              <a href={pdfBlobs[sub.id]} target="_blank" rel="noopener noreferrer" className="underline font-bold text-[#214e34]">
                                 Download PDF
                               </a>
                             </p>
                           </object>
                         ) : (
-                          <p className="text-xs p-4 text-slate-400">Loading PDF preview...</p>
+                          <p className="text-xs p-4 text-[#364156]">Loading PDF preview...</p>
                         )}
                       </div>
                     )}
@@ -808,20 +808,20 @@ export default function TeacherDashboard() {
 
     {/* GEOFENCE ATTENDANCE TAB */}
     {activeTab === 'attendance' && (
-      <div className="max-w-md mx-auto sa-card text-center space-y-6 my-8">
+      <div className="max-w-md mx-auto sa-card bg-[#dff8eb] border border-[#cdcdcd] text-center space-y-6 my-8 shadow-xs">
         <div>
-          <h2 className="font-extrabold text-xl text-slate-800">Teacher Attendance Checker</h2>
-          <p className="text-xs mt-1" style={{ color: 'var(--sa-muted)' }}>
+          <h2 className="font-extrabold text-xl text-[#011638]">Teacher Attendance Checker</h2>
+          <p className="text-xs mt-1 text-[#364156]">
             Enter your exact registered TSC Number to record your daily clock-in/out.
           </p>
         </div>
 
         <div className="text-left">
-          <label htmlFor="teacherId" className="block text-xs font-bold mb-1 text-slate-700">
+          <label htmlFor="teacherId" className="block text-xs font-bold mb-1 text-[#011638]">
             Enter your TSC Number
           </label>
           <input
-            className="w-full border border-slate-200 rounded-xl p-3 text-xs focus:outline-none focus:border-sky-400 font-mono font-bold text-slate-800"
+            className="w-full border border-[#cdcdcd] bg-white rounded-xl p-3 text-xs focus:outline-none focus:border-[#214e34] font-mono font-bold text-[#011638]"
             type="text"
             id="teacherId"
             placeholder="e.g. 8000"
@@ -834,20 +834,20 @@ export default function TeacherDashboard() {
           <button
             onClick={() => runGeoFence('in')}
             disabled={geoLoading}
-            className="sa-btn-primary rounded-full px-8 py-3 text-xs shadow-md transition-all disabled:opacity-50"
+            className="sa-btn-primary bg-[#214e34] text-[#dff8eb] hover:bg-[#011638] rounded-full px-8 py-3 text-xs shadow-md transition-all disabled:opacity-50"
           >
             {geoLoading ? 'Checking Location...' : 'Clock In / Out'}
           </button>
           
           {statusText && (
-            <div className="p-3 rounded-xl border border-slate-100 bg-slate-50 w-full">
-              <h3 id="status" className="text-xs font-semibold text-slate-700">{statusText}</h3>
+            <div className="p-3 rounded-xl border border-[#cdcdcd] bg-white w-full">
+              <h3 id="status" className="text-xs font-semibold text-[#011638]">{statusText}</h3>
             </div>
           )}
         </div>
       </div>
     )}
 
-  </div>
+</div>
 );
 }

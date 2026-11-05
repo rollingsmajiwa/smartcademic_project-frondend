@@ -31,93 +31,88 @@ export default function SignUp() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden font-sans bg-slate-50">
+    <div className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden font-sans bg-[#011638]">
   
-  {/* Light Green Decorative Blur Effect */}
+  {/* Distinct Background Decorative Glows */}
   <div 
-    className="absolute top-12 right-12 w-96 h-96 rounded-full filter blur-3xl opacity-40 pointer-events-none"
-    style={{ backgroundColor: 'var(--sa-green-soft)' }}
+    className="absolute top-12 left-12 w-96 h-96 rounded-sm filter blur-3xl opacity-20 pointer-events-none"
+    style={{ backgroundColor: '#dff8eb' }}
   ></div>
   <div 
-    className="absolute bottom-12 left-12 w-96 h-96 rounded-full filter blur-3xl opacity-30 pointer-events-none"
-    style={{ backgroundColor: 'var(--sa-blue)' }}
+    className="absolute bottom-12 right-12 w-96 h-96 rounded-sm filter blur-3xl opacity-30 pointer-events-none"
+    style={{ backgroundColor: '#214e34' }}
   ></div>
 
-  {/* Greenish Registration Card */}
+  {/* Dark Slate Registration Card (Contrasting Sign In's Light Mint Card) */}
   <main 
-    className="relative z-20 border rounded-3xl w-full max-w-md p-8 backdrop-blur-md shadow-xl space-y-6"
-    style={{ 
-      backgroundColor: 'rgba(232, 245, 233, 0.9)', 
-      borderColor: 'var(--sa-green-soft)' 
-    }}
+    className="relative z-20 border rounded-sm w-full max-w-md p-8 backdrop-blur-md shadow-2xl space-y-6 bg-[#364156]/90 border-[#dff8eb]/30"
   >
     
     <div>
       <h2 
-        className="font-extrabold text-2xl tracking-tight text-center" 
-        style={{ fontFamily: 'Montserrat, sans-serif', color: 'var(--sa-green-dark)' }}
+        className="font-extrabold text-2xl tracking-tight text-center text-[#dff8eb]" 
+        style={{ fontFamily: 'Montserrat, sans-serif' }}
       >
         Create Student Account
       </h2>
-      <p className="text-xs text-slate-600 text-center mt-1 font-medium">
+      <p className="text-xs text-[#cdcdcd] text-center mt-1 font-medium">
         Enter your details to register for SmartAcademic
       </p>
     </div>
 
     {error && (
-      <p className="p-3 rounded-2xl bg-red-500/10 border border-red-400/30 text-red-600 text-xs font-bold text-center">
+      <p className="p-3 rounded-md bg-red-500/10 border border-red-500/30 text-red-300 text-xs font-bold text-center">
         {error}
       </p>
     )}
 
     <form onSubmit={handleSignUp} className="space-y-4">
       <div className="input-group">
-        <label className="block text-xs font-bold mb-1 text-slate-700">Username</label>
+        <label className="block text-xs font-bold mb-1 text-[#dff8eb]">Username</label>
         <input 
           type="text" 
           value={username} 
           onChange={(e) => setUsername(e.target.value)} 
           required 
           placeholder="Choose a username..."
-          className="w-full px-4 py-3 text-xs rounded-full bg-white border border-emerald-200 focus:outline-none focus:border-emerald-500 text-slate-800 shadow-xs" 
+          className="w-full px-4 py-3 text-xs rounded-sm bg-[#011638] border border-[#cdcdcd]/40 text-white placeholder-[#cdcdcd]/50 focus:outline-none focus:border-[#dff8eb] focus:ring-2 focus:ring-[#dff8eb]/20 shadow-xs" 
         />
       </div>
 
       <div className="input-group">
-        <label className="block text-xs font-bold mb-1 text-slate-700">Email</label>
+        <label className="block text-xs font-bold mb-1 text-[#dff8eb]">Email</label>
         <input 
           type="email" 
           value={email} 
           onChange={(e) => setEmail(e.target.value)} 
           required 
           placeholder="Enter your email..."
-          className="w-full px-4 py-3 text-xs rounded-full bg-white border border-emerald-200 focus:outline-none focus:border-emerald-500 text-slate-800 shadow-xs" 
+          className="w-full px-4 py-3 text-xs rounded-sm bg-[#011638] border border-[#cdcdcd]/40 text-white placeholder-[#cdcdcd]/50 focus:outline-none focus:border-[#dff8eb] focus:ring-2 focus:ring-[#dff8eb]/20 shadow-xs" 
         />
       </div>
 
       <div className="input-group">
-        <label className="block text-xs font-bold mb-1 text-slate-700">Password</label>
+        <label className="block text-xs font-bold mb-1 text-[#dff8eb]">Password</label>
         <input 
           type="password" 
           value={password} 
           onChange={(e) => setPassword(e.target.value)} 
           required 
-          placeholder=" "
-          className="w-full px-4 py-3 text-xs rounded-full bg-white border border-emerald-200 focus:outline-none focus:border-emerald-500 text-slate-800 shadow-xs" 
+          placeholder="Create a strong password..."
+          className="w-full px-4 py-3 text-xs rounded-sm bg-[#011638] border border-[#cdcdcd]/40 text-white placeholder-[#cdcdcd]/50 focus:outline-none focus:border-[#dff8eb] focus:ring-2 focus:ring-[#dff8eb]/20 shadow-xs" 
         />
       </div>
 
       <button 
         type="submit" 
-        className="w-full py-3 rounded-full font-bold text-xs text-white shadow-md transition-all hover:opacity-90"
-        style={{ backgroundColor: 'var(--sa-green-dark)' }}
+        className="w-full py-3 rounded-sm font-extrabold text-xs text-[#011638] bg-[#dff8eb] hover:bg-[#214e34] hover:text-[#dff8eb] shadow-md transition-all mt-2"
       >
         Register
       </button>
 
-      <p className="text-center text-xs text-slate-600 font-semibold pt-2">
+      <p className="text-center text-xs text-[#cdcdcd] font-semibold pt-2">
         Already have an account?{' '}
-        <Link to="/signin" className="text-sky-600 hover:underline font-bold">
+        <Link to="/signin" className="text-[#dff8eb] hover:underline font-bold">
           Sign In
         </Link>
       </p>

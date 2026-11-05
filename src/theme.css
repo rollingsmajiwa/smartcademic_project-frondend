@@ -1,32 +1,47 @@
 :root {
-  /* Brand Colors */
-  --sa-green-light: #E8F5E9;   /* Soft background highlight & banners */
-  --sa-green-soft: #C8E6C9;    /* Gentle green borders */
-  --sa-green-dark: #2E7D32;    /* Deep green for headers & text */
+  /* Brand Variables */
+  --sa-green-light: #dff8eb;   
+  --sa-green-soft: #214e34;    
+  --sa-green-dark: #011638;    
   
-  --sa-blue: #38BDF8;          /* Light blue primary action buttons */
-  --sa-blue-hover: #0284C7;    /* Primary button hover state */
+  --sa-blue: #214e34;          /* Primary action buttons */
+  --sa-blue-hover: #153321;    /* Primary button hover state */
   
-  --sa-bg: #F8FAFC;            /* Clean canvas background */
-  --sa-surface: #FFFFFF;       /* Pure white card container background */
-  --sa-text: #1E293B;          /* Dark body text */
-  --sa-muted: #64748B;         /* Secondary label text */
-  --sa-border: #E2E8F0;        /* General border color */
+  --sa-bg: #f2f7f4;            /* Main dashboard canvas background (Bright) */
+  --sa-surface: #dff8eb;       /* Card & Form container background (Bright Mint) */
+  --sa-text: #011638;          /* Dark readable body text */
+  --sa-muted: #364156;         /* Secondary label text */
+  --sa-border: #cdcdcd;        /* General border color */
+
+  /* Sidebar & Navbar Dark Colors */
+  --sa-sidebar-bg: #011638;
+  --sa-sidebar-surface: #364156;
+  --sa-sidebar-text: #ffffff;
 
   /* Radii & Shadows */
-  --sa-radius-lg: 1rem;
+  --sa-radius-md: 1rem;
   --sa-radius-xl: 1.5rem;
-  --sa-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04);
-  --sa-shadow-hover: 0 12px 28px -4px rgba(0, 0, 0, 0.08);
+  --sa-shadow: 0 4px 20px -2px rgba(1, 22, 56, 0.08);
+  --sa-shadow-hover: 0 12px 28px -4px rgba(33, 78, 52, 0.15);
 }
 
-/* Base Body Styles for Dashboards */
+/* Base Body Styles for Dashboards & Links */
 body {
   background-color: var(--sa-bg);
   color: var(--sa-text);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   margin: 0;
   padding: 0;
+}
+
+a {
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+}
+
+a:hover {
+  color: #214e34;
 }
 
 /* =========================================================
@@ -41,8 +56,7 @@ body {
   align-items: center;
   overflow: hidden;
   position: relative;
-  /* 225deg flows explicitly from top-right to bottom-left */
-  background: linear-gradient(225deg, #1E293B, #2E7D32, #0284C7);
+  background: linear-gradient(225deg, #011638, #364156, #214e34);
   background-size: 400% 400%;
   animation: breathe 12s ease infinite;
 }
@@ -57,7 +71,7 @@ body {
 .blob-1 {
   width: 350px;
   height: 350px;
-  background-color: rgba(56, 189, 248, 0.35); /* Light Blue Blob */
+  background-color: rgba(33, 78, 52, 0.35);
   top: 10%;
   left: 15%;
   z-index: 1;
@@ -70,7 +84,7 @@ body {
 .blob-2 {
   width: 300px;
   height: 300px;
-  background: rgba(46, 125, 50, 0.35); /* Deep Green Blob */
+  background: rgba(54, 65, 86, 0.4);
   bottom: 10%;
   right: 15%;
   z-index: 1;
@@ -84,25 +98,24 @@ body {
 .glass-card {
   position: relative;
   z-index: 2;
-  border-radius: var(--sa-radius-xl);
+  border-radius: var(--sa-radius-sm);
   width: 100%;
   max-width: 420px;
   padding: 2.5rem;
   text-align: center;
   backdrop-filter: blur(12px);
-  background: rgba(255, 255, 255, 0.88);
-  border: 1px solid rgba(200, 230, 201, 0.6);
-  box-shadow: 0px 20px 50px rgba(0, 0, 0, 0.2);
+  background: rgba(223, 248, 235, 0.95);
+  border: 1px solid #cdcdcd;
+  box-shadow: 0px 20px 50px rgba(1, 22, 56, 0.25);
 }
 
 .glass-card h1 {
   font-family: 'Montserrat', sans-serif;
-  color: var(--sa-green-dark);
+  color: #011638;
   letter-spacing: 2px;
   line-height: 1.2;
   font-size: 1.75rem;
   font-weight: 800;
-  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.05);
   margin-bottom: 1.75rem;
 }
 
@@ -113,7 +126,7 @@ body {
   margin-bottom: 0.5rem;
   font-size: 0.8rem;
   font-weight: 700;
-  color: var(--sa-text);
+  color: #011638;
 }
 
 .input-group {
@@ -124,45 +137,46 @@ body {
 .glass-card input {
   width: 100%;
   padding: 0.75rem 1rem;
-  border-radius: 50px;
+  border-radius: 5px;
   box-sizing: border-box;
-  background: rgba(248, 250, 252, 0.9);
-  color: var(--sa-text);
+  background: #ffffff;
+  color: #011638;
   font-size: 0.85rem;
   transition: all 0.3s ease;
-  border: 1px solid var(--sa-border);
+  border: 1px solid #cdcdcd;
   outline: none;
 }
 
 .glass-card input:focus {
-  border-color: var(--sa-blue);
-  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25);
-  background: #FFFFFF;
+  border-color: #214e34;
+  box-shadow: 0 0 0 3px rgba(33, 78, 52, 0.2);
+  background: #ffffff;
 }
 
 .glass-card button[type="submit"], 
 .glass-card .sa-btn-login {
   width: 100%;
   padding: 0.75rem;
-  border-radius: 50px;
+  border-radius: 5px;
   border: none;
-  background: linear-gradient(90deg, var(--sa-blue), var(--sa-blue-hover));
-  color: #FFFFFF;
-  font-weight: 700;
+  background: #214e34;
+  color: #dff8eb;
+  font-weight: 800;
   font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+  box-shadow: 0 4px 12px rgba(33, 78, 52, 0.3);
 }
 
 .glass-card button[type="submit"]:hover,
 .glass-card .sa-btn-login:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(56, 189, 248, 0.5);
+  background: #011638;
+  box-shadow: 0 8px 20px rgba(1, 22, 56, 0.4);
 }
 
 /* =========================================================
-   Dashboard UI Layouts & Components (Full Width)
+   Dashboard UI Layouts & Components (Bright Cards/Forms)
    ========================================================= */
 
 .sa-container {
@@ -174,8 +188,8 @@ body {
 
 .sa-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.75rem;
   margin-bottom: 2rem;
   width: 100%;
 }
@@ -188,11 +202,12 @@ body {
 
 .sa-card {
   width: 100%;
+  min-height: 160px;
   box-sizing: border-box;
   background-color: var(--sa-surface);
-  border: 1px solid var(--sa-green-soft);
+  border: 1px solid var(--sa-border);
   border-radius: var(--sa-radius-xl);
-  padding: 1.75rem;
+  padding: 2.25rem 2rem;
   box-shadow: var(--sa-shadow);
   transition: box-shadow 0.2s ease;
 }
@@ -204,24 +219,25 @@ body {
 .sa-banner {
   width: 100%;
   box-sizing: border-box;
-  background-color: var(--sa-green-light);
-  border: 1px solid var(--sa-green-soft);
-  border-radius: var(--sa-radius-xl);
+  background-color: #dff8eb;
+  border: 1px solid var(--sa-border);
+  border-radius: var(--sa-radius-md);
   padding: 2rem;
   margin-bottom: 2rem;
+  box-shadow: var(--sa-shadow);
 }
 
 .sa-card-title {
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--sa-muted);
-  margin: 0 0 0.5rem 0;
+  color: #214e34;
+  margin: 0 0 0.75rem 0;
 }
 
 .sa-card-value {
-  font-size: 2.25rem;
+  font-size: 2.75rem;
   font-weight: 800;
   color: var(--sa-text);
   margin: 0;
@@ -229,8 +245,8 @@ body {
 
 /* Dashboard Action Buttons */
 .sa-btn-primary {
-  background-color: var(--sa-blue);
-  color: #FFFFFF;
+  background-color: #214e34;
+  color: #dff8eb;
   padding: 0.65rem 1.25rem;
   font-size: 0.75rem;
   font-weight: 700;
@@ -241,12 +257,12 @@ body {
 }
 
 .sa-btn-primary:hover {
-  background-color: var(--sa-blue-hover);
+  background-color: #011638;
 }
 
 .sa-btn-secondary {
-  background-color: var(--sa-surface);
-  color: var(--sa-text);
+  background-color: #ffffff;
+  color: #011638;
   border: 1px solid var(--sa-border);
   padding: 0.65rem 1.25rem;
   font-size: 0.75rem;
@@ -257,16 +273,17 @@ body {
 }
 
 .sa-btn-secondary:hover {
-  background-color: #F1F5F9;
+  background-color: #dff8eb;
 }
 
 /* Tables */
 .sa-table-wrapper {
   width: 100%;
   overflow-x: auto;
-  border: 1px solid var(--sa-green-soft);
-  border-radius: var(--sa-radius-lg);
-  background-color: var(--sa-surface);
+  border: 1px solid var(--sa-border);
+  border-radius: var(--sa-radius-md);
+  background-color: #ffffff;
+  box-shadow: var(--sa-shadow);
 }
 
 .sa-table {
@@ -277,21 +294,22 @@ body {
 }
 
 .sa-table thead th {
-  background-color: var(--sa-green-light);
-  color: var(--sa-green-dark);
+  background-color: #364156;
+  color: #ffffff;
   font-size: 0.65rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   padding: 1rem;
-  border-bottom: 1px solid var(--sa-green-soft);
+  border-bottom: 1px solid #011638;
 }
 
 .sa-table tbody td {
   padding: 1rem;
-  border-bottom: 1px solid var(--sa-border);
+  border-bottom: 1px solid #cdcdcd;
+  color: #011638;
 }
 
 .sa-table tbody tr:hover {
-  background-color: rgba(232, 245, 233, 0.3);
+  background-color: rgba(223, 248, 235, 0.6);
 }
