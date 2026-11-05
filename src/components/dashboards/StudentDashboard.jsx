@@ -124,6 +124,7 @@ export default function StudentDashboard() {
 
   const [overview, setOverview] = useState(null);
   const [materials, setMaterials] = useState([]);
+  const [viewingNotesId, setViewingNotesId] = useState(null);
   const [assignments, setAssignments] = useState([]);
   const [exams, setExams] = useState([]);
   const [submissions, setSubmissions] = useState([]);
@@ -157,33 +158,40 @@ export default function StudentDashboard() {
     fetchTabData(activeTab);
   }, [activeTab]);
 
-  const fetchTabData = async (tab) => {
-    setLoading(true);
-    setError(null);
-    try {
-      if (tab === 'overview' || !tab || tab === 'home') {
-        const res = await axios.get('http://127.0.0.1:8000/api/students/overview/', apiConfig);
-        setOverview(res.data);
-      } else if (tab === 'materials') {
-        const res = await axios.get('http://127.0.0.1:8000/api/students/materials/', apiConfig);
-        setMaterials(res.data);
-      } else if (tab === 'assignments') {
-        const res = await axios.get('http://127.0.0.1:8000/api/students/assignments/', apiConfig);
-        setAssignments(res.data);
-      } else if (tab === 'exams') {
-        const res = await axios.get('http://127.0.0.1:8000/api/students/exams/', apiConfig);
-        setExams(res.data);
-      } else if (tab === 'results') {
-        const res = await axios.get('http://127.0.0.1:8000/api/students/my-assignment-submissions/', apiConfig);
-        setSubmissions(res.data);
-      }
-    } catch (err) {
-      console.error(`Error fetching ${tab}:`, err);
-      setError(err.response?.data?.detail || `Failed to load ${tab} data from the server.`);
-    } finally {
-      setLoading(false);
-    }
+ const fetchTabData = async (tab) => {
+  setLoading(true);
+  setError(null);
+
+  // 1. Grab a fresh token and config INSIDE the function call
+  const token = localStorage.getItem('access_token');
+  const apiConfig = {
+    headers: { Authorization: `Bearer ${token}` }
   };
+
+  try {
+    if (tab === 'overview' || !tab || tab === 'home') {
+      const res = await axios.get('http://127.0.0.1:8000/api/students/overview/', apiConfig);
+      setOverview(res.data);
+    } else if (tab === 'materials') {
+      const res = await axios.get('http://127.0.0.1:8000/api/students/materials/', apiConfig);
+      setMaterials(Array.isArray(res.data) ? res.data : res.data.results || []);
+    } else if (tab === 'assignments') {
+      const res = await axios.get('http://127.0.0.1:8000/api/students/assignments/', apiConfig);
+      setAssignments(res.data);
+    } else if (tab === 'exams') {
+      const res = await axios.get('http://127.0.0.1:8000/api/students/exams/', apiConfig);
+      setExams(res.data);
+    } else if (tab === 'results') {
+      const res = await axios.get('http://127.0.0.1:8000/api/students/my-assignment-submissions/', apiConfig);
+      setSubmissions(res.data);
+    }
+  } catch (err) {
+    console.error(`Error fetching ${tab}:`, err);
+    setError(err.response?.data?.detail || `Failed to load ${tab} data from the server.`);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleAssignmentSubmit = async (assignmentId) => {
     try {
@@ -340,44 +348,46 @@ export default function StudentDashboard() {
 
         {/* REVISION MATERIALS TAB */}
         {activeTab === 'materials' && (
-          <div className="space-y-4">
-            <h2 className="text-lg font-extrabold text-[#011638]">Revision Materials</h2>
-            {materials.length === 0 ? (
-              <p className="text-xs py-12 text-center sa-card bg-[#dff8eb] border border-[#cdcdcd] text-[#364156]">
-                No revision materials available at this time.
-              </p>
-            ) : (
-              <div className="sa-card bg-[#dff8eb] border border-[#cdcdcd] p-0 overflow-hidden divide-y divide-[#cdcdcd] shadow-xs">
-                {materials.map((mat) => {
-                  const fileUrl = getFullUrl(mat.file_url || mat.file);
-                  return (
-                    <div key={mat.id} className="p-4 flex items-center justify-between bg-white hover:bg-[#dff8eb]/60 transition-colors">
-                      <div>
-                        <h4 className="font-bold text-xs text-[#011638]">{mat.title}</h4>
-                        <p className="text-[11px] mt-0.5 text-[#364156]">
-                          Subject: {mat.course_name || mat.subject || 'General'} | Uploaded: {mat.created_at || mat.uploaded_at || 'Recently'}
-                        </p>
-                        {mat.description && (
-                          <p className="text-[11px] mt-1 text-[#364156]">{mat.description}</p>
-                        )}
-                      </div>
-                      {fileUrl && (
-                        <a 
-                          href={fileUrl} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
-                          className="sa-btn-secondary text-xs flex items-center gap-1.5 py-1.5 px-3 bg-[#364156] text-white hover:bg-[#011638]"
-                        >
-                          <Download size={14} /> Download Notes
-                        </a>
-                      )}
-                    </div>
-                  );
-                })}
+  <div className="space-y-4">
+    <h2 className="text-lg font-extrabold text-[#011638]">Revision Materials</h2>
+    
+    {materials.length === 0 ? (
+      <p className="text-xs text-center sa-card bg-[#dff8eb] border border-[#cdcdcd] text-[#364156]">
+        No revision materials available at this time.
+      </p>
+    ) : (
+      <div className="sa-card bg-[#dff8eb] border border-[#cdcdcd] p-0 overflow-hidden divide-y divide-[#cdcdcd] shadow-xs">
+        {materials.map((mat) => {
+          const fileUrl = getFullUrl(mat.file_url || mat.file);
+          return (
+            <div key={mat.id} className="p-4 flex items-center justify-between bg-white hover:bg-[#dff8eb]/60 transition-color">
+              <div>
+                <h4 className="font-bold text-xs text-[#011638]">{mat.title}</h4>
+                <p className="text-[11px] mt-0.5 text-[#364156]">
+                  Subject: {mat.course_name || mat.subject || 'General'} | Uploaded: {mat.created_at || mat.uploaded_at || 'Recently'}
+                </p>
+                {mat.description && (
+                  <p className="text-[11px] mt-1 text-[#364156]">{mat.description}</p>
+                )}
               </div>
-            )}
-          </div>
-        )}
+              
+              {fileUrl && (
+                <a 
+                  href={fileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="sa-btn-secondary text-xs flex items-center gap-1.5 py-1.5 px-3 bg-[#364156] text-white hover:bg-[#011638]"
+                >
+                  Open File
+                </a>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    )}
+  </div>
+)}
 
         {/* ASSIGNMENTS TAB */}
         {activeTab === 'assignments' && (

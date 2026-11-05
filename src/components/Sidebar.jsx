@@ -39,7 +39,7 @@ export default function Sidebar({ userRole, baseRole, activeTab, setActiveTab, o
       { id: 'materials', label: 'Revision Materials', icon: BookOpenCheck }, // Maps to materials
       { id: 'assignments', label: 'My Assignments', icon: FileText },       // Maps to assignments
       { id: 'exams', label: 'Exams Portal', icon: GraduationCap },           // Maps to exams
-      { id: 'results', label: 'My Submissions & Grades', icon: CheckCircle2 }, // Maps to my-assignment-submissions
+      { id: 'results', label: 'Submissions & Grades', icon: CheckCircle2 }, // Maps to my-assignment-submissions
     ],
     admin: [
       { id: 'home', label: 'Home', icon: Home },
