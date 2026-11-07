@@ -48,8 +48,7 @@ export default function Sidebar({ userRole, baseRole, activeTab, setActiveTab, o
       { id: 'students', label: 'Manage Students', icon: Users },             // Maps to students
       { id: 'teachers', label: 'Manage Teachers', icon: UserCheck },         // Maps to teachers
       { id: 'attendance', label: 'Teacher Attendance', icon: MapPin },       // Maps to attendance
-      { id: 'posts', label: 'Assignments & Exams', icon: ClipboardList },    // Maps to assignments & exams posts
-      { id: 'submissions', label: 'All Submissions', icon: FileCheck2 },  
+     
     ]
   };
   const handleSignOut = () => {
@@ -62,21 +61,27 @@ export default function Sidebar({ userRole, baseRole, activeTab, setActiveTab, o
     navigate('/')
   }
   return (
-   <aside className="w-64 flex flex-col justify-between min-h-screen p-5 border-r border-[#364156] shadow-sm font-sans" style={{ backgroundColor: '#011638', color: '#ffffff' }}>
-  <div>
+   <aside 
+  className="w-64 h-screen sticky top-0 flex flex-col justify-between p-4 border-r border-[#c77dff]/30 shadow-xl font-sans" 
+  style={{ backgroundColor: '#10002b', color: '#ffffff' }}
+>
+  <div className="space-y-4">
     {/* Brand Header */}
-    <div className="flex items-center gap-3 px-2 py-3 mb-6 border-b border-[#364156]">
-      <div className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-xl text-[#dff8eb] shadow-sm" style={{ backgroundColor: '#214e34' }}>
+    <div className="flex items-center gap-3 px-2 py-2 border-b border-[#c77dff]/30">
+      <div 
+        className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-sm text-[#10002b] shadow-lg shadow-[#c77dff]/20 ring-2 ring-[#c77dff]" 
+        style={{ backgroundColor: '#c77dff' }}
+      >
         SA
       </div>
       <div>
-        <h1 className="font-bold text-base leading-tight text-white">SmartAcademic</h1>
-        <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#cdcdcd]">{userRole} Portal</span>
+        <h1 className="font-bold text-base leading-tight text-white">Smart<span className="text-[#c77dff]">Academic</span></h1>
+        <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#c77dff]">{userRole} Portal</span>
       </div>
     </div>
 
     {/* Navigation Links */}
-    <nav className="space-y-1.5">
+    <nav className="space-y-1">
       {menuItems.map((tab) => {
         const Icon = tab.icon;
         const isActive = activeTab === tab.id;
@@ -90,14 +95,13 @@ export default function Sidebar({ userRole, baseRole, activeTab, setActiveTab, o
                 navigate(`/dashboard/${userRole}/${tab.id}`);
               }
             }}
-            className={`w-full flex items-center gap-3 px-4 py-2.5 cursor-pointer rounded-xl text-xs font-bold transition-all ${
+            className={`w-full flex items-center gap-3 px-3 py-2 cursor-pointer rounded-xl text-xs font-bold transition-all ${
               isActive 
-                ? 'shadow-sm font-extrabold text-[#dff8eb]' 
-                : 'text-[#cdcdcd] hover:bg-[#364156]'
+                ? 'bg-[#c77dff] text-[#10002b] shadow-lg shadow-[#c77dff]/30 font-black' 
+                : 'text-gray-200 hover:text-[#c77dff] hover:bg-[#c77dff]/10'
             }`}
-            style={isActive ? { backgroundColor: '#214e34', border: '1px solid #364156' } : {}}
           >
-            <Icon size={16} style={isActive ? { color: '#dff8eb' } : { color: '#cdcdcd' }} />
+            <Icon size={15} className={isActive ? 'text-[#10002b]' : 'text-[#c77dff]'} />
             <span>{tab.label}</span>
           </button>
         );
@@ -105,57 +109,60 @@ export default function Sidebar({ userRole, baseRole, activeTab, setActiveTab, o
     </nav>
   </div>
 
-  {/* UNIVERSAL RETURN / SWITCH BUTTONS FOR ADMINS & TEACHERS */}
-  {baseRole && baseRole !== 'student' && (
-    <div className="mb-4 p-3 rounded-2xl space-y-2 border border-[#364156]" style={{ backgroundColor: '#364156' }}>
-      <span className="text-[10px] font-extrabold uppercase tracking-wider px-1 text-[#cdcdcd]">Switch Dashboard</span>
-      
-      {baseRole === 'admin' && (
+  {/* Bottom Container: Switch Dashboard & Sign Out */}
+  <div className="space-y-2 mt-auto pb-2">
+    {/* Switch Dashboard Buttons */}
+    {baseRole && baseRole !== 'student' && (
+      <div className="p-2.5 rounded-2xl space-y-1.5 border border-[#c77dff]/40 bg-[#10002b]/60 shadow-md">
+        <span className="text-[10px] font-extrabold uppercase tracking-wider px-1 text-[#c77dff]">Switch Dashboard</span>
+        
+        {baseRole === 'admin' && (
+          <button 
+            onClick={() => navigate('/dashboard/admin')}
+            className={`w-full text-left px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              userRole === 'admin' 
+                ? 'bg-[#c77dff] text-[#10002b] shadow-sm font-black' 
+                : 'text-white hover:bg-[#c77dff]/10 hover:text-[#c77dff]'
+            }`}
+          >
+            Back to Admin
+          </button>
+        )}
+
         <button 
-          onClick={() => navigate('/dashboard/admin')}
-          className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            userRole === 'admin' 
-              ? 'bg-[#214e34] text-[#dff8eb] shadow-sm' 
-              : 'text-[#cdcdcd] hover:bg-[#011638]'
+          onClick={() => navigate('/dashboard/teacher')}
+          className={`w-full text-left px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            userRole === 'teacher' 
+              ? 'bg-[#c77dff] text-[#10002b] shadow-sm font-black' 
+              : 'text-white hover:bg-[#c77dff]/10 hover:text-[#c77dff]'
           }`}
         >
-          Back to Admin
+          Teacher Dashboard
         </button>
-      )}
 
-      <button 
-        onClick={() => navigate('/dashboard/teacher')}
-        className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all ${
-          userRole === 'teacher' 
-            ? 'bg-[#214e34] text-[#dff8eb] shadow-sm' 
-            : 'text-[#cdcdcd] hover:bg-[#011638]'
-        }`}
-      >
-        Teacher Dashboard
-      </button>
+        <button 
+          onClick={() => navigate('/dashboard/student')}
+          className={`w-full text-left px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            userRole === 'student' 
+              ? 'bg-[#c77dff] text-[#10002b] shadow-sm font-black' 
+              : 'text-white hover:bg-[#c77dff]/10 hover:text-[#c77dff]'
+          }`}
+        >
+          Student Dashboard
+        </button>
+      </div>
+    )}
 
-      <button 
-        onClick={() => navigate('/dashboard/student')}
-        className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all ${
-          userRole === 'student' 
-            ? 'bg-[#214e34] text-[#dff8eb] shadow-sm' 
-            : 'text-[#cdcdcd] hover:bg-[#011638]'
-        }`}
+    {/* Logout Action */}
+    <div className="pt-2 border-t border-[#c77dff]/30">
+      <button
+        onClick={handleSignOut}
+        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-red-300 hover:bg-red-500/20 transition-colors cursor-pointer"
       >
-        Student Dashboard
+        <LogOut className="w-4 h-4 text-red-400" />
+        Sign Out
       </button>
     </div>
-  )}
-
-  {/* Logout Action */}
-  <div className="pt-4 border-t border-[#364156]">
-    <button
-      onClick={handleSignOut}
-      className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold text-red-400 hover:bg-red-500/10 transition-colors"
-    >
-      <LogOut className="w-4 h-4" />
-      Sign Out
-    </button>
   </div>
 </aside>
   );

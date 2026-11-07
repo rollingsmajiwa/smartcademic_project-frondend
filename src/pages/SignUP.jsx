@@ -32,114 +32,100 @@ export default function SignUp() {
   };
 
   return (
-   <div className="auth-page min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden font-sans bg-[#011638]">
+   <div className="auth-page min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden font-sans">
       
-  {/* Distinct Glowing Blobs */}
-  <div 
-    className="absolute top-12 left-12 w-96 h-96 rounded-full filter blur-3xl opacity-20 pointer-events-none"
-    style={{ backgroundColor: '#dff8eb' }}
-  ></div>
-  <div 
-    className="absolute bottom-12 right-12 w-96 h-96 rounded-full filter blur-3xl opacity-30 pointer-events-none"
-    style={{ backgroundColor: '#214e34' }}
-  ></div>
+  {/* Background Animated Glowing Blobs */}
+  <div className="blob-1"></div>
+  <div className="blob-2"></div>
   
-  {/* Unified Split Card with Inverted Dark Theme */}
-  <div className="relative z-20 w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 rounded-md overflow-hidden shadow-2xl border border-[#cdcdcd]/30 bg-[#364156]/90 backdrop-blur-md">
+  {/* Unified Single Card Container with Interchanged Theme Accents */}
+  <div className='relative z-20 w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 rounded-md overflow-hidden shadow-2xl border border-[#10002b]/40 backdrop-blur-md' style={{ backgroundColor: 'var(--sa-surface)' }}>
     
-    {/* Left Side: Image Panel (Deep Dark Accent) */}
-    <div className="hidden lg:flex flex-col justify-center items-center p-8 bg-[#011638]/60 border-r border-[#cdcdcd]/20">
-      <div className="w-full flex flex-col justify-center items-center space-y-4">
-        <img 
-          src={regImage} 
-          alt="Sign Up illustration" 
-          className="w-full h-[340px] object-cover rounded-md shadow-lg border border-[#cdcdcd]/20"
-        />
-        <div className="text-center px-2">
-          <h3 className="text-sm font-extrabold text-[#dff8eb]">Join SmartAcademic</h3>
-          <p className="text-[11px] text-[#cdcdcd] mt-1 font-medium">
-            Create your account to start managing your academic progress.
-          </p>
-        </div>
+    {/* Left Side: Full-Cover Image Panel */}
+    <div className="hidden lg:flex flex-col justify-between items-center relative overflow-hidden border-r border-[#10002b]/30" style={{ backgroundColor: 'var(--sa-surface)' }}>
+      <img 
+        src={regImage} 
+        alt="Sign Up illustration" 
+        className="absolute inset-0 w-full h-full object-cover m-0 p-0 border-0"
+      />
+      {/* Dark Overlay for Text Readability */}
+      <div className="absolute inset-0 bg-[#10002b]/60"></div>
+      <div className="relative z-10 mt-auto p-8 text-center w-full">
+        <h3 className="text-sm font-extrabold text-[#c77dff]">Join SmartAcademic</h3>
+        <p className="text-[11px] text-white/90 mt-1 font-medium">
+          Create your account to start managing your academic progress.
+        </p>
       </div>
     </div>
    
     {/* Right Side: Register Form Section */}
-    <div className="p-8 sm:p-10 flex flex-col justify-center">
+    <div className="p-8 sm:p-10 flex flex-col justify-center" style={{ backgroundColor: 'var(--sa-surface)' }}>
       
       {/* Brand SA Logo & Header */}
       <div className="mb-6 flex flex-col items-start">
-        <div 
-          className="w-10 h-10 rounded-xl flex items-center justify-center font-extrabold text-base text-[#011638] shadow-md mb-3" 
-          style={{ backgroundColor: '#dff8eb' }}
-        >
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center font-extrabold text-base text-white shadow-md mb-3 bg-[#10002b]">
           SA
         </div>
-        <h1 
-          className="text-[#dff8eb] text-2xl font-extrabold tracking-tight"
-          style={{ fontFamily: 'Montserrat, sans-serif' }}
-        >
+        <h1 className="text-white text-2xl font-extrabold tracking-tight" style={{ fontFamily: 'Montserrat, sans-serif' }}>
           Create Student Account
         </h1>
-        <p className="text-xs text-[#cdcdcd] mt-1 font-medium">
-          Enter your details to register for SmartAcademic
-        </p>
+        <p className="text-xs text-white/80 mt-1 font-medium">Enter your details to register for SmartAcademic</p>
       </div>
 
       {/* Error Notification Alert */}
       {error && (
-        <div className="mb-4 p-3 rounded-md bg-red-500/10 border border-red-500/30 text-red-300 text-xs font-bold text-center">
+        <div className="mb-4 p-3 rounded-md bg-red-500/20 border border-red-500/40 text-red-200 text-xs font-bold text-center">
           {error}
         </div>
       )}
 
       <form onSubmit={handleSignUp} className="space-y-4">
         <div className="input-group">
-          <label className="block text-xs font-bold mb-1 text-[#dff8eb]">Username</label>
+          <label className="block text-xs font-bold mb-1 text-white">Username</label>
           <input 
             type="text" 
             value={username} 
             onChange={(e) => setUsername(e.target.value)} 
             required 
             placeholder="Choose a username..."
-            className="w-full px-4 py-3 text-xs rounded-md bg-[#011638] border border-[#cdcdcd]/40 text-white placeholder-[#cdcdcd]/50 focus:outline-none focus:border-[#dff8eb] focus:ring-2 focus:ring-[#dff8eb]/20 shadow-xs" 
+            className="w-full px-4 py-3 text-xs rounded-md bg-white border border-[#10002b]/40 text-[#10002b] placeholder-[#10002b]/50 focus:outline-none focus:border-[#c77dff] focus:ring-2 focus:ring-[#c77dff]/40 shadow-xs" 
           />
         </div>
 
         <div className="input-group">
-          <label className="block text-xs font-bold mb-1 text-[#dff8eb]">Email</label>
+          <label className="block text-xs font-bold mb-1 text-white">Email</label>
           <input 
             type="email" 
             value={email} 
             onChange={(e) => setEmail(e.target.value)} 
             required 
             placeholder="Enter your email..."
-            className="w-full px-4 py-3 text-xs rounded-md bg-[#011638] border border-[#cdcdcd]/40 text-white placeholder-[#cdcdcd]/50 focus:outline-none focus:border-[#dff8eb] focus:ring-2 focus:ring-[#dff8eb]/20 shadow-xs" 
+            className="w-full px-4 py-3 text-xs rounded-md bg-white border border-[#10002b]/40 text-[#10002b] placeholder-[#10002b]/50 focus:outline-none focus:border-[#c77dff] focus:ring-2 focus:ring-[#c77dff]/40 shadow-xs" 
           />
         </div>
 
         <div className="input-group">
-          <label className="block text-xs font-bold mb-1 text-[#dff8eb]">Password</label>
+          <label className="block text-xs font-bold mb-1 text-white">Password</label>
           <input 
             type="password" 
             value={password} 
             onChange={(e) => setPassword(e.target.value)} 
             required 
             placeholder="Create a strong password..."
-            className="w-full px-4 py-3 text-xs rounded-md bg-[#011638] border border-[#cdcdcd]/40 text-white placeholder-[#cdcdcd]/50 focus:outline-none focus:border-[#dff8eb] focus:ring-2 focus:ring-[#dff8eb]/20 shadow-xs" 
+            className="w-full px-4 py-3 text-xs rounded-md bg-white border border-[#10002b]/40 text-[#10002b] placeholder-[#10002b]/50 focus:outline-none focus:border-[#c77dff] focus:ring-2 focus:ring-[#c77dff]/40 shadow-xs" 
           />
         </div>
 
         <button 
           type="submit" 
-          className="w-full py-3 rounded-md font-extrabold text-xs text-[#011638] bg-[#dff8eb] hover:bg-[#214e34] hover:text-[#dff8eb] shadow-md transition-all mt-2 cursor-pointer"
+          className="sa-btn-login w-full py-3 rounded-md bg-[#c77dff] text-[#10002b] hover:bg-white hover:text-[#10002b] transition-all shadow-md font-extrabold text-xs mt-2 cursor-pointer"
         >
           Register
         </button>
 
-        <p className="mt-6 text-xs text-[#cdcdcd] font-semibold text-center">
+        <p className="mt-6 text-xs text-white/80 font-semibold text-center">
           Already have an account?{' '}
-          <Link to="/signin" className="text-[#dff8eb] hover:underline font-bold">
+          <Link to="/signin" className="text-[#c77dff] hover:underline font-bold">
             Sign In
           </Link>
         </p>

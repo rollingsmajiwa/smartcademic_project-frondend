@@ -1,28 +1,26 @@
 :root {
-  /* Brand Variables */
-  --sa-green-light: #dff8eb;   
-  --sa-green-soft: #214e34;    
-  --sa-green-dark: #011638;    
+  /* Strict 3-Color Core Palette */
+  --sa-darkest: #10002b;      /* Navbar, Sidebar, and Deepest Elements */
+  --sa-dark: #10002b;         /* Primary Dark & Secondary Surfaces */
+  --sa-purple: #10002b;       /* Accent Brand Color */
+  --sa-accent: #c77dff;       /* Highlights, Borders, and Glows */
+  --sa-light: #ffffff;        /* Lightest color (Background & Cards) */
   
-  --sa-blue: #214e34;          /* Primary action buttons */
-  --sa-blue-hover: #153321;    /* Primary button hover state */
-  
-  --sa-bg: #f2f7f4;            /* Main dashboard canvas background (Bright) */
-  --sa-surface: #dff8eb;       /* Card & Form container background (Bright Mint) */
-  --sa-text: #011638;          /* Dark readable body text */
-  --sa-muted: #364156;         /* Secondary label text */
-  --sa-border: #cdcdcd;        /* General border color */
+  --sa-bg: #ffffff;           /* Main dashboard canvas background */
+  --sa-surface: rgba(199, 125, 255, 0.12); /* Soft tinted surface for cards and forms */
+  --sa-text: #10002b;         /* Dark readable body text */
+  --sa-muted: #10002b;        /* Secondary label text (via opacity) */
+  --sa-border: #c77dff;       /* General border color */
 
   /* Sidebar & Navbar Dark Colors */
-  --sa-sidebar-bg: #011638;
-  --sa-sidebar-surface: #364156;
+  --sa-sidebar-bg: #10002b;
+  --sa-sidebar-surface: #10002b;
   --sa-sidebar-text: #ffffff;
 
   /* Radii & Shadows */
-  --sa-radius-md: 1rem;
-  --sa-radius-xl: 1.5rem;
-  --sa-shadow: 0 4px 20px -2px rgba(1, 22, 56, 0.08);
-  --sa-shadow-hover: 0 12px 28px -4px rgba(33, 78, 52, 0.15);
+  --sa-radius-sm: 0.5rem;
+  --sa-shadow: 0 4px 20px -2px rgba(16, 0, 43, 0.08);
+  --sa-shadow-hover: 0 12px 28px -4px rgba(199, 125, 255, 0.25);
 }
 
 /* Base Body Styles for Dashboards & Links */
@@ -41,7 +39,7 @@ a {
 }
 
 a:hover {
-  color: #214e34;
+  color: #c77dff;
 }
 
 /* =========================================================
@@ -56,7 +54,7 @@ a:hover {
   align-items: center;
   overflow: hidden;
   position: relative;
-  background: linear-gradient(225deg, #011638, #364156, #214e34);
+  background: linear-gradient(225deg, #10002b, #10002b, #c77dff);
   background-size: 400% 400%;
   animation: breathe 12s ease infinite;
 }
@@ -71,7 +69,7 @@ a:hover {
 .blob-1 {
   width: 350px;
   height: 350px;
-  background-color: rgba(33, 78, 52, 0.35);
+  background-color: rgba(199, 125, 255, 0.35);
   top: 10%;
   left: 15%;
   z-index: 1;
@@ -84,7 +82,7 @@ a:hover {
 .blob-2 {
   width: 300px;
   height: 300px;
-  background: rgba(54, 65, 86, 0.4);
+  background: rgba(199, 125, 255, 0.3);
   bottom: 10%;
   right: 15%;
   z-index: 1;
@@ -104,14 +102,14 @@ a:hover {
   padding: 2.5rem;
   text-align: center;
   backdrop-filter: blur(12px);
-  background: rgba(223, 248, 235, 0.95);
-  border: 1px solid #cdcdcd;
-  box-shadow: 0px 20px 50px rgba(1, 22, 56, 0.25);
+  background: var(--sa-surface);
+  border: 1px solid #c77dff;
+  box-shadow: 0px 20px 50px rgba(16, 0, 43, 0.25);
 }
 
 .glass-card h1 {
   font-family: 'Montserrat', sans-serif;
-  color: #011638;
+  color: #10002b;
   letter-spacing: 2px;
   line-height: 1.2;
   font-size: 1.75rem;
@@ -126,7 +124,7 @@ a:hover {
   margin-bottom: 0.5rem;
   font-size: 0.8rem;
   font-weight: 700;
-  color: #011638;
+  color: #10002b;
 }
 
 .input-group {
@@ -137,19 +135,19 @@ a:hover {
 .glass-card input {
   width: 100%;
   padding: 0.75rem 1rem;
-  border-radius: 5px;
+  border-radius: 6px;
   box-sizing: border-box;
   background: #ffffff;
-  color: #011638;
+  color: #10002b;
   font-size: 0.85rem;
   transition: all 0.3s ease;
-  border: 1px solid #cdcdcd;
+  border: 1px solid #c77dff;
   outline: none;
 }
 
 .glass-card input:focus {
-  border-color: #214e34;
-  box-shadow: 0 0 0 3px rgba(33, 78, 52, 0.2);
+  border-color: #10002b;
+  box-shadow: 0 0 0 3px rgba(199, 125, 255, 0.3);
   background: #ffffff;
 }
 
@@ -157,26 +155,27 @@ a:hover {
 .glass-card .sa-btn-login {
   width: 100%;
   padding: 0.75rem;
-  border-radius: 5px;
+  border-radius: 6px;
   border: none;
-  background: #214e34;
-  color: #dff8eb;
+  background: #10002b;
+  color: #ffffff;
   font-weight: 800;
   font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(33, 78, 52, 0.3);
+  box-shadow: 0 4px 12px rgba(16, 0, 43, 0.3);
 }
 
 .glass-card button[type="submit"]:hover,
 .glass-card .sa-btn-login:hover {
   transform: translateY(-2px);
-  background: #011638;
-  box-shadow: 0 8px 20px rgba(1, 22, 56, 0.4);
+  background: #c77dff;
+  color: #10002b;
+  box-shadow: 0 8px 20px rgba(199, 125, 255, 0.4);
 }
 
 /* =========================================================
-   Dashboard UI Layouts & Components (Bright Cards/Forms)
+   Dashboard UI Layouts & Components
    ========================================================= */
 
 .sa-container {
@@ -184,11 +183,11 @@ a:hover {
   padding: 2rem;
   min-height: 100vh;
   box-sizing: border-box;
+  background-color: var(--sa-bg);
 }
 
 .sa-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.75rem;
   margin-bottom: 2rem;
   width: 100%;
@@ -206,7 +205,7 @@ a:hover {
   box-sizing: border-box;
   background-color: var(--sa-surface);
   border: 1px solid var(--sa-border);
-  border-radius: var(--sa-radius-xl);
+  border-radius: var(--sa-radius-sm);
   padding: 2.25rem 2rem;
   box-shadow: var(--sa-shadow);
   transition: box-shadow 0.2s ease;
@@ -219,9 +218,9 @@ a:hover {
 .sa-banner {
   width: 100%;
   box-sizing: border-box;
-  background-color: #dff8eb;
+  background-color: var(--sa-surface);
   border: 1px solid var(--sa-border);
-  border-radius: var(--sa-radius-md);
+  border-radius: var(--sa-radius-sm);
   padding: 2rem;
   margin-bottom: 2rem;
   box-shadow: var(--sa-shadow);
@@ -232,48 +231,50 @@ a:hover {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #214e34;
+  color: #10002b;
   margin: 0 0 0.75rem 0;
 }
 
 .sa-card-value {
   font-size: 2.75rem;
   font-weight: 800;
-  color: var(--sa-text);
+  color: #10002b;
   margin: 0;
 }
 
 /* Dashboard Action Buttons */
 .sa-btn-primary {
-  background-color: #214e34;
-  color: #dff8eb;
+  background-color: #10002b;
+  color: #ffffff;
   padding: 0.65rem 1.25rem;
   font-size: 0.75rem;
   font-weight: 700;
-  border-radius: var(--sa-radius-lg);
+  border-radius: var(--sa-radius-sm);
   border: none;
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
 
 .sa-btn-primary:hover {
-  background-color: #011638;
+  background-color: #c77dff;
+  color: #10002b;
 }
 
 .sa-btn-secondary {
   background-color: #ffffff;
-  color: #011638;
+  color: #10002b;
   border: 1px solid var(--sa-border);
   padding: 0.65rem 1.25rem;
   font-size: 0.75rem;
   font-weight: 700;
-  border-radius: var(--sa-radius-lg);
+  border-radius: var(--sa-radius-sm);
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
 
 .sa-btn-secondary:hover {
-  background-color: #dff8eb;
+  background-color: #c77dff;
+  color: #10002b;
 }
 
 /* Tables */
@@ -281,8 +282,8 @@ a:hover {
   width: 100%;
   overflow-x: auto;
   border: 1px solid var(--sa-border);
-  border-radius: var(--sa-radius-md);
-  background-color: #ffffff;
+  border-radius: var(--sa-radius-sm);
+  background-color: var(--sa-surface);
   box-shadow: var(--sa-shadow);
 }
 
@@ -294,22 +295,22 @@ a:hover {
 }
 
 .sa-table thead th {
-  background-color: #364156;
+  background-color: #10002b;
   color: #ffffff;
   font-size: 0.65rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   padding: 1rem;
-  border-bottom: 1px solid #011638;
+  border-bottom: 1px solid #c77dff;
 }
 
 .sa-table tbody td {
   padding: 1rem;
-  border-bottom: 1px solid #cdcdcd;
-  color: #011638;
+  border-bottom: 1px solid #c77dff;
+  color: #10002b;
 }
 
 .sa-table tbody tr:hover {
-  background-color: rgba(223, 248, 235, 0.6);
+  background-color: #ffffff;
 }
