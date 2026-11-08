@@ -50,9 +50,9 @@ export default function SignUp() {
       />
       {/* Dark Overlay for Text Readability */}
       <div className="absolute inset-0 bg-[#10002b]/60"></div>
-      <div className="relative z-10 mt-auto p-8 text-center w-full">
-        <h3 className="text-sm font-extrabold text-[#c77dff]">Join SmartAcademic</h3>
-        <p className="text-[11px] text-white/90 mt-1 font-medium">
+      <div className="relative z-10 mt-40 p-8 text-center w-full">
+        <h3 className="text-3xl font-extrabold text-white">Join SmartAcademic</h3>
+        <p className="text-[20px] text-white/90 mt-1 font-medium">
           Create your account to start managing your academic progress.
         </p>
       </div>

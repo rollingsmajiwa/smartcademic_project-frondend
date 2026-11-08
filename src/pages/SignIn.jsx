@@ -61,9 +61,9 @@ export default function SignIn() {
       />
       {/* Optional Dark Overlay & Bottom Text Caption for Readability */}
       <div className="absolute inset-0 bg-[#10002b]/40"></div>
-      <div className="relative z-10 mt-auto p-8 text-center w-full">
-        <h3 className="text-md font-extrabold text-white">Welcome to SmartAcademic</h3>
-        <p className="text-[15px] text-white/90 mt-1 font-medium">
+      <div className="relative z-10 mt-40 p-8 text-center w-full">
+        <h3 className="text-3xl font-extrabold text-white">Welcome to SmartAcademic</h3>
+        <p className="text-[20px] text-white/90 mt-1 font-medium">
           Your unified portal for seamless academic management.
         </p>
       </div>

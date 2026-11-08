@@ -246,8 +246,8 @@ a:hover {
 .sa-btn-primary {
   background-color: #10002b;
   color: #ffffff;
-  padding: 0.65rem 1.25rem;
-  font-size: 0.75rem;
+  padding: 0.4rem 1rem;
+  font-size: 0.6rem;
   font-weight: 700;
   border-radius: var(--sa-radius-sm);
   border: none;
