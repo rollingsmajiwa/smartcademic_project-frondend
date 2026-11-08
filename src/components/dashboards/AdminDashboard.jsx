@@ -36,11 +36,15 @@ export default function AdminDashboard() {
     username: '',
     email: '',
     password: '',
+    raw_password: '',
     first_name: '',
+    surname: '',
     last_name: '',
     tsc_number: '',
-    student_id_number: '',
-    admission_number: '', // Added required admission number field
+    admission_number: '',
+    gender: 'Male',
+    classroom: '',
+    date_admitted: new Date().toISOString().split('T')[0],
     name: '',
     teacher: ''
   });
@@ -54,15 +58,12 @@ export default function AdminDashboard() {
   const getDisplayName = (obj) => {
     if (!obj) return 'Unassigned';
     if (typeof obj === 'string') return obj;
-    if (obj.name && obj.name.trim() !== '') return obj.name;
-    const fullName = `${obj.first_name || ''} ${obj.last_name || ''}`.trim();
-    if (fullName) return fullName;
-    if (obj.user) {
-      const nestedName = `${obj.user.first_name || ''} ${obj.user.last_name || ''}`.trim();
-      if (nestedName) return nestedName;
-      if (obj.user.username) return obj.user.username;
-    }
-    return obj.username || obj.email || `ID: ${obj.id}`;
+    const first = obj.first_name || obj.user?.first_name || '';
+    const middle = obj.surname || '';
+    const last = obj.last_name || obj.user?.last_name || '';
+    const combined = `${first} ${middle} ${last}`.trim();
+    if (combined) return combined;
+    return obj.username || obj.user?.username || `ID: ${obj.id}`;
   };
 
   const fetchAdminData = async () => {
@@ -111,11 +112,15 @@ export default function AdminDashboard() {
       username: '',
       email: '',
       password: '',
+      raw_password: '',
       first_name: '',
+      surname: '',
       last_name: '',
       tsc_number: '',
-      student_id_number: '',
       admission_number: '',
+      gender: 'Male',
+      classroom: '',
+      date_admitted: new Date().toISOString().split('T')[0],
       name: '',
       teacher: ''
     });
@@ -134,15 +139,24 @@ export default function AdminDashboard() {
       currentTeacherId = obj.teacher_id;
     }
 
+    let currentClassroomId = '';
+    if (obj.classroom) {
+      currentClassroomId = typeof obj.classroom === 'object' ? obj.classroom.id : obj.classroom;
+    }
+
     setFormData({
       username: obj.username || obj.user?.username || '',
       email: obj.email || obj.user?.email || '',
       password: '',
+      raw_password: obj.raw_password || '',
       first_name: obj.first_name || obj.user?.first_name || '',
+      surname: obj.surname || '',
       last_name: obj.last_name || obj.user?.last_name || '',
       tsc_number: obj.tsc_number || '',
-      student_id_number: obj.student_id_number || '',
       admission_number: obj.admission_number || '',
+      gender: obj.gender || 'Male',
+      classroom: currentClassroomId,
+      date_admitted: obj.date_admitted ? obj.date_admitted.split('T')[0] : new Date().toISOString().split('T')[0],
       name: obj.name || obj.class_name || '',
       teacher: currentTeacherId
     });
@@ -196,7 +210,7 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="w-full min-h-screen p-6 lg:p-8 space-y-6 font-sans max-w-5xl mx-auto" style={{ backgroundColor: 'var(--sa-bg)', color: 'var(--sa-text)' }}>
+    <div className="w-full min-h-screen p-6 lg:p-8 space-y-6 font-sans max-w-7xl mx-auto" style={{ backgroundColor: 'var(--sa-bg)', color: 'var(--sa-text)' }}>
       
       {/* OVERVIEW TAB */}
       {activeTab === 'overview' && (
@@ -326,45 +340,69 @@ export default function AdminDashboard() {
             </button>
           </div>
 
-          <div className="sa-table-wrapper border border-[#c77dff] shadow-xs rounded-2xl overflow-hidden w-full" style={{ backgroundColor: 'var(--sa-surface)' }}>
-            <table className="sa-table w-full text-left text-xs">
+          <div className="sa-table-wrapper border border-[#c77dff] shadow-xs rounded-2xl overflow-x-auto w-full" style={{ backgroundColor: 'var(--sa-surface)' }}>
+            <table className="sa-table w-full text-left text-xs min-w-[800px]">
               <thead>
                 <tr>
                   <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Admission No.</th>
-                  <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Name</th>
-                  <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Email / Username</th>
+                  <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Name (First, Surname, Last)</th>
+                  <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Username</th>
+                  <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Password</th>
+                  <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Gender</th>
+                  <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Classroom</th>
+                  <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Date Admitted</th>
                   <th className="p-4 text-right bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#c77dff]/40">
                 {students.length === 0 ? (
                   <tr>
-                    <td colSpan="4" className="p-6 text-center text-[#10002b]/70 bg-white">No students registered yet.</td>
+                    <td colSpan="8" className="p-6 text-center text-[#10002b]/70 bg-white">No students registered yet.</td>
                   </tr>
                 ) : (
-                  students.map((s) => (
-                    <tr key={s.id} className="bg-white hover:bg-[#c77dff]/10 transition-colors">
-                      <td className="p-4 font-mono font-bold text-[#10002b]">{s.admission_number || s.student_id_number || s.id}</td>
-                      <td className="p-4 font-bold text-[#10002b]">{getDisplayName(s)}</td>
-                      <td className="p-4 text-[#10002b]/80">{s.email || s.username || s.user?.email || 'N/A'}</td>
-                      <td className="p-4 text-right space-x-2">
-                        <button
-                          type="button"
-                          onClick={() => openEditModal(s, 'student')}
-                          className="sa-btn-secondary py-1.5 px-3 text-xs bg-[#10002b] text-white border border-[#10002b] hover:bg-[#c77dff] hover:text-[#10002b] rounded-xl font-bold transition-all cursor-pointer"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteUser(s.id, 'student')}
-                          className="py-1.5 px-3 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-xl border border-red-200 transition-colors cursor-pointer"
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))
+                  students.map((s) => {
+                    let assignedClass = s.classroom_name || 'Unassigned';
+                    if (assignedClass === 'Unassigned' && s.classroom) {
+                      if (typeof s.classroom === 'object') {
+                        assignedClass = s.classroom.name;
+                      } else {
+                        const found = classrooms.find(c => c.id === Number(s.classroom));
+                        if (found) assignedClass = found.name;
+                      }
+                    }
+
+                    return (
+                      <tr key={s.id} className="bg-white hover:bg-[#c77dff]/10 transition-colors">
+                        <td className="p-4 font-mono font-bold text-[#10002b]">{s.admission_number || s.id}</td>
+                        <td className="p-4 font-bold text-[#10002b]">
+                          {s.first_name || s.user?.first_name || ''} {s.surname ? `, ${s.surname}` : ''} {s.last_name || s.user?.last_name || ''}
+                        </td>
+                        <td className="p-4 font-mono text-[#10002b]">{s.username || s.user?.username || 'N/A'}</td>
+                        <td className="p-4 font-mono text-[#10002b]/80">{s.raw_password || s.password || '••••••••'}</td>
+                        <td className="p-4 text-[#10002b]">{s.gender || 'N/A'}</td>
+                        <td className="p-4 text-[#10002b] font-semibold">{assignedClass}</td>
+                        <td className="p-4 text-[#10002b]/80 font-mono">
+                          {s.date_admitted ? new Date(s.date_admitted).toLocaleDateString() : 'N/A'}
+                        </td>
+                        <td className="p-4 text-right space-x-2">
+                          <button
+                            type="button"
+                            onClick={() => openEditModal(s, 'student')}
+                            className="sa-btn-secondary py-1.5 px-3 text-xs bg-[#10002b] text-white border border-[#10002b] hover:bg-[#c77dff] hover:text-[#10002b] rounded-xl font-bold transition-all cursor-pointer"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteUser(s.id, 'student')}
+                            className="py-1.5 px-3 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-xl border border-red-200 transition-colors cursor-pointer"
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
@@ -403,17 +441,14 @@ export default function AdminDashboard() {
                   </tr>
                 ) : (
                   classrooms.map((c) => {
-                    let assignedTeacherName = 'Unassigned';
-                    if (c.teacher) {
+                    let assignedTeacherName = c.teacher_name || 'Unassigned';
+                    if (assignedTeacherName === 'Unassigned' && c.teacher) {
                       if (typeof c.teacher === 'object') {
                         assignedTeacherName = getDisplayName(c.teacher);
                       } else {
                         const foundTeacher = teachers.find((t) => t.id === c.teacher || t.id === Number(c.teacher));
                         assignedTeacherName = foundTeacher ? getDisplayName(foundTeacher) : `Teacher ID: ${c.teacher}`;
                       }
-                    } else if (c.teacher_id) {
-                      const foundTeacher = teachers.find((t) => t.id === c.teacher_id || t.id === Number(c.teacher_id));
-                      assignedTeacherName = foundTeacher ? getDisplayName(foundTeacher) : `Teacher ID: ${c.teacher_id}`;
                     }
 
                     return (
@@ -474,7 +509,7 @@ export default function AdminDashboard() {
                         <td className="p-4 font-mono font-bold text-[#10002b]">{att.tsc_number || att.teacher}</td>
                         <td className="p-4">
                           <span className="px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider border bg-[#10002b] text-[#c77dff] border-[#10002b]">
-                            Clocked In {att.direction || ''}
+                            Clocked {att.direction || 'IN'}
                           </span>
                         </td>
                         <td className="p-4 font-bold text-[#10002b]">
@@ -507,7 +542,7 @@ export default function AdminDashboard() {
       {/* SHARED CREATE/EDIT MODAL */}
       {showModal && (
         <div className="fixed inset-0 bg-[#10002b]/50 backdrop-blur-xs flex justify-center items-center p-4 z-50">
-          <div className="sa-card max-w-md w-full space-y-4 shadow-xl border border-[#c77dff] p-6 rounded-2xl" style={{ backgroundColor: 'var(--sa-surface)' }}>
+          <div className="sa-card max-w-md w-full space-y-4 shadow-xl border border-[#c77dff] p-6 rounded-2xl max-h-[90vh] overflow-y-auto" style={{ backgroundColor: 'var(--sa-surface)' }}>
             <h3 className="font-extrabold text-base text-[#10002b] capitalize">
               {modalMode === 'create' ? `Add New ${userRoleType}` : `Edit ${userRoleType}`}
             </h3>
@@ -544,7 +579,7 @@ export default function AdminDashboard() {
                 </>
               ) : (
                 <>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-3 gap-2">
                     <div>
                       <label className="block font-bold mb-1 text-[#10002b]">First Name</label>
                       <input
@@ -552,6 +587,17 @@ export default function AdminDashboard() {
                         placeholder="First Name"
                         value={formData.first_name}
                         onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                        className="w-full p-3 rounded-xl border border-[#c77dff] bg-white text-[#10002b] focus:outline-none focus:border-[#10002b]"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold mb-1 text-[#10002b]">Surname</label>
+                      <input
+                        type="text"
+                        placeholder="Surname"
+                        value={formData.surname}
+                        onChange={(e) => setFormData({ ...formData, surname: e.target.value })}
                         className="w-full p-3 rounded-xl border border-[#c77dff] bg-white text-[#10002b] focus:outline-none focus:border-[#10002b]"
                       />
                     </div>
@@ -567,40 +613,31 @@ export default function AdminDashboard() {
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block font-bold mb-1 text-[#10002b]">Username</label>
-                    <input
-                      type="text"
-                      placeholder="Username"
-                      value={formData.username}
-                      onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                      className="w-full p-3 rounded-xl border border-[#c77dff] bg-white text-[#10002b] focus:outline-none focus:border-[#10002b]"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block font-bold mb-1 text-[#10002b]">Email Address</label>
-                    <input
-                      type="email"
-                      placeholder="Email Address"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full p-3 rounded-xl border border-[#c77dff] bg-white text-[#10002b] focus:outline-none focus:border-[#10002b]"
-                    />
-                  </div>
-                  {modalMode === 'create' && (
+                  {userRoleType === 'teacher' && (
                     <div>
-                      <label className="block font-bold mb-1 text-[#10002b]">Password</label>
+                      <label className="block font-bold mb-1 text-[#10002b]">Email Address</label>
                       <input
-                        type="password"
-                        placeholder="Password"
-                        value={formData.password}
-                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                        type="email"
+                        placeholder="Email Address"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         className="w-full p-3 rounded-xl border border-[#c77dff] bg-white text-[#10002b] focus:outline-none focus:border-[#10002b]"
-                        required
                       />
                     </div>
                   )}
+
+                  <div>
+                    <label className="block font-bold mb-1 text-[#10002b]">{modalMode === 'create' ? 'Password' : 'Password (Leave blank to keep unchanged)'}</label>
+                    <input
+                      type="password"
+                      placeholder="Password"
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value, raw_password: e.target.value })}
+                      className="w-full p-3 rounded-xl border border-[#c77dff] bg-white text-[#10002b] focus:outline-none focus:border-[#10002b]"
+                      required={modalMode === 'create'}
+                    />
+                  </div>
+
                   {userRoleType === 'teacher' ? (
                     <div>
                       <label className="block font-bold mb-1 text-[#10002b]">TSC Number</label>
@@ -613,17 +650,60 @@ export default function AdminDashboard() {
                       />
                     </div>
                   ) : (
-                    <div>
-                      <label className="block font-bold mb-1 text-[#10002b]">Admission Number</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. ADM-2026-001"
-                        value={formData.admission_number}
-                        onChange={(e) => setFormData({ ...formData, admission_number: e.target.value })}
-                        className="w-full p-3 rounded-xl border border-[#c77dff] bg-white text-[#10002b] focus:outline-none focus:border-[#10002b] font-mono"
-                        required
-                      />
-                    </div>
+                    <>
+                      <div>
+                        <label className="block font-bold mb-1 text-[#10002b]">Admission Number</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. ADM-2026-001"
+                          value={formData.admission_number}
+                          onChange={(e) => setFormData({ ...formData, admission_number: e.target.value })}
+                          className="w-full p-3 rounded-xl border border-[#c77dff] bg-white text-[#10002b] focus:outline-none focus:border-[#10002b] font-mono"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-bold mb-1 text-[#10002b]">Date Admitted</label>
+                        <input
+                          type="date"
+                          value={formData.date_admitted}
+                          onChange={(e) => setFormData({ ...formData, date_admitted: e.target.value })}
+                          className="w-full p-3 rounded-xl border border-[#c77dff] bg-white text-[#10002b] focus:outline-none focus:border-[#10002b]"
+                          required
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block font-bold mb-1 text-[#10002b]">Gender</label>
+                          <select
+                            value={formData.gender}
+                            onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                            className="w-full p-3 rounded-xl border border-[#c77dff] bg-white text-[#10002b] focus:outline-none focus:border-[#10002b]"
+                          >
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block font-bold mb-1 text-[#10002b]">Classroom</label>
+                          <select
+                            value={formData.classroom}
+                            onChange={(e) => setFormData({ ...formData, classroom: e.target.value })}
+                            className="w-full p-3 rounded-xl border border-[#c77dff] bg-white text-[#10002b] focus:outline-none focus:border-[#10002b]"
+                          >
+                            <option value="">Unassigned</option>
+                            {classrooms.map((c) => (
+                              <option key={c.id} value={c.id}>
+                                {c.name || c.class_name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    </>
                   )}
                 </>
               )}
