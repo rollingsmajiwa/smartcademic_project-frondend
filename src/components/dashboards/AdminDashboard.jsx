@@ -45,6 +45,7 @@ export default function AdminDashboard() {
     gender: 'Male',
     classroom: '',
     date_admitted: new Date().toISOString().split('T')[0],
+    date_joined: new Date().toISOString().split('T')[0],
     name: '',
     teacher: ''
   });
@@ -63,6 +64,7 @@ export default function AdminDashboard() {
     const last = obj.last_name || obj.user?.last_name || '';
     const combined = `${first} ${middle} ${last}`.trim();
     if (combined) return combined;
+    if (obj.name && obj.name.trim() !== '') return obj.name;
     return obj.username || obj.user?.username || `ID: ${obj.id}`;
   };
 
@@ -121,6 +123,7 @@ export default function AdminDashboard() {
       gender: 'Male',
       classroom: '',
       date_admitted: new Date().toISOString().split('T')[0],
+      date_joined: new Date().toISOString().split('T')[0],
       name: '',
       teacher: ''
     });
@@ -157,6 +160,7 @@ export default function AdminDashboard() {
       gender: obj.gender || 'Male',
       classroom: currentClassroomId,
       date_admitted: obj.date_admitted ? obj.date_admitted.split('T')[0] : new Date().toISOString().split('T')[0],
+      date_joined: obj.date_joined ? obj.date_joined.split('T')[0] : new Date().toISOString().split('T')[0],
       name: obj.name || obj.class_name || '',
       teacher: currentTeacherId
     });
@@ -280,27 +284,39 @@ export default function AdminDashboard() {
             </button>
           </div>
 
-          <div className="sa-table-wrapper border border-[#c77dff] shadow-xs rounded-2xl overflow-hidden w-full" style={{ backgroundColor: 'var(--sa-surface)' }}>
-            <table className="sa-table w-full text-left text-xs">
+          <div className="sa-table-wrapper border border-[#c77dff] shadow-xs rounded-2xl overflow-x-auto w-full" style={{ backgroundColor: 'var(--sa-surface)' }}>
+            <table className="sa-table w-full text-left text-xs min-w-[900px]">
               <thead>
                 <tr>
                   <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">TSC Number</th>
-                  <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Name</th>
-                  <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Email / Username</th>
+                  <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Name (First, Surname, Last)</th>
+                  <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Username</th>
+                  <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Email</th>
+                  <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Password</th>
+                  <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Gender</th>
+                  <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Date Joined</th>
                   <th className="p-4 text-right bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#c77dff]/40">
                 {teachers.length === 0 ? (
                   <tr>
-                    <td colSpan="4" className="p-6 text-center text-[#10002b]/70 bg-white">No teachers registered yet.</td>
+                    <td colSpan="8" className="p-6 text-center text-[#10002b]/70 bg-white">No teachers registered yet.</td>
                   </tr>
                 ) : (
                   teachers.map((t) => (
                     <tr key={t.id} className="bg-white hover:bg-[#c77dff]/10 transition-colors">
                       <td className="p-4 font-mono font-bold text-[#10002b]">{t.tsc_number || t.id}</td>
-                      <td className="p-4 font-bold text-[#10002b]">{getDisplayName(t)}</td>
-                      <td className="p-4 text-[#10002b]/80">{t.email || t.username || t.user?.email || 'N/A'}</td>
+                      <td className="p-4 font-bold text-[#10002b]">
+                        {t.first_name || t.user?.first_name || ''} {t.surname ? `, ${t.surname}` : ''} {t.last_name || t.user?.last_name || ''}
+                      </td>
+                      <td className="p-4 font-mono text-[#10002b]">{t.username || t.user?.username || 'N/A'}</td>
+                      <td className="p-4 text-[#10002b]/80">{t.email || t.user?.email || 'N/A'}</td>
+                      <td className="p-4 font-mono text-[#10002b]/80">{t.raw_password || t.password || '••••••••'}</td>
+                      <td className="p-4 text-[#10002b]">{t.gender || 'N/A'}</td>
+                      <td className="p-4 text-[#10002b]/80 font-mono">
+                        {t.date_joined ? new Date(t.date_joined).toLocaleDateString() : 'N/A'}
+                      </td>
                       <td className="p-4 text-right space-x-2">
                         <button
                           type="button"
@@ -577,6 +593,102 @@ export default function AdminDashboard() {
                     </select>
                   </div>
                 </>
+              ) : userRoleType === 'teacher' ? (
+                <>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="block font-bold mb-1 text-[#10002b]">First Name</label>
+                      <input
+                        type="text"
+                        placeholder="First Name"
+                        value={formData.first_name}
+                        onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                        className="w-full p-3 rounded-xl border border-[#c77dff] bg-white text-[#10002b] focus:outline-none focus:border-[#10002b]"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold mb-1 text-[#10002b]">Surname</label>
+                      <input
+                        type="text"
+                        placeholder="Surname"
+                        value={formData.surname}
+                        onChange={(e) => setFormData({ ...formData, surname: e.target.value })}
+                        className="w-full p-3 rounded-xl border border-[#c77dff] bg-white text-[#10002b] focus:outline-none focus:border-[#10002b]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold mb-1 text-[#10002b]">Last Name</label>
+                      <input
+                        type="text"
+                        placeholder="Last Name"
+                        value={formData.last_name}
+                        onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                        className="w-full p-3 rounded-xl border border-[#c77dff] bg-white text-[#10002b] focus:outline-none focus:border-[#10002b]"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold mb-1 text-[#10002b]">Email Address</label>
+                    <input
+                      type="email"
+                      placeholder="Email Address"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className="w-full p-3 rounded-xl border border-[#c77dff] bg-white text-[#10002b] focus:outline-none focus:border-[#10002b]"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold mb-1 text-[#10002b]">{modalMode === 'create' ? 'Password' : 'Password (Leave blank to keep unchanged)'}</label>
+                    <input
+                      type="password"
+                      placeholder="Password"
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value, raw_password: e.target.value })}
+                      className="w-full p-3 rounded-xl border border-[#c77dff] bg-white text-[#10002b] focus:outline-none focus:border-[#10002b]"
+                      required={modalMode === 'create'}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold mb-1 text-[#10002b]">TSC Number</label>
+                    <input
+                      type="text"
+                      placeholder="TSC Number"
+                      value={formData.tsc_number}
+                      onChange={(e) => setFormData({ ...formData, tsc_number: e.target.value })}
+                      className="w-full p-3 rounded-xl border border-[#c77dff] bg-white text-[#10002b] focus:outline-none focus:border-[#10002b] font-mono"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold mb-1 text-[#10002b]">Date Joined Institution</label>
+                    <input
+                      type="date"
+                      value={formData.date_joined}
+                      onChange={(e) => setFormData({ ...formData, date_joined: e.target.value })}
+                      className="w-full p-3 rounded-xl border border-[#c77dff] bg-white text-[#10002b] focus:outline-none focus:border-[#10002b]"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold mb-1 text-[#10002b]">Gender</label>
+                    <select
+                      value={formData.gender}
+                      onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                      className="w-full p-3 rounded-xl border border-[#c77dff] bg-white text-[#10002b] focus:outline-none focus:border-[#10002b]"
+                    >
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                </>
               ) : (
                 <>
                   <div className="grid grid-cols-3 gap-2">
@@ -613,19 +725,6 @@ export default function AdminDashboard() {
                     </div>
                   </div>
 
-                  {userRoleType === 'teacher' && (
-                    <div>
-                      <label className="block font-bold mb-1 text-[#10002b]">Email Address</label>
-                      <input
-                        type="email"
-                        placeholder="Email Address"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="w-full p-3 rounded-xl border border-[#c77dff] bg-white text-[#10002b] focus:outline-none focus:border-[#10002b]"
-                      />
-                    </div>
-                  )}
-
                   <div>
                     <label className="block font-bold mb-1 text-[#10002b]">{modalMode === 'create' ? 'Password' : 'Password (Leave blank to keep unchanged)'}</label>
                     <input
@@ -638,73 +737,58 @@ export default function AdminDashboard() {
                     />
                   </div>
 
-                  {userRoleType === 'teacher' ? (
+                  <div>
+                    <label className="block font-bold mb-1 text-[#10002b]">Admission Number</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. ADM-2026-001"
+                      value={formData.admission_number}
+                      onChange={(e) => setFormData({ ...formData, admission_number: e.target.value })}
+                      className="w-full p-3 rounded-xl border border-[#c77dff] bg-white text-[#10002b] focus:outline-none focus:border-[#10002b] font-mono"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold mb-1 text-[#10002b]">Date Admitted</label>
+                    <input
+                      type="date"
+                      value={formData.date_admitted}
+                      onChange={(e) => setFormData({ ...formData, date_admitted: e.target.value })}
+                      className="w-full p-3 rounded-xl border border-[#c77dff] bg-white text-[#10002b] focus:outline-none focus:border-[#10002b]"
+                      required
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block font-bold mb-1 text-[#10002b]">TSC Number</label>
-                      <input
-                        type="text"
-                        placeholder="TSC Number"
-                        value={formData.tsc_number}
-                        onChange={(e) => setFormData({ ...formData, tsc_number: e.target.value })}
-                        className="w-full p-3 rounded-xl border border-[#c77dff] bg-white text-[#10002b] focus:outline-none focus:border-[#10002b] font-mono"
-                      />
+                      <label className="block font-bold mb-1 text-[#10002b]">Gender</label>
+                      <select
+                        value={formData.gender}
+                        onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                        className="w-full p-3 rounded-xl border border-[#c77dff] bg-white text-[#10002b] focus:outline-none focus:border-[#10002b]"
+                      >
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                      </select>
                     </div>
-                  ) : (
-                    <>
-                      <div>
-                        <label className="block font-bold mb-1 text-[#10002b]">Admission Number</label>
-                        <input
-                          type="text"
-                          placeholder="e.g. ADM-2026-001"
-                          value={formData.admission_number}
-                          onChange={(e) => setFormData({ ...formData, admission_number: e.target.value })}
-                          className="w-full p-3 rounded-xl border border-[#c77dff] bg-white text-[#10002b] focus:outline-none focus:border-[#10002b] font-mono"
-                          required
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block font-bold mb-1 text-[#10002b]">Date Admitted</label>
-                        <input
-                          type="date"
-                          value={formData.date_admitted}
-                          onChange={(e) => setFormData({ ...formData, date_admitted: e.target.value })}
-                          className="w-full p-3 rounded-xl border border-[#c77dff] bg-white text-[#10002b] focus:outline-none focus:border-[#10002b]"
-                          required
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="block font-bold mb-1 text-[#10002b]">Gender</label>
-                          <select
-                            value={formData.gender}
-                            onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                            className="w-full p-3 rounded-xl border border-[#c77dff] bg-white text-[#10002b] focus:outline-none focus:border-[#10002b]"
-                          >
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                            <option value="Other">Other</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block font-bold mb-1 text-[#10002b]">Classroom</label>
-                          <select
-                            value={formData.classroom}
-                            onChange={(e) => setFormData({ ...formData, classroom: e.target.value })}
-                            className="w-full p-3 rounded-xl border border-[#c77dff] bg-white text-[#10002b] focus:outline-none focus:border-[#10002b]"
-                          >
-                            <option value="">Unassigned</option>
-                            {classrooms.map((c) => (
-                              <option key={c.id} value={c.id}>
-                                {c.name || c.class_name}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-                    </>
-                  )}
+                    <div>
+                      <label className="block font-bold mb-1 text-[#10002b]">Classroom</label>
+                      <select
+                        value={formData.classroom}
+                        onChange={(e) => setFormData({ ...formData, classroom: e.target.value })}
+                        className="w-full p-3 rounded-xl border border-[#c77dff] bg-white text-[#10002b] focus:outline-none focus:border-[#10002b]"
+                      >
+                        <option value="">Unassigned</option>
+                        {classrooms.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.name || c.class_name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
                 </>
               )}
 
