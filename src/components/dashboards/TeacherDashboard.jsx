@@ -433,14 +433,14 @@ const runGeoFence = (statusDirect) => {
           <button
             onClick={() => runGeoFence('IN')}
             disabled={geoLoading}
-            className="flex-1 py-3.5 bg-green-600 text-white font-bold rounded-xl text-xs hover:bg-green-700 transition-all cursor-pointer disabled:opacity-50 shadow-xs"
+            className="flex-1 py-3.5 bg-[#10002b] text-white font-bold rounded-xl text-xs hover:bg-[#10002b]/70 transition-all cursor-pointer disabled:opacity-50 shadow-xs"
           >
             {geoLoading ? 'Checking...' : 'Clock In'}
           </button>
           <button
             onClick={() => runGeoFence('OUT')}
             disabled={geoLoading}
-            className="flex-1 py-3.5 bg-red-600 text-white font-bold rounded-xl text-xs hover:bg-red-700 transition-all cursor-pointer disabled:opacity-50 shadow-xs"
+            className="flex-1 py-3.5 bg-[#10002b] text-white font-bold rounded-xl text-xs hover:bg-[#10002b]/70 transition-all cursor-pointer disabled:opacity-50 shadow-xs"
           >
             {geoLoading ? 'Checking...' : 'Clock Out'}
           </button>
