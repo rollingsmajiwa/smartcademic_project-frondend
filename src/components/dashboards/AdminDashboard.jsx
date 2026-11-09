@@ -205,14 +205,6 @@ export default function AdminDashboard() {
     }
   };
 
-  const filterWeeklyLogs = (logs) => {
-    return logs.filter(log => {
-      if (!log.timestamp) return true;
-      const day = new Date(log.timestamp).getDay();
-      return day >= 1 && day <= 5;
-    });
-  };
-
   return (
     <div className="w-full min-h-screen p-6 lg:p-8 space-y-6 font-sans max-w-7xl mx-auto" style={{ backgroundColor: 'var(--sa-bg)', color: 'var(--sa-text)' }}>
       
@@ -226,7 +218,7 @@ export default function AdminDashboard() {
               </span>
               <h1 className="text-xl font-extrabold mt-2 text-[#10002b]">Admin Central Overview</h1>
               <p className="text-xs mt-1 text-[#10002b]/70">
-                Manage system users, classrooms, and monitor real-time weekly teacher attendance.
+                Manage system users, classrooms, and monitor single-session weekly teacher attendance.
               </p>
             </div>
           </div>
@@ -261,10 +253,8 @@ export default function AdminDashboard() {
               className="sa-card border border-[#c77dff] shadow-xs p-5 rounded-2xl w-full cursor-pointer hover:border-[#10002b] transition-all" 
               style={{ backgroundColor: 'var(--sa-surface)' }}
             >
-              <p className="sa-card-title text-[#10002b] text-xs font-bold uppercase tracking-wider">Weekly Attendance Logs</p>
-              <p className="sa-card-value text-[#10002b] text-2xl font-extrabold mt-2">
-                {filterWeeklyLogs(attendanceLogs).length}
-              </p>
+              <p className="sa-card-title text-[#10002b] text-xs font-bold uppercase tracking-wider">Attendance Logs</p>
+              <p className="sa-card-value text-[#10002b] text-2xl font-extrabold mt-2">{attendanceLogs.length}</p>
             </div>
           </div>
         </div>
@@ -500,47 +490,197 @@ export default function AdminDashboard() {
 
       {/* WEEKLY TEACHER GEOFENCE ATTENDANCE LOGS */}
       {activeTab === 'attendance' && (
-        <div className="w-full space-y-6">
-          <h2 className="text-lg font-extrabold text-[#10002b]">Weekly Teacher Attendance Logs (Mon - Fri)</h2>
-          <div className="sa-table-wrapper border border-[#c77dff] shadow-xs rounded-2xl overflow-hidden w-full" style={{ backgroundColor: 'var(--sa-surface)' }}>
-            <table className="sa-table w-full text-left text-xs">
-              <thead>
-                <tr>
-                  <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Teacher ID</th>
-                  <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Status</th>
-                  <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Day of Week</th>
-                  <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Exact Time</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#c77dff]/40">
-                {filterWeeklyLogs(attendanceLogs).length === 0 ? (
-                  <tr>
-                    <td colSpan="4" className="p-6 text-center text-[#10002b]/70 bg-white">No attendance logs found.</td>
-                  </tr>
-                ) : (
-                  filterWeeklyLogs(attendanceLogs).map((att, idx) => {
-                    const dateObj = att.timestamp ? new Date(att.timestamp) : new Date();
-                    return (
-                      <tr key={idx} className="bg-white hover:bg-[#c77dff]/10 transition-colors">
-                        <td className="p-4 font-mono font-bold text-[#10002b]">{att.tsc_number || att.teacher}</td>
-                        <td className="p-4">
-                          <span className="px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider border bg-[#10002b] text-[#c77dff] border-[#10002b]">
-                            Clocked {att.direction || 'IN'}
-                          </span>
-                        </td>
-                        <td className="p-4 font-bold text-[#10002b]">
-                          {dateObj.toLocaleDateString('en-US', { weekday: 'long' })}
-                        </td>
-                        <td className="p-4 font-mono text-[#10002b]/70">
-                          {dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} ({dateObj.toLocaleDateString()})
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
+        <div className="w-full space-y-8">
+          <div className="flex justify-between items-center w-full">
+            <div>
+              <h2 className="text-lg font-extrabold text-[#10002b]">Teacher Attendance Tracking & Analytics</h2>
+              <p className="text-xs text-[#10002b]/70 mt-0.5">
+                Evaluated against {teachers.length} registered teachers. Rules: Late (&gt; 7:00 AM), Absent (No Record).
+              </p>
+            </div>
           </div>
+
+          {(() => {
+            if (teachers.length === 0) {
+              return (
+                <div className="sa-card border border-[#c77dff] p-8 rounded-2xl text-center text-xs text-[#10002b]/70 bg-white shadow-xs">
+                  No teachers registered in the system to calculate attendance.
+                </div>
+              );
+            }
+
+            // Group logs by exact date and enforce single-session locking (first login per day)
+            const logsByDate = {};
+            attendanceLogs.forEach((log) => {
+              if (!log.timestamp) return;
+              const logDateObj = new Date(log.timestamp);
+              const dateStr = logDateObj.toISOString().split('T')[0];
+              if (!logsByDate[dateStr]) logsByDate[dateStr] = {};
+              const tKey = log.tsc_number || log.teacher_id || log.teacher;
+              
+              if (!logsByDate[dateStr][tKey]) {
+                logsByDate[dateStr][tKey] = log;
+              }
+            });
+
+            const dates = Object.keys(logsByDate).length > 0 ? Object.keys(logsByDate).sort() : [new Date().toISOString().split('T')[0]];
+
+            const weeks = [];
+            let currentWeekDates = [];
+
+            dates.forEach((dateStr) => {
+              const d = new Date(dateStr);
+              const dayOfWeek = d.getDay();
+              if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+                currentWeekDates.push(dateStr);
+                if (dayOfWeek === 5 || currentWeekDates.length >= 5) {
+                  weeks.push({
+                    startDate: new Date(currentWeekDates[0]),
+                    dates: [...currentWeekDates],
+                    monthYear: new Date(currentWeekDates[0]).toLocaleString('en-US', { month: 'long', year: 'numeric' })
+                  });
+                  currentWeekDates = [];
+                }
+              }
+            });
+
+            if (currentWeekDates.length > 0) {
+              weeks.push({
+                startDate: new Date(currentWeekDates[0]),
+                dates: [...currentWeekDates],
+                monthYear: new Date(currentWeekDates[0]).toLocaleString('en-US', { month: 'long', year: 'numeric' })
+              });
+            }
+
+            return weeks.map((week, weekIndex) => {
+              let weekPresent = 0;
+              let weekLate = 0;
+              let weekAbsent = 0;
+
+              const evaluatedRows = [];
+
+              week.dates.forEach((dateStr) => {
+                const dailyLogs = logsByDate[dateStr] || {};
+                const targetDate = new Date(dateStr);
+
+                teachers.forEach((teacher) => {
+                  const tKey = teacher.tsc_number || teacher.id;
+                  const log = dailyLogs[tKey] || dailyLogs[teacher.id];
+
+                  const firstName = teacher.first_name || teacher.user?.first_name || '';
+                  const surname = teacher.surname || '';
+                  const fullName = `${firstName} ${surname}`.trim() || `Teacher ID: ${teacher.id}`;
+                  const tscNum = teacher.tsc_number || 'N/A';
+
+                  const currentTimeMinutes = new Date().getHours() * 60 + new Date().getMinutes();
+                  const isPastFourPM = currentTimeMinutes >= 1080 || new Date().toDateString() !== targetDate.toDateString();
+
+                  let status = 'Absent';
+                  let badgeClass = 'bg-red-100 text-red-800 border-red-300';
+                  let clockInTime = 'No Record';
+                  let clockOutTime = 'N/A';
+
+                  if (log && log.timestamp) {
+                    const dateObj = new Date(log.timestamp);
+                    const hours = dateObj.getHours();
+                    const minutes = dateObj.getMinutes();
+                    const totalMinutes = hours * 60 + minutes;
+
+                    clockInTime = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                    clockOutTime = log.clock_out ? new Date(log.clock_out).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'Pending / Not Clocked Out';
+
+                    // 7:00 AM = 420 minutes from midnight
+                    if (totalMinutes > 420) {
+                      status = 'Late';
+                      badgeClass = 'bg-amber-100 text-amber-800 border-amber-300';
+                      weekLate++;
+                    } else {
+                      status = 'Present';
+                      badgeClass = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+                      weekPresent++;
+                    }
+                  } else {
+                    if (isPastFourPM) {
+                      status = 'Absent';
+                      badgeClass = '';
+                      weekAbsent++;
+                    } else {
+                      status = 'Pending (Before 4 PM)';
+                      badgeClass = 'bg-blue-100 text-blue-800 border-blue-300';
+                    }
+                  }
+
+                  evaluatedRows.push({
+                    tscNum,
+                    fullName,
+                    dayOfWeek: targetDate.toLocaleDateString('en-US', { weekday: 'long' }),
+                    clockInTime,
+                    clockOutTime,
+                    status,
+                    badgeClass,
+                    exactDate: targetDate.toLocaleDateString()
+                  });
+                });
+              });
+
+              return (
+                <div key={weekIndex} className="space-y-4 w-full bg-white p-6 rounded-2xl border border-[#c77dff] shadow-xs">
+                  {/* Automatic Month and Year H1 Header */}
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-[#c77dff]/40 pb-3 gap-2">
+                    <h1 className="text-base font-extrabold text-[#10002b] uppercase tracking-wide">
+                      {week.monthYear} — Week {weekIndex + 1} (Mon to Fri)
+                    </h1>
+                    
+                    {/* Weekly Metrics Summary Badges */}
+                    <div className="flex items-center gap-2 text-[11px] font-bold">
+                      <span className="px-3 py-1 rounded-lg">
+                        Present: {weekPresent}
+                      </span>
+                      <span className="px-3 py-1 rounded-lg">
+                        Late: {weekLate}
+                      </span>
+                      <span className="px-3 py-1 rounded-lg">
+                        Absent: {weekAbsent}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="sa-table-wrapper rounded-xl overflow-x-auto w-full">
+                    <table className="sa-table w-full text-left text-xs min-w-[950px]">
+                      <thead>
+                        <tr>
+                          <th className="p-3.5 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">TSC Number</th>
+                          <th className="p-3.5 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">First Name & Surname</th>
+                          <th className="p-3.5 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Day</th>
+                          <th className="p-3.5 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Clock-In Time</th>
+                          <th className="p-3.5 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Clock-Out Time</th>
+                          <th className="p-3.5 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Status</th>
+                          <th className="p-3.5 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Exact Date</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#c77dff]/30">
+                        {evaluatedRows.map((row, idx) => (
+                          <tr key={idx} className="hover:bg-[#c77dff]/5 transition-colors">
+                            <td className="p-3.5 font-mono font-bold text-[#10002b]">{row.tscNum}</td>
+                            <td className="p-3.5 font-bold text-[#10002b]">{row.fullName}</td>
+                            <td className="p-3.5 font-bold text-[#10002b]">{row.dayOfWeek}</td>
+                            <td className="p-3.5 font-mono text-emerald-800 font-semibold">{row.clockInTime}</td>
+                            <td className="p-3.5 font-mono text-[#10002b]/70 font-semibold">{row.clockOutTime}</td>
+                            <td className="p-3.5">
+                              <span className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider border ${row.badgeClass}`}>
+                                {row.status}
+                              </span>
+                            </td>
+                            <td className="p-3.5 font-mono text-[#10002b]/80">{row.exactDate}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              );
+            });
+          })()}
         </div>
       )}
 
