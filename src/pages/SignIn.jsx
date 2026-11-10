@@ -234,7 +234,7 @@ export default function SignIn() {
 
                   <div className="flex items-center my-3">
                     <div className="flex-grow border-t border-white/20"></div>
-                    <span className="px-3 text-white/50 text-[10px] uppercase font-bold">or use email OTP</span>
+                    <span className="px-3 text-white/50 text-[10px] uppercase font-bold">or use email</span>
                     <div className="flex-grow border-t border-white/20"></div>
                   </div>
 
@@ -285,7 +285,7 @@ export default function SignIn() {
                       type="text"
                       id="otp"
                       maxLength="6"
-                      placeholder="123456"
+                      placeholder="5677456"
                       value={otp}
                       onChange={(e) => setOtp(e.target.value)}
                       required
@@ -346,7 +346,7 @@ export default function SignIn() {
               <p className="mt-6 text-xs text-white/80 font-semibold text-center">
                 Don't have a code?{' '}
                 <Link to="/signup" className="text-[#c77dff] hover:underline font-bold">
-                  Register Student
+                  Register (Student)
                 </Link>
               </p>
             </form>
