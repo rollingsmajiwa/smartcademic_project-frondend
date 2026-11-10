@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
+import { GoogleLogin } from '@react-oauth/google'; // 1. Import GoogleLogin
 import signImage from '../components/images/sign.jpg';
 
 export default function SignIn() {
@@ -81,6 +82,38 @@ export default function SignIn() {
     }
   };
 
+  // 2. Handle Google Login Success for Staff (Teachers / Admins)
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setError('');
+    setLoading(true);
+
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/accounts/auth/google/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: credentialResponse.credential }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        localStorage.setItem('access_token', data.access);
+        localStorage.setItem('refresh_token', data.refresh);
+
+        const decoded = jwtDecode(data.access);
+        const userRole = data.role || decoded.role;
+
+        navigate(`/dashboard/${userRole}`);
+      } else {
+        setError(data.error || 'Google login failed.');
+      }
+    } catch (err) {
+      setError('Server connection error.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Student Login using Code
   const handleStudentLogin = async (e) => {
     e.preventDefault();
@@ -148,7 +181,7 @@ export default function SignIn() {
             <h1 className="text-white text-2xl font-extrabold tracking-tight">Sign In</h1>
             <p className="text-xs text-white/80 mt-1 font-medium">
               {loginType === 'staff' 
-                ? (step === 1 ? "Enter your email address to receive your login code" : "Enter the verification code sent to your email")
+                ? (step === 1 ? "Sign in with Google or enter your email for an OTP code" : "Enter the verification code sent to your email")
                 : "Enter your student code to sign in directly"}
             </p>
           </div>
@@ -189,35 +222,52 @@ export default function SignIn() {
           {loginType === 'staff' && (
             <>
               {step === 1 ? (
-                <form onSubmit={handleSendOTP} className="space-y-4">
-                  <div className="input-group">
-                    <label htmlFor="email" className="text-white block text-xs font-bold mb-1">Staff Email Address</label>
-                    <input
-                      type="email"
-                      id="email"
-                      placeholder="Enter your email (eg. rollingsmajiwa@gmail.com)"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      className="w-full px-4 py-3 text-xs rounded-md bg-white border border-[#c77dff] text-[#10002b] placeholder-[#10002b]/50 focus:outline-none focus:border-[#10002b] focus:ring-2 focus:ring-[#c77dff]/40 shadow-xs"
+                <div className="space-y-4">
+                  {/* 3. Google Sign-In Button Option */}
+                  <div className="flex justify-center w-full mb-2">
+                    <GoogleLogin
+                      onSuccess={handleGoogleSuccess}
+                      onError={() => setError('Google Sign-In was unsuccessful.')}
+                      useOneTap
                     />
                   </div>
 
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="sa-btn-login w-full py-3 rounded-md bg-[#c77dff] text-[#10002b] hover:bg-white hover:text-[#10002b] transition-all shadow-md font-extrabold text-xs mt-2 disabled:opacity-50 cursor-pointer"
-                  >
-                    {loading ? 'Sending Code...' : 'Send Login Code'}
-                  </button>
+                  <div className="flex items-center my-3">
+                    <div className="flex-grow border-t border-white/20"></div>
+                    <span className="px-3 text-white/50 text-[10px] uppercase font-bold">or use email OTP</span>
+                    <div className="flex-grow border-t border-white/20"></div>
+                  </div>
 
-                  <p className="mt-6 text-xs text-white/80 font-semibold text-center">
-                    Don't have an account?{' '}
-                    <Link to="/signup" className="text-[#c77dff] hover:underline font-bold">
-                      Register (Student)
-                    </Link>
-                  </p>
-                </form>
+                  <form onSubmit={handleSendOTP} className="space-y-4">
+                    <div className="input-group">
+                      <label htmlFor="email" className="text-white block text-xs font-bold mb-1">Staff Email Address</label>
+                      <input
+                        type="email"
+                        id="email"
+                        placeholder="Enter your email (eg. rollingsmajiwa@gmail.com)"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        className="w-full px-4 py-3 text-xs rounded-md bg-white border border-[#c77dff] text-[#10002b] placeholder-[#10002b]/50 focus:outline-none focus:border-[#10002b] focus:ring-2 focus:ring-[#c77dff]/40 shadow-xs"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="sa-btn-login w-full py-3 rounded-md bg-[#c77dff] text-[#10002b] hover:bg-white hover:text-[#10002b] transition-all shadow-md font-extrabold text-xs mt-2 disabled:opacity-50 cursor-pointer"
+                    >
+                      {loading ? 'Sending Code...' : 'Send Login Code'}
+                    </button>
+
+                    <p className="mt-6 text-xs text-white/80 font-semibold text-center">
+                      Don't have an account?{' '}
+                      <Link to="/signup" className="text-[#c77dff] hover:underline font-bold">
+                        Register (Student)
+                      </Link>
+                    </p>
+                  </form>
+                </div>
               ) : (
                 <form onSubmit={handleVerifyOTP} className="space-y-4">
                   <div className="input-group">
