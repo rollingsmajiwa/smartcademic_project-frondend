@@ -32,6 +32,15 @@ export default function AdminDashboard() {
   const [modalMode, setModalMode] = useState('create');
   const [userRoleType, setUserRoleType] = useState('teacher');
   const [selectedUserId, setSelectedUserId] = useState(null);
+
+  // Invitation Modal States
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteRole, setInviteRole] = useState('teacher');
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteMessage, setInviteMessage] = useState('');
+  const [inviteError, setInviteError] = useState('');
+
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -50,10 +59,15 @@ export default function AdminDashboard() {
     teacher: ''
   });
 
-  const apiConfig = {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-    },
+  // Resilient Auth Configuration helper checking both token keys
+  const getAuthConfig = () => {
+    const token = localStorage.getItem('access_token') || localStorage.getItem('access');
+    return {
+      headers: {
+        Authorization: token ? `Bearer ${token}` : '',
+        'Content-Type': 'application/json',
+      },
+    };
   };
 
   const getDisplayName = (obj) => {
@@ -80,13 +94,13 @@ export default function AdminDashboard() {
         asSubRes,
         exSubRes
       ] = await Promise.all([
-        axios.get('http://127.0.0.1:8000/api/admin/users/', apiConfig).catch(() => ({ data: [] })),
-        axios.get('http://127.0.0.1:8000/api/admin/teachers/', apiConfig).catch(() => ({ data: [] })),
-        axios.get('http://127.0.0.1:8000/api/admin/students/', apiConfig).catch(() => ({ data: [] })),
-        axios.get('http://127.0.0.1:8000/api/admin/classrooms/', apiConfig).catch(() => ({ data: [] })),
-        axios.get('http://127.0.0.1:8000/api/admin/attendance/teachers/', apiConfig).catch(() => ({ data: [] })),
-        axios.get('http://127.0.0.1:8000/api/admin/submissions/assignments/', apiConfig).catch(() => ({ data: [] })),
-        axios.get('http://127.0.0.1:8000/api/admin/submissions/exams/', apiConfig).catch(() => ({ data: [] })),
+        axios.get('http://127.0.0.1:8000/api/admin/users/', getAuthConfig()).catch(() => ({ data: [] })),
+        axios.get('http://127.0.0.1:8000/api/admin/teachers/', getAuthConfig()).catch(() => ({ data: [] })),
+        axios.get('http://127.0.0.1:8000/api/admin/students/', getAuthConfig()).catch(() => ({ data: [] })),
+        axios.get('http://127.0.0.1:8000/api/admin/classrooms/', getAuthConfig()).catch(() => ({ data: [] })),
+        axios.get('http://127.0.0.1:8000/api/admin/attendance/teachers/', getAuthConfig()).catch(() => ({ data: [] })),
+        axios.get('http://127.0.0.1:8000/api/admin/submissions/assignments/', getAuthConfig()).catch(() => ({ data: [] })),
+        axios.get('http://127.0.0.1:8000/api/admin/submissions/exams/', getAuthConfig()).catch(() => ({ data: [] })),
       ]);
 
       setUsers(usersRes.data);
@@ -167,6 +181,30 @@ export default function AdminDashboard() {
     setShowModal(true);
   };
 
+  const handleSendInvite = async (e) => {
+    e.preventDefault();
+    setInviteError('');
+    setInviteMessage('');
+    setInviteLoading(true);
+
+    try {
+      const response = await axios.post(
+        'http://127.0.0.1:8000/api/accounts/admin/invite/',
+        { email: inviteEmail, role: inviteRole },
+        getAuthConfig()
+      );
+
+      setInviteMessage(response.data.message || `Invitation successfully sent to ${inviteEmail}`);
+      setInviteEmail('');
+      fetchAdminData();
+    } catch (err) {
+      console.error('Invite failed:', err.response?.data || err);
+      setInviteError(err.response?.data?.error || 'Failed to send invitation. Please try again.');
+    } finally {
+      setInviteLoading(false);
+    }
+  };
+
   const handleSaveUser = async (e) => {
     e.preventDefault();
     let endpoint = 'http://127.0.0.1:8000/api/admin/teachers/';
@@ -175,10 +213,10 @@ export default function AdminDashboard() {
 
     try {
       if (modalMode === 'create') {
-        await axios.post(endpoint, formData, apiConfig);
+        await axios.post(endpoint, formData, getAuthConfig());
         alert(`${userRoleType.charAt(0).toUpperCase() + userRoleType.slice(1)} created successfully!`);
       } else {
-        await axios.patch(`${endpoint}${selectedUserId}/`, formData, apiConfig);
+        await axios.patch(`${endpoint}${selectedUserId}/`, formData, getAuthConfig());
         alert(`${userRoleType.charAt(0).toUpperCase() + userRoleType.slice(1)} updated successfully!`);
       }
       setShowModal(false);
@@ -196,11 +234,11 @@ export default function AdminDashboard() {
     if (role === 'classroom') endpoint = `http://127.0.0.1:8000/api/admin/classrooms/${id}/`;
 
     try {
-      await axios.delete(endpoint, apiConfig);
+      await axios.delete(endpoint, getAuthConfig());
       alert(`${role} deleted successfully.`);
       fetchAdminData();
     } catch (err) {
-      console.error(`Delete failed:`, err);
+      console.error(`Delete failed:`, err.response?.data || err);
       alert(`Failed to delete ${role}.`);
     }
   };
@@ -208,24 +246,36 @@ export default function AdminDashboard() {
   return (
     <div className="w-full min-h-screen p-6 lg:p-8 space-y-6 font-sans max-w-7xl mx-auto" style={{ backgroundColor: 'var(--sa-bg)', color: 'var(--sa-text)' }}>
       
+      {/* Top Header with Invite Button */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl border border-[#c77dff] shadow-xs">
+        <div>
+          <span className="text-[10px] uppercase font-extrabold px-3 py-1 rounded-lg border tracking-wider bg-white border-[#c77dff] text-[#10002b]">
+            System Administrator Portal
+          </span>
+          <h1 className="text-xl font-extrabold mt-2 text-[#10002b]">SmartAcademic Management Hub</h1>
+          <p className="text-xs mt-1 text-[#10002b]/70">
+            Invite users via email activation link, manage classes, and monitor weekly teacher attendance.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            setInviteError('');
+            setInviteMessage('');
+            setShowInviteModal(true);
+          }}
+          className="py-2.5 px-5 rounded-xl text-xs font-extrabold bg-[#10002b] text-white hover:bg-[#c77dff] hover:text-[#10002b] transition-all cursor-pointer shadow-md"
+        >
+          ✉️ Send User Invitation
+        </button>
+      </div>
+
       {/* OVERVIEW TAB */}
       {activeTab === 'overview' && (
         <div className="space-y-6 w-full">
-          <div className="sa-banner sa-flex-between border border-[#c77dff] shadow-xs p-6 rounded-2xl w-full" style={{ backgroundColor: 'var(--sa-surface)' }}>
-            <div>
-              <span className="text-[10px] uppercase font-extrabold px-3 py-1 rounded-lg border tracking-wider bg-white border-[#c77dff] text-[#10002b]">
-                System Administrator Portal
-              </span>
-              <h1 className="text-xl font-extrabold mt-2 text-[#10002b]">Admin Central Overview</h1>
-              <p className="text-xs mt-1 text-[#10002b]/70">
-                Manage system users, classrooms, and monitor single-session weekly teacher attendance.
-              </p>
-            </div>
-          </div>
-          
           <div className="sa-grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
             <div 
-              onClick={() => window.location.href = '/admin/teachers'} 
+              onClick={() => window.location.href = '/dashboard/admin/teachers'} 
               className="sa-card border border-[#c77dff] shadow-xs p-5 rounded-2xl w-full cursor-pointer hover:border-[#10002b] transition-all" 
               style={{ backgroundColor: 'var(--sa-surface)' }}
             >
@@ -233,7 +283,7 @@ export default function AdminDashboard() {
               <p className="sa-card-value text-[#10002b] text-2xl font-extrabold mt-2">{teachers.length}</p>
             </div>
             <div 
-              onClick={() => window.location.href = '/admin/students'} 
+              onClick={() => window.location.href = '/dashboard/admin/students'} 
               className="sa-card border border-[#c77dff] shadow-xs p-5 rounded-2xl w-full cursor-pointer hover:border-[#10002b] transition-all" 
               style={{ backgroundColor: 'var(--sa-surface)' }}
             >
@@ -241,7 +291,7 @@ export default function AdminDashboard() {
               <p className="sa-card-value text-[#10002b] text-2xl font-extrabold mt-2">{students.length}</p>
             </div>
             <div 
-              onClick={() => window.location.href = '/admin/classrooms'} 
+              onClick={() => window.location.href = '/dashboard/admin/classrooms'} 
               className="sa-card border border-[#c77dff] shadow-xs p-5 rounded-2xl w-full cursor-pointer hover:border-[#10002b] transition-all" 
               style={{ backgroundColor: 'var(--sa-surface)' }}
             >
@@ -249,7 +299,7 @@ export default function AdminDashboard() {
               <p className="sa-card-value text-[#10002b] text-2xl font-extrabold mt-2">{classrooms.length}</p>
             </div>
             <div 
-              onClick={() => window.location.href = '/admin/attendance'} 
+              onClick={() => window.location.href = '/dashboard/admin/attendance'} 
               className="sa-card border border-[#c77dff] shadow-xs p-5 rounded-2xl w-full cursor-pointer hover:border-[#10002b] transition-all" 
               style={{ backgroundColor: 'var(--sa-surface)' }}
             >
@@ -270,7 +320,7 @@ export default function AdminDashboard() {
               onClick={() => openCreateModal('teacher')}
               className="sa-btn-primary py-2.5 px-4 rounded-xl text-xs font-bold bg-[#10002b] text-white hover:bg-[#c77dff] hover:text-[#10002b] transition-all cursor-pointer shadow-xs"
             >
-               Add New Teacher
+              Add New Teacher
             </button>
           </div>
 
@@ -488,7 +538,7 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* WEEKLY TEACHER GEOFENCE ATTENDANCE LOGS */}
+      {/* ATTENDANCE TAB */}
       {activeTab === 'attendance' && (
         <div className="w-full space-y-8">
           <div className="flex justify-between items-center w-full">
@@ -509,7 +559,6 @@ export default function AdminDashboard() {
               );
             }
 
-            // Group logs by exact date and enforce single-session locking (first login per day)
             const logsByDate = {};
             attendanceLogs.forEach((log) => {
               if (!log.timestamp) return;
@@ -589,7 +638,6 @@ export default function AdminDashboard() {
                     clockInTime = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
                     clockOutTime = log.clock_out ? new Date(log.clock_out).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'Pending / Not Clocked Out';
 
-                    // 7:00 AM = 420 minutes from midnight
                     if (totalMinutes > 420) {
                       status = 'Late';
                       badgeClass = 'bg-amber-100 text-amber-800 border-amber-300';
@@ -602,7 +650,7 @@ export default function AdminDashboard() {
                   } else {
                     if (isPastFourPM) {
                       status = 'Absent';
-                      badgeClass = '';
+                      badgeClass = 'bg-red-100 text-red-800 border-red-300';
                       weekAbsent++;
                     } else {
                       status = 'Pending (Before 4 PM)';
@@ -625,23 +673,15 @@ export default function AdminDashboard() {
 
               return (
                 <div key={weekIndex} className="space-y-4 w-full bg-white p-6 rounded-2xl border border-[#c77dff] shadow-xs">
-                  {/* Automatic Month and Year H1 Header */}
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-[#c77dff]/40 pb-3 gap-2">
-                    <h1 className="text-base font-extrabold text-[#10002b] uppercase tracking-wide">
+                    <h3 className="text-base font-extrabold text-[#10002b] uppercase tracking-wide">
                       {week.monthYear} — Week {weekIndex + 1} (Mon to Fri)
-                    </h1>
+                    </h3>
                     
-                    {/* Weekly Metrics Summary Badges */}
                     <div className="flex items-center gap-2 text-[11px] font-bold">
-                      <span className="px-3 py-1 rounded-lg">
-                        Present: {weekPresent}
-                      </span>
-                      <span className="px-3 py-1 rounded-lg">
-                        Late: {weekLate}
-                      </span>
-                      <span className="px-3 py-1 rounded-lg">
-                        Absent: {weekAbsent}
-                      </span>
+                      <span className="px-3 py-1 rounded-lg bg-emerald-50 text-emerald-700">Present: {weekPresent}</span>
+                      <span className="px-3 py-1 rounded-lg bg-amber-50 text-amber-700">Late: {weekLate}</span>
+                      <span className="px-3 py-1 rounded-lg bg-red-50 text-red-700">Absent: {weekAbsent}</span>
                     </div>
                   </div>
 
@@ -691,6 +731,83 @@ export default function AdminDashboard() {
           <div className="sa-card border border-[#c77dff] p-6 rounded-2xl space-y-4 shadow-xs" style={{ backgroundColor: 'var(--sa-surface)' }}>
             <p className="text-xs text-[#10002b]/80">Assignment Submissions Count: <strong>{assignmentSubs.length}</strong></p>
             <p className="text-xs text-[#10002b]/80">Exam Submissions Count: <strong>{examSubs.length}</strong></p>
+          </div>
+        </div>
+      )}
+
+      {/* ADMIN INVITATION MODAL POPUP */}
+      {showInviteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md border border-[#c77dff] shadow-2xl space-y-4">
+            <div className="flex justify-between items-center border-b pb-3">
+              <h3 className="text-base font-extrabold text-[#10002b]">Invite User to SmartAcademic</h3>
+              <button 
+                onClick={() => setShowInviteModal(false)}
+                className="text-gray-400 hover:text-black font-bold text-lg cursor-pointer"
+              >
+                &times;
+              </button>
+            </div>
+
+            <p className="text-xs text-[#10002b]/80">
+              Enter the email address and select the role. The system will dispatch an activation link directly to their email.
+            </p>
+
+            {inviteError && (
+              <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-xs font-bold rounded-xl text-center">
+                {inviteError}
+              </div>
+            )}
+
+            {inviteMessage && (
+              <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold rounded-xl text-center">
+                {inviteMessage}
+              </div>
+            )}
+
+            <form onSubmit={handleSendInvite} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-[#10002b] mb-1">Email Address</label>
+                <input
+                  type="email"
+                  required
+                  placeholder="user@smartacademic.com"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  className="w-full px-4 py-3 text-xs rounded-xl bg-gray-50 border border-gray-300 text-[#10002b] focus:outline-none focus:border-[#c77dff]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#10002b] mb-1">Role Type</label>
+                <select
+                  value={inviteRole}
+                  onChange={(e) => setInviteRole(e.target.value)}
+                  className="w-full px-4 py-3 text-xs rounded-xl bg-gray-50 border border-gray-300 text-[#10002b] focus:outline-none focus:border-[#c77dff] cursor-pointer"
+                >
+                  <option value="teacher">Teacher</option>
+                  <option value="student">Student</option>
+                  <option value="admin">Administrator</option>
+                </select>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowInviteModal(false)}
+                  className="px-4 py-2.5 text-xs font-bold rounded-xl bg-gray-200 text-gray-700 hover:bg-gray-300 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={inviteLoading}
+                  className="px-5 py-2.5 text-xs font-extrabold rounded-xl bg-[#10002b] text-white hover:bg-[#c77dff] hover:text-[#10002b] transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {inviteLoading ? 'Sending Invite...' : 'Send Invitation Email'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
@@ -782,18 +899,6 @@ export default function AdminDashboard() {
                   </div>
 
                   <div>
-                    <label className="block font-bold mb-1 text-[#10002b]">{modalMode === 'create' ? 'Password' : 'Password (Leave blank to keep unchanged)'}</label>
-                    <input
-                      type="password"
-                      placeholder="Password"
-                      value={formData.password}
-                      onChange={(e) => setFormData({ ...formData, password: e.target.value, raw_password: e.target.value })}
-                      className="w-full p-3 rounded-xl border border-[#c77dff] bg-white text-[#10002b] focus:outline-none focus:border-[#10002b]"
-                      required={modalMode === 'create'}
-                    />
-                  </div>
-
-                  <div>
                     <label className="block font-bold mb-1 text-[#10002b]">TSC Number</label>
                     <input
                       type="text"
@@ -863,18 +968,6 @@ export default function AdminDashboard() {
                         className="w-full p-3 rounded-xl border border-[#c77dff] bg-white text-[#10002b] focus:outline-none focus:border-[#10002b]"
                       />
                     </div>
-                  </div>
-
-                  <div>
-                    <label className="block font-bold mb-1 text-[#10002b]">{modalMode === 'create' ? 'Password' : 'Password (Leave blank to keep unchanged)'}</label>
-                    <input
-                      type="password"
-                      placeholder="Password"
-                      value={formData.password}
-                      onChange={(e) => setFormData({ ...formData, password: e.target.value, raw_password: e.target.value })}
-                      className="w-full p-3 rounded-xl border border-[#c77dff] bg-white text-[#10002b] focus:outline-none focus:border-[#10002b]"
-                      required={modalMode === 'create'}
-                    />
                   </div>
 
                   <div>
