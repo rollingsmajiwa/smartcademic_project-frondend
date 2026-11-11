@@ -26,7 +26,6 @@ export default function Home() {
         
         {/* Brand Badge */}
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-md bg-[#c77dff]/20 border border-[#c77dff]/40 text-[#10002b] text-xl font-bold shadow-sm">
-        
           SmartAcademic
         </div>
 
@@ -51,22 +50,20 @@ export default function Home() {
           >
             Get Started Now
           </Link>
-          <a 
-            href="#about" 
-            className="px-7 py-3.5 rounded-xl bg-[#c77dff] border border-[#c77dff]/40 text-white font-extrabold text-sm hover:border-[#c77dff] hover:bg-[#10002b] hover:text-[#10002b] backdrop-blur-sm transition-all transform hover:-translate-y-0.5"
+          <Link 
+            to="/services" 
+            className="px-7 py-3.5 rounded-xl bg-[#c77dff] border border-[#c77dff]/40 text-[#10002b] font-extrabold text-sm hover:border-[#c77dff] hover:bg-[#10002b] hover:text-white backdrop-blur-sm transition-all transform hover:-translate-y-0.5"
           >
             View Platform Modules
-          </a>
+          </Link>
         </div>
 
         {/* Quick Contact & Support Bar */}
         <div className="mt-12 pt-6 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs text-slate-700 max-w-xl font-semibold">
           <div className="flex items-center justify-center lg:justify-start gap-2.5">
-            
             rollingsmajiwa@gmail.com
           </div>
           <div className="flex items-center justify-center lg:justify-start gap-2.5">
-            
             +254 742234603
           </div>
         </div>
