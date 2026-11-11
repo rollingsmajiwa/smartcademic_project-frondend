@@ -139,7 +139,7 @@ export default function SignIn() {
               <label className="text-white block text-xs font-bold mb-1">Email Address</label>
               <input
                 type="email"
-                placeholder="name@smartacademic.com"
+                placeholder="rollingsmajiwa@gmail.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -151,7 +151,7 @@ export default function SignIn() {
               <label className="text-white block text-xs font-bold mb-1">Password</label>
               <input
                 type="password"
-                placeholder="••••••••"
+                placeholder=""
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required

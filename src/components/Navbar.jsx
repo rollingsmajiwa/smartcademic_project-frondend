@@ -5,25 +5,25 @@ import { Link } from 'react-router-dom';
 
 function Navbar() {
   return (
-    <nav className="sticky top-0 z-30 w-full px-6 py-3.5 bg-[#10002b] border-b border-[#c77dff]/40 shadow-xl font-sans text-white backdrop-blur-md">
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
+    <nav className="w-full bg-[#f7f0fa] border-b border-[#c77dff]/40 sticky top-0 z-50 shadow-xs">
+      <div className="max-w-7xl px-6 py-4 mx-auto flex items-center justify-between">
         
         {/* Brand Logo */}
         <div className="flex items-center gap-3">
           <div 
-            className="w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm text-[#10002b] shadow-lg shadow-[#c77dff]/30 ring-2 ring-[#c77dff]"
+            className="w-10 h-10 rounded-xl bg-[#10002b] text-white flex items-center justify-center font-black text-sm tracking-tighter shadow-sm border border-[#c77dff]/40 group-hover:bg-[#c77dff] group-hover:text-[#10002b] transition-all"
             style={{ backgroundColor: '#c77dff' }}
           >
             SA
           </div>
-          <span className="text-xl font-black tracking-wider text-white">
-            Smart<span className="text-[#c77dff]">Academic</span>
+          <span className="text-xl font-black tracking-wider text-[#7b2cbf]">
+            Smart<span className="text-[#10002b]">Academic</span>
           </span>
         </div>
 
         {/* Center Navigation Links */}
         <div>
-          <ul className="flex items-center gap-8 text-md font-bold text-gray-200">
+          <ul className="flex items-center gap-8 text-md font-bold text-[#10002b]">
             <li>
               <Link to="/" className="hover:text-[#c77dff] transition-all py-1.5 px-3 rounded-lg hover:bg-[#c77dff]/10">
                 Home

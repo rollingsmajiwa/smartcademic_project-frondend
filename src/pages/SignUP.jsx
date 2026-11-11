@@ -90,7 +90,7 @@ export default function SignUp() {
                 value={email} 
                 onChange={(e) => setEmail(e.target.value)} 
                 required
-                placeholder="name@smartacademic.com"
+                placeholder="e.g. rollingsmajiwa@gmail.com"
                 className="w-full px-4 py-3 text-xs rounded-md bg-white border border-[#10002b]/40 text-[#10002b] focus:outline-none focus:border-[#c77dff] focus:ring-2 focus:ring-[#c77dff]/40 shadow-xs" 
               />
             </div>
@@ -103,7 +103,7 @@ export default function SignUp() {
                   value={password} 
                   onChange={(e) => setPassword(e.target.value)} 
                   required 
-                  placeholder="••••••••"
+                  placeholder=""
                   className="w-full px-4 py-3 text-xs rounded-md bg-white border border-[#10002b]/40 text-[#10002b] focus:outline-none focus:border-[#c77dff] focus:ring-2 focus:ring-[#c77dff]/40 shadow-xs" 
                 />
               </div>
@@ -115,7 +115,7 @@ export default function SignUp() {
                   value={confirmPassword} 
                   onChange={(e) => setConfirmPassword(e.target.value)} 
                   required 
-                  placeholder="••••••••"
+                  placeholder=""
                   className="w-full px-4 py-3 text-xs rounded-md bg-white border border-[#10002b]/40 text-[#10002b] focus:outline-none focus:border-[#c77dff] focus:ring-2 focus:ring-[#c77dff]/40 shadow-xs" 
                 />
               </div>
