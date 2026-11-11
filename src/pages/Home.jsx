@@ -58,15 +58,6 @@ export default function Home() {
           </Link>
         </div>
 
-        {/* Quick Contact & Support Bar */}
-        <div className="mt-12 pt-6 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs text-slate-700 max-w-xl font-semibold">
-          <div className="flex items-center justify-center lg:justify-start gap-2.5">
-            rollingsmajiwa@gmail.com
-          </div>
-          <div className="flex items-center justify-center lg:justify-start gap-2.5">
-            +254 742234603
-          </div>
-        </div>
       </div>
     </section>
   );
