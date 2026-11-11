@@ -111,48 +111,7 @@ export default function Sidebar({ userRole, baseRole, activeTab, setActiveTab, o
 
   {/* Bottom Container: Switch Dashboard & Sign Out */}
   <div className="space-y-2 mt-auto pb-2">
-    {/* Switch Dashboard Buttons */}
-    {baseRole && baseRole !== 'student' && (
-      <div className="p-2.5 rounded-2xl space-y-1.5 border border-[#c77dff]/40 bg-[#10002b]/60 shadow-md">
-        <span className="text-[10px] font-extrabold uppercase tracking-wider px-1 text-[#c77dff]">Switch Dashboard</span>
-        
-        {baseRole === 'admin' && (
-          <button 
-            onClick={() => navigate('/dashboard/admin')}
-            className={`w-full text-left px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              userRole === 'admin' 
-                ? 'bg-[#c77dff] text-[#10002b] shadow-sm font-black' 
-                : 'text-white hover:bg-[#c77dff]/10 hover:text-[#c77dff]'
-            }`}
-          >
-            Back to Admin
-          </button>
-        )}
-
-        <button 
-          onClick={() => navigate('/dashboard/teacher')}
-          className={`w-full text-left px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            userRole === 'teacher' 
-              ? 'bg-[#c77dff] text-[#10002b] shadow-sm font-black' 
-              : 'text-white hover:bg-[#c77dff]/10 hover:text-[#c77dff]'
-          }`}
-        >
-          Teacher Dashboard
-        </button>
-
-        <button 
-          onClick={() => navigate('/dashboard/student')}
-          className={`w-full text-left px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            userRole === 'student' 
-              ? 'bg-[#c77dff] text-[#10002b] shadow-sm font-black' 
-              : 'text-white hover:bg-[#c77dff]/10 hover:text-[#c77dff]'
-          }`}
-        >
-          Student Dashboard
-        </button>
-      </div>
-    )}
-
+    
     {/* Logout Action */}
     <div className="pt-2 border-t border-[#c77dff]/30">
       <button

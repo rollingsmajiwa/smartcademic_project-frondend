@@ -250,9 +250,9 @@ export default function AdminDashboard() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl border border-[#c77dff] shadow-xs">
         <div>
           <span className="text-[10px] uppercase font-extrabold px-3 py-1 rounded-lg border tracking-wider bg-white border-[#c77dff] text-[#10002b]">
-            System Administrator Portal
+            System Administrator
           </span>
-          <h1 className="text-xl font-extrabold mt-2 text-[#10002b]">SmartAcademic Management Hub</h1>
+          <h1 className="text-xl font-extrabold mt-2 text-[#10002b]">SmartAcademic Management Portal</h1>
           <p className="text-xs mt-1 text-[#10002b]/70">
             Invite users via email activation link, manage classes, and monitor weekly teacher attendance.
           </p>
