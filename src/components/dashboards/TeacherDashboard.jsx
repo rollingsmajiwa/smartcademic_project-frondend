@@ -353,22 +353,30 @@ const runGeoFence = (statusDirect) => {
           </div>
 
           <div className="sa-grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
-            <div className="sa-card border border-[#c77dff] shadow-xs p-5 rounded-2xl w-full" style={{ backgroundColor: 'var(--sa-surface)' }}>
-              <p className="sa-card-title text-[#10002b] text-xs font-bold uppercase tracking-wider">Assignments Posted</p>
-              <p className="sa-card-value text-[#10002b] text-2xl font-extrabold mt-2">{overview?.total_assignments_posted || 0}</p>
-            </div>
-            <div className="sa-card border border-[#c77dff] shadow-xs p-5 rounded-2xl w-full" style={{ backgroundColor: 'var(--sa-surface)' }}>
-              <p className="sa-card-title text-[#10002b] text-xs font-bold uppercase tracking-wider">Exams Created</p>
-              <p className="sa-card-value text-[#10002b] text-2xl font-extrabold mt-2">{overview?.total_exams_created || 0}</p>
-            </div>
-            <div className="sa-card border border-[#c77dff] shadow-xs p-5 rounded-2xl w-full" style={{ backgroundColor: 'var(--sa-surface)' }}>
-              <p className="sa-card-title text-[#10002b] text-xs font-bold uppercase tracking-wider">Submissions Received</p>
-              <p className="sa-card-value text-[#10002b] text-2xl font-extrabold mt-2">{overview?.total_submissions_received || 0}</p>
-            </div>
-            <div className="sa-card border border-[#c77dff] shadow-xs p-5 rounded-2xl w-full" style={{ backgroundColor: 'var(--sa-surface)' }}>
-              <p className="sa-card-title text-[#10002b] text-xs font-bold uppercase tracking-wider">Revision Materials</p>
-              <p className="sa-card-value text-[#10002b] text-2xl font-extrabold mt-2">{revisionsList.length}</p>
-            </div>
+            <button onClick={() => navigate('/dashboard/student/assignments')} className='cursor-pointer'>
+              <div className="sa-card border border-[#c77dff] shadow-xs p-5 rounded-2xl w-full" style={{ backgroundColor: 'var(--sa-surface)' }}>
+                <p className="sa-card-title text-[#10002b] text-xs font-bold uppercase tracking-wider">Assignments Posted</p>
+                <p className="sa-card-value text-[#10002b] text-2xl font-extrabold mt-2">{overview?.total_assignments_posted || 0}</p>
+              </div>
+            </button>
+            <button onClick={() => navigate('/dashboard/student/exams')} className='cursor-pointer'>
+              <div className="sa-card border border-[#c77dff] shadow-xs p-5 rounded-2xl w-full" style={{ backgroundColor: 'var(--sa-surface)' }}>
+                <p className="sa-card-title text-[#10002b] text-xs font-bold uppercase tracking-wider">Exams Created</p>
+                <p className="sa-card-value text-[#10002b] text-2xl font-extrabold mt-2">{overview?.total_exams_created || 0}</p>
+              </div>
+            </button>
+            <button onClick={() => navigate('/dashboard/teacher/submissions/')} className='cursor-pointer'>
+              <div className="sa-card border border-[#c77dff] shadow-xs p-5 rounded-2xl w-full" style={{ backgroundColor: 'var(--sa-surface)' }}>
+                <p className="sa-card-title text-[#10002b] text-xs font-bold uppercase tracking-wider">Submissions Received</p>
+                <p className="sa-card-value text-[#10002b] text-2xl font-extrabold mt-2">{overview?.total_submissions_received || 0}</p>
+              </div>
+            </button>
+            <button onClick={() => navigate('/dashboard/student/materials/')} className='cursor-pointer'>
+              <div className="sa-card border border-[#c77dff] shadow-xs p-5 rounded-2xl w-full" style={{ backgroundColor: 'var(--sa-surface)' }}>
+                <p className="sa-card-title text-[#10002b] text-xs font-bold uppercase tracking-wider">Revision Materials</p>
+                <p className="sa-card-value text-[#10002b] text-2xl font-extrabold mt-2">{revisionsList.length}</p>
+              </div>
+            </button>
           </div>
 
           <div className="sa-card border border-[#c77dff] space-y-4 shadow-xs p-6 rounded-2xl w-full" style={{ backgroundColor: 'var(--sa-surface)' }}>

@@ -318,17 +318,19 @@ export default function StudentDashboard() {
                   </span>
                 </div>
 
-                <div className="sa-card border border-[#c77dff] shadow-xs p-5 rounded-2xl w-full" style={{ backgroundColor: 'var(--sa-surface)' }}>
-                  <p className="sa-card-title text-[#10002b] text-xs font-bold uppercase tracking-wider">Task Completion</p>
-                  <p className="sa-card-value text-[#10002b] text-2xl font-extrabold mt-2">
-                    {completedTasks} / {totalTasks}
-                  </p>
-                  <span className="text-[11px] font-medium mt-2 block text-[#10002b]/70">
-                    {handInRate}% done
-                  </span>
-                </div>
+                
+                  <div onClick={() => navigate('/dashboard/student/results/')} className="sa-card cursor-pointer border border-[#c77dff] shadow-xs p-5 rounded-2xl w-full" style={{ backgroundColor: 'var(--sa-surface)' }}>
+                    <p className="sa-card-title text-[#10002b] text-xs font-bold uppercase tracking-wider">Task Completion</p>
+                    <p className="sa-card-value text-[#10002b] text-2xl font-extrabold mt-2">
+                      {completedTasks} / {totalTasks}
+                    </p>
+                    <span className="text-[11px] font-medium mt-2 block text-[#10002b]/70">
+                      {handInRate}% done
+                    </span>
+                  </div>
+                
 
-                <div className="sa-card border border-[#c77dff] shadow-xs p-5 rounded-2xl w-full" style={{ backgroundColor: 'var(--sa-surface)' }}>
+                <div onClick={() => navigate('/dashboard/student/assignments/')} className="sa-card cursor-pointer border border-[#c77dff] shadow-xs p-5 rounded-2xl w-full" style={{ backgroundColor: 'var(--sa-surface)' }}>
                   <p className="sa-card-title text-[#10002b] text-xs font-bold uppercase tracking-wider">Urgent Action Items</p>
                   <p className="sa-card-value text-red-600 font-extrabold text-2xl mt-2">
                     {overview.urgent_deadlines ?? 0} Deadlines
