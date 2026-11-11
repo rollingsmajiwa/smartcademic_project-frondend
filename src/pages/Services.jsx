@@ -20,7 +20,7 @@ export default function Services() {
       <div className="relative z-10 max-w-5xl mx-auto w-full space-y-16">
         <div className="text-center space-y-4 max-w-3xl mx-auto">
           <div className="inline-flex items-center px-4 py-1.5 rounded-md bg-[#c77dff]/20 border border-[#c77dff]/40 text-[#10002b] text-sm font-extrabold shadow-sm">
-            Core Modules
+            Our Core Modules
           </div>
           <h1 className="text-3xl sm:text-5xl font-black text-[#10002b]">System Services & Capabilities</h1>
           <p className="text-base sm:text-lg text-slate-700 font-medium leading-relaxed">
@@ -56,7 +56,7 @@ export default function Services() {
           <div className="bg-white p-8 rounded-2xl border border-[#c77dff]/40 shadow-md space-y-4">
             <h3 className="text-xl font-black text-[#10002b]">Tokenized Email Invitations</h3>
             <p className="text-xs sm:text-sm text-slate-700 font-medium leading-relaxed">
-              Automated terminal and email dispatch for secure student and teachers self-registration and administrative onboardings.
+              Automated email dispatch for secure student and teachers self-registration and administrative onboardings.
             </p>
           </div>
         </div>
