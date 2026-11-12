@@ -30,8 +30,11 @@ export default function Sidebar({ userRole, baseRole, activeTab, setActiveTab, o
       { id: 'assignments', label: 'Assignments Hub', icon: FileText },
       { id: 'exams', label: 'Exams Manager', icon: GraduationCap },
       { id: 'submissions', label: 'Submissions & Grading', icon: FileCheck },
-      { id: 'attendance', label: 'Geo Attendance', icon: MapPin },
+      { id: 'marks', label: 'Class Marks Grid', icon: ClipboardList },      
+      { id: 'analysis', label: 'Class Analysis Report', icon: BarChart3 },
       { id: 'analytics', label: 'Class Analytics', icon: BarChart3 },
+      { id: 'attendance', label: 'Geo Attendance', icon: MapPin },
+      
     ],
     student: [
       { id: 'home', label: 'Home', icon: Home },

@@ -18,7 +18,7 @@ export default function AdminDashboard() {
   const activeTab = getActiveTab();
 
   // Data States
-  const [users, setUsers] = useState([]);
+  
   const [teachers, setTeachers] = useState([]);
   const [students, setStudents] = useState([]);
   const [classrooms, setClassrooms] = useState([]);
@@ -83,39 +83,36 @@ export default function AdminDashboard() {
   };
 
   const fetchAdminData = async () => {
-    setLoading(true);
-    try {
-      const [
-        usersRes,
-        teachersRes,
-        studentsRes,
-        classRes,
-        attRes,
-        asSubRes,
-        exSubRes
-      ] = await Promise.all([
-        axios.get('http://127.0.0.1:8000/api/admin/users/', getAuthConfig()).catch(() => ({ data: [] })),
-        axios.get('http://127.0.0.1:8000/api/admin/teachers/', getAuthConfig()).catch(() => ({ data: [] })),
-        axios.get('http://127.0.0.1:8000/api/admin/students/', getAuthConfig()).catch(() => ({ data: [] })),
-        axios.get('http://127.0.0.1:8000/api/admin/classrooms/', getAuthConfig()).catch(() => ({ data: [] })),
-        axios.get('http://127.0.0.1:8000/api/admin/attendance/teachers/', getAuthConfig()).catch(() => ({ data: [] })),
-        axios.get('http://127.0.0.1:8000/api/admin/submissions/assignments/', getAuthConfig()).catch(() => ({ data: [] })),
-        axios.get('http://127.0.0.1:8000/api/admin/submissions/exams/', getAuthConfig()).catch(() => ({ data: [] })),
-      ]);
+  setLoading(true);
+  try {
+    const [
+      teachersRes,
+      studentsRes,
+      classRes,
+      attRes,
+      asSubRes,
+      exSubRes
+    ] = await Promise.all([
+      axios.get('http://127.0.0.1:8000/api/admin/teachers/', getAuthConfig()).catch(() => ({ data: [] })),
+      axios.get('http://127.0.0.1:8000/api/admin/students/', getAuthConfig()).catch(() => ({ data: [] })),
+      axios.get('http://127.0.0.1:8000/api/admin/classrooms/', getAuthConfig()).catch(() => ({ data: [] })),
+      axios.get('http://127.0.0.1:8000/api/admin/attendance/teachers/', getAuthConfig()).catch(() => ({ data: [] })),
+      axios.get('http://127.0.0.1:8000/api/admin/submissions/assignments/', getAuthConfig()).catch(() => ({ data: [] })),
+      axios.get('http://127.0.0.1:8000/api/admin/submissions/exams/', getAuthConfig()).catch(() => ({ data: [] })),
+    ]);
 
-      setUsers(usersRes.data);
-      setTeachers(teachersRes.data);
-      setStudents(studentsRes.data);
-      setClassrooms(classRes.data);
-      setAttendanceLogs(attRes.data);
-      setAssignmentSubs(asSubRes.data);
-      setExamSubs(exSubRes.data);
-    } catch (err) {
-      console.error('Failed to fetch admin data:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    setTeachers(teachersRes.data);
+    setStudents(studentsRes.data);
+    setClassrooms(classRes.data);
+    setAttendanceLogs(attRes.data);
+    setAssignmentSubs(asSubRes.data);
+    setExamSubs(exSubRes.data);
+  } catch (err) {
+    console.error('Failed to fetch admin data:', err);
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     fetchAdminData();
