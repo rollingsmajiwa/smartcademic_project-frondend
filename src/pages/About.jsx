@@ -29,33 +29,33 @@ export default function About() {
             About SmartAcademic
           </div>
           <h1 className="text-3xl sm:text-5xl font-black leading-tight text-[#10002b]">
-            Architected for Modern Educational Standards
+            Built for Modern Educational Standards
           </h1>
           <p className="text-base sm:text-lg text-slate-700 font-medium leading-relaxed">
-            SmartAcademic is an automated institutional management platform engineered to connect physical compound verification with real-time academic records and administrative workflows.
+            SmartAcademic was created to replace fragmented manual registers, unverified attendance logs, and passive study habits with one accountable academic ecosystem.
           </p>
         </div>
 
-        {/* Feature Cards */}
+        {/* Mission & Core Pillars (No overlap with Services) */}
         <div className="grid md:grid-cols-3 gap-8">
           <div className="bg-white p-8 rounded-2xl border border-[#c77dff]/30 shadow-md space-y-3">
-            <h3 className="text-lg font-black text-[#10002b]">Institutional Focus</h3>
+            <h3 className="text-lg font-black text-[#10002b]">Our Mission</h3>
             <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium">
-              Eliminate administrative friction through seamless user roles across administrators, teachers, and students.
+              To empower schools and institutions with transparent, tamper-proof operational tools that save administrative hours every day.
             </p>
           </div>
 
           <div className="bg-white p-8 rounded-2xl border border-[#c77dff]/30 shadow-md space-y-3">
-            <h3 className="text-lg font-black text-[#10002b]">Geofenced Compliance</h3>
+            <h3 className="text-lg font-black text-[#10002b]">Academic Integrity</h3>
             <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium">
-              Automated coordinate evaluation ensures accurate physical attendance logging within institutional boundary limits.
+              From GPS-verified campus presence to Socratic AI guidance that builds real understanding, every workflow promotes accountability.
             </p>
           </div>
 
           <div className="bg-white p-8 rounded-2xl border border-[#c77dff]/30 shadow-md space-y-3">
-            <h3 className="text-lg font-black text-[#10002b]">Real-Time Reporting</h3>
+            <h3 className="text-lg font-black text-[#10002b]">Unified Ecosystem</h3>
             <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium">
-              Instant breakdown of present, late, and absent metrics categorized by week and month for administrative oversight.
+              Designed to bridge the gap between school leadership, educators, and learners inside a single connected platform.
             </p>
           </div>
         </div>
@@ -74,8 +74,8 @@ export default function About() {
                 a: "The geofence backend checks coordinates continuously during operating hours and executes an automated check-out log when boundary limits are exceeded."
               },
               {
-                q: "How are student invitations sent?",
-                a: "Administrators generate encrypted registration tokens sent directly to student email accounts for verified self-registration."
+                q: "How are student and teacher invitations sent?",
+                a: "Administrators generate encrypted registration tokens sent directly to student and teacher email accounts for verified self-registration."
               }
             ].map((faq, index) => (
               <div key={index} className="bg-slate-50 border border-[#c77dff]/30 rounded-xl overflow-hidden">

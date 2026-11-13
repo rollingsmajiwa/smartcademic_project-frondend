@@ -1,11 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import RevisionAITutor from '../../pages/RevisionAITutor';
 import { 
   BookOpen, BookOpenCheck, FileText, GraduationCap, 
   CheckCircle2, Clock, Award, AlertCircle, Download, Send, Loader2, ArrowLeft 
 } from 'lucide-react';
 import * as pdfjsLib from 'pdfjs-dist';
+
+// --- API CONFIG ---
+// API ends at /api (no trailing slash). RevisionAITutor appends "/students/ai-tutor/" itself.
+const API_ORIGIN = 'http://127.0.0.1:8000';
+const API = `${API_ORIGIN}/api`;
 
 // Set worker source to CDN for PDF.js
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
@@ -13,8 +19,13 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs
 // Helper to format full file URLs
 const getFullUrl = (filePath) => {
   if (!filePath) return '';
-  return filePath.startsWith('http') ? filePath : `http://127.0.0.1:8000${filePath}`;
+  return filePath.startsWith('http') ? filePath : `${API_ORIGIN}${filePath}`;
 };
+
+// Helper to build auth headers
+const getAuthConfig = () => ({
+  headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` }
+});
 
 // --- COUNTDOWN TIMER COMPONENT (Exams Only) ---
 function ExamTimer({ durationMins, onTimeUp }) {
@@ -65,9 +76,8 @@ function PdfCanvasViewer({ fileUrl }) {
 
     const fetchBlob = async () => {
       try {
-        const token = localStorage.getItem('access_token');
         const response = await axios.get(fileUrl, {
-          headers: { Authorization: `Bearer ${token}` },
+          ...getAuthConfig(),
           responseType: 'arraybuffer'
         });
 
@@ -127,6 +137,7 @@ export default function StudentDashboard() {
   const [assignments, setAssignments] = useState([]);
   const [exams, setExams] = useState([]);
   const [submissions, setSubmissions] = useState([]);
+  const [selectedTutorMaterial, setSelectedTutorMaterial] = useState(null);
   
   // Active Assignment Workspace States
   const [activeAssignment, setActiveAssignment] = useState(null);
@@ -157,26 +168,23 @@ export default function StudentDashboard() {
     setLoading(true);
     setError(null);
 
-    const token = localStorage.getItem('access_token');
-    const apiConfig = {
-      headers: { Authorization: `Bearer ${token}` }
-    };
+    const apiConfig = getAuthConfig();
 
     try {
       if (tab === 'overview' || !tab || tab === 'home') {
-        const res = await axios.get('http://127.0.0.1:8000/api/students/overview/', apiConfig);
+        const res = await axios.get(`${API}/students/overview/`, apiConfig);
         setOverview(res.data);
       } else if (tab === 'materials') {
-        const res = await axios.get('http://127.0.0.1:8000/api/students/materials/', apiConfig);
+        const res = await axios.get(`${API}/students/materials/`, apiConfig);
         setMaterials(Array.isArray(res.data) ? res.data : res.data.results || []);
       } else if (tab === 'assignments') {
-        const res = await axios.get('http://127.0.0.1:8000/api/students/assignments/', apiConfig);
+        const res = await axios.get(`${API}/students/assignments/`, apiConfig);
         setAssignments(res.data);
       } else if (tab === 'exams') {
-        const res = await axios.get('http://127.0.0.1:8000/api/students/exams/', apiConfig);
+        const res = await axios.get(`${API}/students/exams/`, apiConfig);
         setExams(res.data);
       } else if (tab === 'results') {
-        const res = await axios.get('http://127.0.0.1:8000/api/students/my-assignment-submissions/', apiConfig);
+        const res = await axios.get(`${API}/students/my-assignment-submissions/`, apiConfig);
         setSubmissions(res.data);
       }
     } catch (err) {
@@ -199,7 +207,7 @@ export default function StudentDashboard() {
       if (selectedFile) formData.append('file', selectedFile);
       
       await axios.post(
-        `http://127.0.0.1:8000/api/students/assignments/submit/`, 
+        `${API}/students/assignments/submit/`, 
         formData,
         { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' } }
       );
@@ -237,7 +245,7 @@ export default function StudentDashboard() {
       if (fileVal) formData.append('file', fileVal);
       
       await axios.post(
-        'http://127.0.0.1:8000/api/teachers/exam-submissions/', 
+        `${API}/teachers/exam-submissions/`, 
         formData, 
         { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' } }
       );
@@ -318,17 +326,15 @@ export default function StudentDashboard() {
                   </span>
                 </div>
 
-                
-                  <div onClick={() => navigate('/dashboard/student/results/')} className="sa-card cursor-pointer border border-[#c77dff] shadow-xs p-5 rounded-2xl w-full" style={{ backgroundColor: 'var(--sa-surface)' }}>
-                    <p className="sa-card-title text-[#10002b] text-xs font-bold uppercase tracking-wider">Task Completion</p>
-                    <p className="sa-card-value text-[#10002b] text-2xl font-extrabold mt-2">
-                      {completedTasks} / {totalTasks}
-                    </p>
-                    <span className="text-[11px] font-medium mt-2 block text-[#10002b]/70">
-                      {handInRate}% done
-                    </span>
-                  </div>
-                
+                <div onClick={() => navigate('/dashboard/student/results/')} className="sa-card cursor-pointer border border-[#c77dff] shadow-xs p-5 rounded-2xl w-full" style={{ backgroundColor: 'var(--sa-surface)' }}>
+                  <p className="sa-card-title text-[#10002b] text-xs font-bold uppercase tracking-wider">Task Completion</p>
+                  <p className="sa-card-value text-[#10002b] text-2xl font-extrabold mt-2">
+                    {completedTasks} / {totalTasks}
+                  </p>
+                  <span className="text-[11px] font-medium mt-2 block text-[#10002b]/70">
+                    {handInRate}% done
+                  </span>
+                </div>
 
                 <div onClick={() => navigate('/dashboard/student/assignments/')} className="sa-card cursor-pointer border border-[#c77dff] shadow-xs p-5 rounded-2xl w-full" style={{ backgroundColor: 'var(--sa-surface)' }}>
                   <p className="sa-card-title text-[#10002b] text-xs font-bold uppercase tracking-wider">Urgent Action Items</p>
@@ -364,20 +370,37 @@ export default function StudentDashboard() {
                           </p>
                           {mat.description && <p className="text-[11px] mt-1 text-[#10002b]/70">{mat.description}</p>}
                         </div>
-                        {fileUrl && (
-                          <a 
-                            href={fileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="sa-btn-secondary text-xs flex items-center gap-1.5 py-1.5 px-3 bg-[#10002b] text-white hover:bg-[#c77dff] hover:text-[#10002b] rounded-lg font-bold transition-all cursor-pointer"
+                        <div className="flex items-center gap-2">
+                          {fileUrl && (
+                            <a 
+                              href={fileUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="sa-btn-secondary text-xs flex items-center gap-1.5 py-1.5 px-3 bg-[#10002b] text-white hover:bg-[#c77dff] hover:text-[#10002b] rounded-lg font-bold transition-all cursor-pointer"
+                            >
+                              Open File
+                            </a>
+                          )}
+                          <button
+                            onClick={() => setSelectedTutorMaterial(mat)}
+                            className="text-xs bg-[#c77dff] text-[#10002b] font-bold px-3 py-1.5 rounded-lg hover:opacity-90 cursor-pointer"
                           >
-                            Open File
-                          </a>
-                        )}
+                            Ask Mwalimu AI
+                          </button>
+                        </div>
                       </div>
                     );
                   })}
                 </div>
+              )}
+
+              {selectedTutorMaterial && (
+                <RevisionAITutor 
+                  material={selectedTutorMaterial} 
+                  onClose={() => setSelectedTutorMaterial(null)} 
+                  apiBaseUrl={API}
+                  authConfig={getAuthConfig()}
+                />
               )}
             </div>
           )}

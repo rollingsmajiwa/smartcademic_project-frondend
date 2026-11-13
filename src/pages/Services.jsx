@@ -30,7 +30,6 @@ export default function Services() {
 
         <div className="grid md:grid-cols-2 gap-8">
           <div className="bg-white p-8 rounded-2xl border border-[#c77dff]/40 shadow-md space-y-4">
-            
             <h3 className="text-xl font-black text-[#10002b]">Geofenced Attendance Verification</h3>
             <p className="text-xs sm:text-sm text-slate-700 font-medium leading-relaxed">
               GPS location validation ensures staff check-ins are restricted to school coordinate bounds with automated exit logging.
@@ -38,7 +37,6 @@ export default function Services() {
           </div>
 
           <div className="bg-white p-8 rounded-2xl border border-[#c77dff]/40 shadow-md space-y-4">
-            
             <h3 className="text-xl font-black text-[#10002b]">Punctuality Logic Engine</h3>
             <p className="text-xs sm:text-sm text-slate-700 font-medium leading-relaxed">
               Automated rules mark arrivals before or at exactly 7:00 AM as Present(on time), arrivals later than 7:00 AM as Late, and unclocked records as Absent at 4:30 PM.
@@ -46,7 +44,6 @@ export default function Services() {
           </div>
 
           <div className="bg-white p-8 rounded-2xl border border-[#c77dff]/40 shadow-md space-y-4">
-            
             <h3 className="text-xl font-black text-[#10002b]">Role-Based Access Control</h3>
             <p className="text-xs sm:text-sm text-slate-700 font-medium leading-relaxed">
               Dedicated dashboards tailored for administrators, teachers, and students to access localized metrics and actions.
@@ -57,6 +54,20 @@ export default function Services() {
             <h3 className="text-xl font-black text-[#10002b]">Tokenized Email Invitations</h3>
             <p className="text-xs sm:text-sm text-slate-700 font-medium leading-relaxed">
               Automated email dispatch for secure student and teachers self-registration and administrative onboardings.
+            </p>
+          </div>
+
+          <div className="bg-white p-8 rounded-2xl border border-[#c77dff]/40 shadow-md space-y-4">
+            <h3 className="text-xl font-black text-[#10002b]">Live Exams</h3>
+            <p className="text-xs sm:text-sm text-slate-700 font-medium leading-relaxed">
+              Real-time online examination delivery with automated timing, secure student access, and instant academic grading.
+            </p>
+          </div>
+
+          <div className="bg-white p-8 rounded-2xl border border-[#c77dff]/40 shadow-md space-y-4">
+            <h3 className="text-xl font-black text-[#10002b]">Mwalimu AI</h3>
+            <p className="text-xs sm:text-sm text-slate-700 font-medium leading-relaxed">
+              Interactive Socratic revision tutor that guides students through uploaded study materials using hints and conceptual prompts without giving away direct answers.
             </p>
           </div>
         </div>

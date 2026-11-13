@@ -55,18 +55,13 @@ function Navbar() {
         {/* Auth Action Buttons */}
         <div className="flex items-center gap-3">
           <Link 
-            to="/signup" 
-            className="text-xs px-4 py-2 font-bold rounded-xl bg-transparent text-[#c77dff] border border-[#c77dff]/60 hover:text-[#10002b] transition-all shadow-sm"
-          >
-            Register
-          </Link>
-
-          <Link 
             to="/signin" 
-            className="text-xs px-4 py-2 font-bold rounded-xl bg-[#c77dff] text-[#10002b] shadow-md shadow-[#c77dff]/30 hover:bg-white hover:text-[#10002b] transition-all"
+            className="text-sm px-4 py-2 font-bold rounded-xl bg-transparent text-[#c77dff] border border-[#c77dff]/60 hover:text-[#10002b] transition-all shadow-sm"
           >
             Sign In
           </Link>
+
+          
         </div>
 
       </div>
