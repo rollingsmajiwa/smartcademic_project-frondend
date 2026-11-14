@@ -586,7 +586,7 @@ export default function TeacherDashboard() {
           
           <button 
             onClick={() => navigate(card.to)}
-            className="w-full py-2 px-3 rounded-xl bg-[#c77dff]/20 border border-[#c77dff] text-[#10002b] hover:bg-[#10002b] hover:text-white transition-all text-xs font-extrabold cursor-pointer shadow-xs"
+            className="w-full py-2 px-3 rounded-md bg-[#c77dff]/20 border border-[#c77dff] text-[#10002b] hover:bg-[#10002b] hover:text-white transition-all text-xs font-extrabold cursor-pointer shadow-xs"
           >
             {card.actionLabel}
           </button>
@@ -1073,7 +1073,8 @@ export default function TeacherDashboard() {
       {/* CLASS MARKS GRID TAB */}
       {activeTab === 'marks' && (
         <div className="p-6 bg-white rounded-lg shadow-md space-y-6">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-[#c77dff]/30 pb-4">
+          <div className="sa-banner sa-flex-between border border-[#c77dff] shadow-xs p-6 rounded-2xl w-full"
+            style={{ backgroundColor: 'var(--sa-surface)' }}>
             <div>
               <h2 className="text-xl font-extrabold text-[#10002b]">Class Marks Entry</h2>
               <p className="text-xs text-[#10002b]/70">
@@ -1166,7 +1167,8 @@ export default function TeacherDashboard() {
       {/* CLASS ANALYSIS REPORT TAB */}
       {activeTab === 'analysis' && (
         <div className="p-6 bg-white rounded-lg shadow-md space-y-6">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-[#c77dff]/30 pb-4">
+          <div className="sa-banner sa-flex-between border border-[#c77dff] shadow-xs p-6 rounded-2xl w-full"
+      style={{ backgroundColor: 'var(--sa-surface)' }}>
             <div>
               <h2 className="text-xl font-extrabold text-[#10002b]">Class Performance & Analysis Report</h2>
               <p className="text-xs text-[#10002b]/70">
@@ -1308,7 +1310,8 @@ export default function TeacherDashboard() {
       {/* CLASS ANALYTICS TAB (subject means + level distribution) */}
       {activeTab === 'analytics' && (
         <div className="p-6 bg-white rounded-lg shadow-md space-y-6">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-[#c77dff]/30 pb-4">
+          <div className="sa-banner sa-flex-between border border-[#c77dff] shadow-xs p-6 rounded-2xl w-full"
+      style={{ backgroundColor: 'var(--sa-surface)' }}>
             <div>
               <h2 className="text-xl font-extrabold text-[#10002b]">Class Analytics</h2>
               <p className="text-xs text-[#10002b]/70">Subject means and level distribution for the selected class.</p>

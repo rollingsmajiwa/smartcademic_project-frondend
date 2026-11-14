@@ -49,7 +49,7 @@ export default function Home() {
           .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         `}</style>
 
-        {/* Background Image on Far Right (Clear & Bright) */}
+        {/* Background Image on Far Right */}
         <div className="absolute inset-0 z-0 pointer-events-none flex justify-end overflow-hidden">
           <div className="w-full lg:w-2/3 h-full relative">
             <img 
@@ -61,7 +61,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Soft #c77dff Glow Orb */}
+        
         <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#c77dff]/25 rounded-full blur-3xl pointer-events-none z-1"></div>
 
         {/* Main Content Grid */}
@@ -69,7 +69,7 @@ export default function Home() {
           
           {/* Interactive Sidebar */}
           <div 
-            className="lg:col-span-3 relative h-[380px] rounded-2xl border border-[#c77dff]/50 bg-white/85 backdrop-blur-md shadow-xl p-2.5 overflow-hidden ml-0"
+            className="lg:col-span-3 relative h-[380px] rounded-md border border-[#c77dff]/50 bg-white/85 backdrop-blur-md shadow-xl p-2.5 overflow-hidden ml-0"
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => setIsPaused(false)}
             onTouchStart={() => setIsPaused(true)}
@@ -84,7 +84,7 @@ export default function Home() {
               className="h-full overflow-y-auto no-scrollbar flex flex-col gap-2.5 cursor-grab active:cursor-grabbing"
             >
               {[...sidebarImages, ...sidebarImages].map((img, index) => (
-                <div key={index} className="rounded-xl overflow-hidden border border-[#c77dff]/40 shadow-sm bg-white shrink-0">
+                <div key={index} className="rounded-md overflow-hidden border border-[#c77dff]/40 shadow-sm bg-white shrink-0">
                   <img 
                     src={img.src} 
                     alt={img.alt} 

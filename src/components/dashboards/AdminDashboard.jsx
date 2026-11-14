@@ -244,7 +244,8 @@ export default function AdminDashboard() {
     <div className="w-full min-h-screen p-6 lg:p-8 space-y-6 font-sans max-w-7xl mx-auto" style={{ backgroundColor: 'var(--sa-bg)', color: 'var(--sa-text)' }}>
       
       {/* Top Header with Invite Button */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl border border-[#c77dff] shadow-xs">
+      <div className="sa-banner sa-flex-between border border-[#c77dff] shadow-xs p-6 rounded-2xl w-full"
+      style={{ backgroundColor: 'var(--sa-surface)' }}>
         <div>
           <span className="text-[10px] uppercase font-extrabold px-3 py-1 rounded-lg border tracking-wider bg-white border-[#c77dff] text-[#10002b]">
             System Administrator
@@ -327,7 +328,7 @@ export default function AdminDashboard() {
                 <tr>
                   <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">TSC Number</th>
                   <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Name (First, Surname, Last)</th>
-                  <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Username</th>
+                  
                   <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Email</th>
                   <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Password</th>
                   <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Gender</th>
@@ -347,7 +348,7 @@ export default function AdminDashboard() {
                       <td className="p-4 font-bold text-[#10002b]">
                         {t.first_name || t.user?.first_name || ''} {t.surname ? `, ${t.surname}` : ''} {t.last_name || t.user?.last_name || ''}
                       </td>
-                      <td className="p-4 font-mono text-[#10002b]">{t.username || t.user?.username || 'N/A'}</td>
+                     
                       <td className="p-4 text-[#10002b]/80">{t.email || t.user?.email || 'N/A'}</td>
                       <td className="p-4 font-mono text-[#10002b]/80">{t.raw_password || t.password || '••••••••'}</td>
                       <td className="p-4 text-[#10002b]">{t.gender || 'N/A'}</td>
@@ -399,7 +400,7 @@ export default function AdminDashboard() {
                 <tr>
                   <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Admission No.</th>
                   <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Name (First, Surname, Last)</th>
-                  <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Username</th>
+                  
                   <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Password</th>
                   <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Gender</th>
                   <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Classroom</th>
@@ -430,7 +431,7 @@ export default function AdminDashboard() {
                         <td className="p-4 font-bold text-[#10002b]">
                           {s.first_name || s.user?.first_name || ''} {s.surname ? `, ${s.surname}` : ''} {s.last_name || s.user?.last_name || ''}
                         </td>
-                        <td className="p-4 font-mono text-[#10002b]">{s.username || s.user?.username || 'N/A'}</td>
+                        
                         <td className="p-4 font-mono text-[#10002b]/80">{s.raw_password || s.password || '••••••••'}</td>
                         <td className="p-4 text-[#10002b]">{s.gender || 'N/A'}</td>
                         <td className="p-4 text-[#10002b] font-semibold">{assignedClass}</td>
@@ -483,7 +484,7 @@ export default function AdminDashboard() {
                 <tr>
                   <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Classroom ID</th>
                   <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Class Name</th>
-                  <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Assigned Teacher</th>
+                  <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Class Teacher</th>
                   <th className="p-4 text-right bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Actions</th>
                 </tr>
               </thead>
@@ -679,7 +680,7 @@ export default function AdminDashboard() {
         });
 
         return (
-          <div key={weekIndex} className="space-y-4 w-full bg-white p-6 rounded-2xl border border-[#c77dff] shadow-xs">
+          <div key={weekIndex} className="space-y-4 w-full bg-white p-6 rounded-2xl border border-[#c77dff] shadow-xs overflow-y-auto">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-[#c77dff]/40 pb-3 gap-2">
               <h3 className="text-base font-extrabold text-[#10002b] uppercase tracking-wide">
                 {week.monthYear} — Week {weeks.length - weekIndex} (Mon to Fri)
