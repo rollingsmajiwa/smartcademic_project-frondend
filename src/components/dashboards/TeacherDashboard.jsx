@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://smartacademic-project.onrender.com';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://smartcademic-project.onrender.com';
 const API = `${API_BASE}/api/teachers`;
 const HOST = `${API_BASE}`;
 

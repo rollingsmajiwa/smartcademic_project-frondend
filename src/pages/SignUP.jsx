@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 
 
-  const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://smartacademic-project.onrender.com';
+  const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://smartcademic-project.onrender.com';
 
 /**
  * Removes email-client damage from link parameters.
