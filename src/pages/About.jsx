@@ -8,60 +8,51 @@ export default function About() {
   };
 
   return (
-    <section className="relative min-h-[88vh] flex items-center justify-center px-6 py-20 overflow-hidden bg-slate-50 text-[#10002b]">
+    <section className="relative min-h-[88vh] flex items-center justify-center px-6 py-20 overflow-hidden bg-white text-[#10002b]">
       {/* Ambient Glows */}
       <div className="absolute -top-32 -right-32 w-96 h-96 bg-[#c77dff]/20 rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute -bottom-32 -left-32 w-[500px] h-[500px] bg-[#10002b]/10 rounded-full blur-3xl pointer-events-none"></div>
-
-      {/* Grid Dot Overlay */}
-      <div 
-        className="absolute inset-0 opacity-[0.15] pointer-events-none"
-        style={{
-          backgroundImage: `radial-gradient(#c77dff 1.2px, transparent 1.2px)`,
-          backgroundSize: '32px 32px',
-        }}
-      ></div>
+      <div className="absolute -bottom-32 -left-32 w-[500px] h-[500px] bg-[#c77dff]/15 rounded-full blur-3xl pointer-events-none"></div>
 
       <div className="relative z-10 max-w-5xl mx-auto w-full space-y-16">
         {/* Page Header */}
         <div className="text-center space-y-4 max-w-3xl mx-auto">
-          <div className="inline-flex items-center px-4 py-1.5 rounded-md bg-[#c77dff]/20 border border-[#c77dff]/40 text-[#10002b] text-sm font-extrabold shadow-sm">
+          <div className="inline-flex items-center px-4 py-1.5 rounded-md bg-[#c77dff]/20 border border-[#c77dff]/50 text-[#10002b] text-sm font-extrabold shadow-sm">
             About SmartAcademic
           </div>
           <h1 className="text-3xl sm:text-5xl font-black leading-tight text-[#10002b]">
             Built for Modern Educational Standards
           </h1>
-          <p className="text-base sm:text-lg text-slate-700 font-medium leading-relaxed">
+          <p className="text-base sm:text-lg text-[#10002b]/80 font-medium leading-relaxed">
             SmartAcademic was created to replace fragmented manual registers, unverified attendance logs, and passive study habits with one accountable academic ecosystem.
           </p>
         </div>
 
         {/* Mission & Core Pillars (No overlap with Services) */}
         <div className="grid md:grid-cols-3 gap-8">
-          <div className="bg-white p-8 rounded-2xl border border-[#c77dff]/30 shadow-md space-y-3">
+          <div className="bg-white p-8 rounded-2xl border border-[#c77dff]/40 shadow-md space-y-3 hover:border-[#10002b]/40 transition-all">
             <h3 className="text-lg font-black text-[#10002b]">Our Mission</h3>
-            <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium">
+            <p className="text-xs sm:text-sm text-[#10002b]/80 leading-relaxed font-medium">
               To empower schools and institutions with transparent, tamper-proof operational tools that save administrative hours every day.
             </p>
           </div>
 
-          <div className="bg-white p-8 rounded-2xl border border-[#c77dff]/30 shadow-md space-y-3">
+          <div className="bg-white p-8 rounded-2xl border border-[#c77dff]/40 shadow-md space-y-3 hover:border-[#10002b]/40 transition-all">
             <h3 className="text-lg font-black text-[#10002b]">Academic Integrity</h3>
-            <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium">
+            <p className="text-xs sm:text-sm text-[#10002b]/80 leading-relaxed font-medium">
               From GPS-verified campus presence to Socratic AI guidance that builds real understanding, every workflow promotes accountability.
             </p>
           </div>
 
-          <div className="bg-white p-8 rounded-2xl border border-[#c77dff]/30 shadow-md space-y-3">
+          <div className="bg-white p-8 rounded-2xl border border-[#c77dff]/40 shadow-md space-y-3 hover:border-[#10002b]/40 transition-all">
             <h3 className="text-lg font-black text-[#10002b]">Unified Ecosystem</h3>
-            <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium">
+            <p className="text-xs sm:text-sm text-[#10002b]/80 leading-relaxed font-medium">
               Designed to bridge the gap between school leadership, educators, and learners inside a single connected platform.
             </p>
           </div>
         </div>
 
         {/* System FAQ */}
-        <div className="bg-white p-8 rounded-2xl border border-[#c77dff]/40 shadow-md space-y-8 max-w-4xl mx-auto">
+        <div className="bg-white p-8 rounded-2xl border border-[#c77dff]/50 shadow-md space-y-8 max-w-4xl mx-auto">
           <h2 className="text-2xl font-black text-[#10002b] text-center">Platform Details & Logic</h2>
           <div className="space-y-4">
             {[
@@ -78,16 +69,16 @@ export default function About() {
                 a: "Administrators generate encrypted registration tokens sent directly to student and teacher email accounts for verified self-registration."
               }
             ].map((faq, index) => (
-              <div key={index} className="bg-slate-50 border border-[#c77dff]/30 rounded-xl overflow-hidden">
+              <div key={index} className="bg-[#c77dff]/10 border border-[#c77dff]/40 rounded-xl overflow-hidden">
                 <button
                   onClick={() => toggleFaq(index)}
-                  className="w-full text-left p-4 font-bold text-xs sm:text-sm text-[#10002b] flex justify-between items-center focus:outline-none"
+                  className="w-full text-left p-4 font-bold text-xs sm:text-sm text-[#10002b] flex justify-between items-center focus:outline-none hover:bg-[#c77dff]/15 transition-colors"
                 >
                   <span>{faq.q}</span>
                   <span className="text-lg font-black text-[#10002b]">{activeFaq === index ? "−" : "+"}</span>
                 </button>
                 {activeFaq === index && (
-                  <div className="p-4 pt-0 text-xs sm:text-sm text-slate-700 border-t border-[#c77dff]/20 leading-relaxed font-medium">
+                  <div className="p-4 pt-3 bg-white text-xs sm:text-sm text-[#10002b]/85 border-t border-[#c77dff]/30 leading-relaxed font-medium">
                     {faq.a}
                   </div>
                 )}

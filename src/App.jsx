@@ -8,7 +8,11 @@ import Contact from "./pages/Contact"
 import About from "./pages/About"
 import SignIn from "./pages/SignIn"
 import SignUp from "./pages/SignUP"
+import PrivacyPolicy from "./pages/Privacy"
+import TermsOfService from "./pages/TermsOfService"
 import ProtectedRoute from "./components/ProtectedRoute"
+
+
 
 
 function App() {
@@ -22,6 +26,9 @@ function App() {
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/services" element={<Services />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<TermsOfService />} />
+
       </Route>
 
       {/* Auth Pages */}

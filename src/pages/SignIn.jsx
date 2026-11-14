@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import { GoogleLogin } from '@react-oauth/google';
-
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
@@ -116,9 +115,19 @@ export default function SignIn() {
         </div>
        
         {/* Right Form Column */}
-        <div className="p-8 sm:p-10 flex flex-col justify-center" style={{ backgroundColor: 'var(--sa-surface)' }}>
+        <div className="p-8 sm:p-10 flex flex-col justify-center relative" style={{ backgroundColor: 'var(--sa-surface)' }}>
           
-          <div className="mb-6 flex flex-col items-start">
+          {/* Back to Home Button */}
+          <div className="absolute top-6 right-6">
+            <Link 
+              to="/" 
+              className="px-3 py-1.5 rounded-lg bg-[#c77dff]/20 border border-[#c77dff]/50 text-white text-xs font-bold hover:text-[#10002b] transition-all flex items-center gap-1.5 shadow-sm"
+            >
+              Back to Home
+            </Link>
+          </div>
+
+          <div className="mb-6 flex flex-col items-start pt-4 sm:pt-0">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center font-extrabold text-base text-[#10002b] shadow-md mb-3 bg-[#c77dff]">
               SA
             </div>
