@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import { GoogleLogin } from '@react-oauth/google';
-
+const API_ORIGIN = import.meta.env.VITE_API_URL || 'https://smartacademic-project.onrender.com';
 export default function SignIn() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -46,7 +46,7 @@ export default function SignIn() {
     setLoading(true);
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/accounts/auth/login/password/', {
+      const response = await fetch(`${API_ORIGIN}/api/accounts/auth/login/password/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -71,7 +71,7 @@ export default function SignIn() {
     setLoading(true);
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/accounts/auth/google/', {
+      const response = await fetch(`${API_ORIGIN}/api/accounts/auth/google/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: credentialResponse.credential }),

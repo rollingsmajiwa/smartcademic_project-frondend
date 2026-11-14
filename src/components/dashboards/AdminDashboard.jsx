@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 
+const API_ORIGIN = import.meta.env.VITE_API_URL || 'https://smartacademic-project.onrender.com';
+
 export default function AdminDashboard() {
   const location = useLocation();
 
@@ -93,12 +95,12 @@ export default function AdminDashboard() {
       asSubRes,
       exSubRes
     ] = await Promise.all([
-      axios.get('http://127.0.0.1:8000/api/admin/teachers/', getAuthConfig()).catch(() => ({ data: [] })),
-      axios.get('http://127.0.0.1:8000/api/admin/students/', getAuthConfig()).catch(() => ({ data: [] })),
-      axios.get('http://127.0.0.1:8000/api/admin/classrooms/', getAuthConfig()).catch(() => ({ data: [] })),
-      axios.get('http://127.0.0.1:8000/api/admin/attendance/teachers/', getAuthConfig()).catch(() => ({ data: [] })),
-      axios.get('http://127.0.0.1:8000/api/admin/submissions/assignments/', getAuthConfig()).catch(() => ({ data: [] })),
-      axios.get('http://127.0.0.1:8000/api/admin/submissions/exams/', getAuthConfig()).catch(() => ({ data: [] })),
+      axios.get(`${API_ORIGIN}/api/admin/teachers/`, getAuthConfig()).catch(() => ({ data: [] })),
+      axios.get(`${API_ORIGIN}/api/admin/students/`, getAuthConfig()).catch(() => ({ data: [] })),
+      axios.get(`${API_ORIGIN}/api/admin/classrooms/`, getAuthConfig()).catch(() => ({ data: [] })),
+      axios.get(`${API_ORIGIN}/api/admin/attendance/teachers/`, getAuthConfig()).catch(() => ({ data: [] })),
+      axios.get(`${API_ORIGIN}/api/admin/submissions/assignments/`, getAuthConfig()).catch(() => ({ data: [] })),
+      axios.get(`${API_ORIGIN}/api/admin/submissions/exams/`, getAuthConfig()).catch(() => ({ data: [] })),
     ]);
 
     setTeachers(teachersRes.data);
@@ -186,7 +188,7 @@ export default function AdminDashboard() {
 
     try {
       const response = await axios.post(
-        'http://127.0.0.1:8000/api/accounts/admin/invite/',
+        `${API_ORIGIN}/api/accounts/admin/invite/`,
         { email: inviteEmail, role: inviteRole },
         getAuthConfig()
       );
@@ -204,9 +206,9 @@ export default function AdminDashboard() {
 
   const handleSaveUser = async (e) => {
     e.preventDefault();
-    let endpoint = 'http://127.0.0.1:8000/api/admin/teachers/';
-    if (userRoleType === 'student') endpoint = 'http://127.0.0.1:8000/api/admin/students/';
-    if (userRoleType === 'classroom') endpoint = 'http://127.0.0.1:8000/api/admin/classrooms/';
+    let endpoint = `${API_ORIGIN}/api/admin/teachers/`;
+    if (userRoleType === 'student') endpoint = `${API_ORIGIN}/api/admin/students/`;
+    if (userRoleType === 'classroom') endpoint = `${API_ORIGIN}/api/admin/classrooms/`;
 
     try {
       if (modalMode === 'create') {
@@ -226,9 +228,9 @@ export default function AdminDashboard() {
 
   const handleDeleteUser = async (id, role) => {
     if (!window.confirm(`Are you sure you want to delete this ${role}?`)) return;
-    let endpoint = `http://127.0.0.1:8000/api/admin/teachers/${id}/`;
-    if (role === 'student') endpoint = `http://127.0.0.1:8000/api/admin/students/${id}/`;
-    if (role === 'classroom') endpoint = `http://127.0.0.1:8000/api/admin/classrooms/${id}/`;
+    let endpoint = `${API_ORIGIN}/api/admin/teachers/${id}/`;
+    if (role === 'student') endpoint = `${API_ORIGIN}/api/admin/students/${id}/`;
+    if (role === 'classroom') endpoint = `${API_ORIGIN}/api/admin/classrooms/${id}/`;
 
     try {
       await axios.delete(endpoint, getAuthConfig());

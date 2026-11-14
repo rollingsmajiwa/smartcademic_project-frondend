@@ -10,7 +10,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 
 // --- API CONFIG ---
 // API ends at /api (no trailing slash). RevisionAITutor appends "/students/ai-tutor/" itself.
-const API_ORIGIN = 'http://127.0.0.1:8000';
+const API_ORIGIN = import.meta.env.VITE_API_URL || 'https://smartacademic-project.onrender.com';
 const API = `${API_ORIGIN}/api`;
 
 // Set worker source to CDN for PDF.js

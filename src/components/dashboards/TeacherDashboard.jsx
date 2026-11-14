@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const API = 'http://127.0.0.1:8000/api/teachers';
-const HOST = 'http://127.0.0.1:8000';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://smartacademic-project.onrender.com';
+const API = `${API_BASE}/api/teachers`;
+const HOST = `${API_BASE}`;
 
 // Build auth headers fresh on every call so a new login is always picked up
 const authConfig = () => ({
