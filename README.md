@@ -1,7 +1,7 @@
 # SmartAcademic — Frontend
 
 ## Project Brief
-SmartAcademic is a modern, responsive React web application built to streamline institutional operations, attendance tracking, live exams, and AI-guided student revision. It provides a unified, high-contrast interface tailored for administrators, teachers, and students.
+SmartAcademic Frontend project is a modern, responsive React web application built to streamline institutional operations, attendance tracking, live exams, and AI-guided student revision. It provides a unified, high-contrast interface tailored for administrators, teachers, and students.
 
 ## Business Rationale
 Educational institutions require reliable, accessible, and distraction-free software to manage daily operations. This client application addresses two primary business needs:
