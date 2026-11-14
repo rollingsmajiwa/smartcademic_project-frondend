@@ -532,74 +532,102 @@ export default function TeacherDashboard() {
       className="flex-1 p-6 lg:p-8 overflow-y-auto min-h-screen font-sans space-y-6"
       style={{ backgroundColor: 'var(--sa-bg)', color: 'var(--sa-text)' }}
     >
-      {/* OVERVIEW TAB */}
-      {activeTab === 'overview' && (
-        <div className="space-y-6 w-full px-4 sm:px-6">
-          <div
-            className="sa-banner sa-flex-between border border-[#c77dff] shadow-xs p-6 rounded-2xl w-full"
-            style={{ backgroundColor: 'var(--sa-surface)' }}
-          >
-            <div>
-              <h2 className="text-xl font-extrabold text-[#10002b]">Teacher Overview Dashboard</h2>
-              <p className="text-xs mt-1 text-[#10002b]/70">
-                Quick summary of your assignments, exams, and student submissions.
-              </p>
-            </div>
-          </div>
+{/* OVERVIEW TAB */}
+{activeTab === 'overview' && (
+  <div className="space-y-6 w-full px-4 sm:px-6">
+    <div
+      className="sa-banner sa-flex-between border border-[#c77dff] shadow-xs p-6 rounded-2xl w-full"
+      style={{ backgroundColor: 'var(--sa-surface)' }}
+    >
+      <div>
+        <h2 className="text-xl font-extrabold text-[#10002b]">Teacher Overview Dashboard</h2>
+        <p className="text-xs mt-1 text-[#10002b]/70">
+          Quick summary of your assignments, exams, and student submissions.
+        </p>
+      </div>
+    </div>
 
-          <div className="sa-grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
-            {[
-              { label: 'Assignments Posted', value: overview?.total_assignments_posted || 0, to: '/dashboard/student/assignments' },
-              { label: 'Exams Created', value: overview?.total_exams_created || 0, to: '/dashboard/student/exams' },
-              { label: 'Submissions Received', value: overview?.total_submissions_received || 0, to: '/dashboard/teacher/submissions/' },
-              { label: 'Revision Materials', value: revisionsList.length, to: '/dashboard/student/materials/' },
-            ].map((card) => (
-              <button key={card.label} onClick={() => navigate(card.to)} className="cursor-pointer">
-                <div
-                  className="sa-card border border-[#c77dff] shadow-xs p-5 rounded-2xl w-full"
-                  style={{ backgroundColor: 'var(--sa-surface)' }}
-                >
-                  <p className="sa-card-title text-[#10002b] text-xs font-bold uppercase tracking-wider">{card.label}</p>
-                  <p className="sa-card-value text-[#10002b] text-2xl font-extrabold mt-2">{card.value}</p>
-                </div>
-              </button>
-            ))}
+    <div className="sa-grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
+      {[
+        { 
+          label: 'Assignments Posted', 
+          value: overview?.total_assignments_posted || 0, 
+          actionLabel: 'Add Assignment', 
+          to: '/dashboard/teacher/assignments' 
+        },
+        { 
+          label: 'Exams Created', 
+          value: overview?.total_exams_created || 0, 
+          actionLabel: 'Add Exam', 
+          to: '/dashboard/teacher/exams' 
+        },
+        { 
+          label: 'Submissions Received', 
+          value: overview?.total_submissions_received || 0, 
+          actionLabel: 'View Submissions', 
+          to: '/dashboard/teacher/submissions' 
+        },
+        { 
+          label: 'Revision Materials', 
+          value: revisionsList.length, 
+          actionLabel: 'Add Materials', 
+          to: '/dashboard/teacher/revisions' 
+        },
+      ].map((card) => (
+        <div
+          key={card.label}
+          className="sa-card border border-[#c77dff] shadow-xs p-5 rounded-2xl w-full flex flex-col justify-between space-y-4"
+          style={{ backgroundColor: 'var(--sa-surface)' }}
+        >
+          <div>
+            <p className="sa-card-title text-[#10002b] text-xs font-bold uppercase tracking-wider">{card.label}</p>
+            <p className="sa-card-value text-[#10002b] text-2xl font-extrabold mt-2">{card.value}</p>
           </div>
-
-          <div
-            className="sa-card border border-[#c77dff] space-y-4 shadow-xs p-6 rounded-2xl w-full"
-            style={{ backgroundColor: 'var(--sa-surface)' }}
+          
+          <button 
+            onClick={() => navigate(card.to)}
+            className="w-full py-2 px-3 rounded-xl bg-[#c77dff]/20 border border-[#c77dff] text-[#10002b] hover:bg-[#10002b] hover:text-white transition-all text-xs font-extrabold cursor-pointer shadow-xs"
           >
-            <h3 className="text-xs font-extrabold uppercase tracking-wider text-[#10002b]">Quick Actions</h3>
-            <div className="flex flex-wrap gap-3 w-full">
-              <button
-                onClick={() => navigate('/dashboard/teacher/assignments')}
-                className="sa-btn-primary py-2.5 px-4 rounded-xl text-xs font-bold bg-[#10002b] text-white hover:bg-[#c77dff] hover:text-[#10002b] transition-all cursor-pointer shadow-xs"
-              >
-                Post Assignment
-              </button>
-              <button
-                onClick={() => navigate('/dashboard/teacher/exams')}
-                className="sa-btn-primary py-2.5 px-4 rounded-xl text-xs font-bold bg-[#10002b] text-white hover:bg-[#c77dff] hover:text-[#10002b] transition-all cursor-pointer shadow-xs"
-              >
-                Create Exam
-              </button>
-              <button
-                onClick={() => navigate('/dashboard/teacher/materials')}
-                className="sa-btn-secondary py-2.5 px-4 rounded-xl text-xs font-bold bg-white text-[#10002b] border border-[#c77dff] hover:bg-[#c77dff] hover:text-[#10002b] transition-all cursor-pointer shadow-xs"
-              >
-                Upload Revision Material
-              </button>
-              <button
-                onClick={() => navigate('/dashboard/teacher/submissions')}
-                className="sa-btn-secondary py-2.5 px-4 rounded-xl text-xs font-bold bg-white text-[#10002b] border border-[#c77dff] hover:bg-[#c77dff] hover:text-[#10002b] transition-all cursor-pointer shadow-xs"
-              >
-                Grade Submissions
-              </button>
-            </div>
-          </div>
+            {card.actionLabel}
+          </button>
         </div>
-      )}
+      ))}
+    </div>
+
+    <div
+      className="sa-card border border-[#c77dff] space-y-4 shadow-xs p-6 rounded-2xl w-full"
+      style={{ backgroundColor: 'var(--sa-surface)' }}
+    >
+      <h3 className="text-xs font-extrabold uppercase tracking-wider text-[#10002b]">Quick Actions</h3>
+      <div className="flex flex-wrap gap-3 w-full">
+        <button
+          onClick={() => navigate('/dashboard/teacher/assignments')}
+          className="sa-btn-primary py-2.5 px-4 rounded-xl text-xs font-bold bg-[#10002b] text-white hover:bg-[#c77dff] hover:text-[#10002b] transition-all cursor-pointer shadow-xs"
+        >
+          Post Assignment
+        </button>
+        <button
+          onClick={() => navigate('/dashboard/teacher/exams')}
+          className="sa-btn-primary py-2.5 px-4 rounded-xl text-xs font-bold bg-[#10002b] text-white hover:bg-[#c77dff] hover:text-[#10002b] transition-all cursor-pointer shadow-xs"
+        >
+          Create Exam
+        </button>
+        <button
+          onClick={() => navigate('/dashboard/teacher/revisions')}
+          className="sa-btn-secondary py-2.5 px-4 rounded-xl text-xs font-bold bg-white text-[#10002b] border border-[#c77dff] hover:bg-[#c77dff] hover:text-[#10002b] transition-all cursor-pointer shadow-xs"
+        >
+          Upload Revision Material
+        </button>
+        <button
+          onClick={() => navigate('/dashboard/teacher/submissions')}
+          className="sa-btn-secondary py-2.5 px-4 rounded-xl text-xs font-bold bg-white text-[#10002b] border border-[#c77dff] hover:bg-[#c77dff] hover:text-[#10002b] transition-all cursor-pointer shadow-xs"
+        >
+          Grade Submissions
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
       {/* ATTENDANCE & GEOFENCE TAB */}
       {activeTab === 'attendance' && (
