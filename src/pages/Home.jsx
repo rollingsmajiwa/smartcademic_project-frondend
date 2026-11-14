@@ -1,18 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import teacher1 from '../components/images/teacher1.jpg'
-import teacher2 from '../components/images/teacher2.jpg'
-import student1 from '../components/images/student1.jpg'
-import student2 from '../components/images/student2.jpg'
-import school1 from '../components/images/school1.jpg'
-
 
 export default function Home() {
   const sidebarImages = [
-    { src: teacher1, alt: 'Teacher Portal' },
-    { src: teacher2, alt: 'Student Portal' },
-    { src: student1, alt: 'Assignments' },
-    { src: student2, alt: 'Sign In' },
+    { src: '/images/teacher1.jpg', alt: 'Teacher Portal' },
+    { src: '/images/teacher2.jpg', alt: 'Student Portal' },
+    { src: '/images/student1.jpg', alt: 'Assignments' },
+    { src: '/images/student2.jpg', alt: 'Sign In' },
   ];
 
   const scrollContainerRef = useRef(null);
@@ -42,7 +36,7 @@ export default function Home() {
   return (
     <section 
       id="home" 
-      className="relative min-h-[88vh] flex items-center justify-center px-6 py-20 overflow-hidden bg-slate-50 text-[#10002b]"
+      className="relative min-h-[88vh] flex items-center px-4 sm:px-8 py-8 overflow-hidden bg-slate-50 text-[#10002b]"
     >
       {/* Hide scrollbar visually while keeping full manual touch/wheel scrolling */}
       <style>{`
@@ -55,15 +49,17 @@ export default function Home() {
         }
       `}</style>
 
-      {/* ---------------- FULL HERO BACKGROUND IMAGE & OVERLAY ---------------- */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
-        <img 
-          src="school1"
-          alt="Hero Background" 
-          className="w-full h-full object-cover opacity-20"
-        />
-        {/* Gradient overlay to ensure text readability while letting the background show through */}
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-50/95 via-slate-50/90 to-slate-50/80"></div>
+      {/* ---------------- BACKGROUND IMAGE POSITIONED ON THE FAR RIGHT ---------------- */}
+      <div className="absolute inset-0 z-0 pointer-events-none flex justify-end overflow-hidden">
+        <div className="w-full lg:w-2/3 h-full relative">
+          <img 
+            src="/images/school1.jpg" 
+            alt="Hero Background" 
+            className="w-full h-full object-cover opacity-60"
+          />
+          {/* Gradient fade overlay: clear on the far right, blending smoothly into light background on the left */}
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-50 via-slate-50/70 to-transparent"></div>
+        </div>
       </div>
 
       {/* Glow Orbs & Grid Accents */}
@@ -76,32 +72,32 @@ export default function Home() {
         }}
       ></div>
 
-      {/* ---------------- MAIN CONTENT GRID ---------------- */}
-      <div className="relative z-10 max-w-6xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+      {/* ---------------- MAIN CONTENT GRID (TIGHTENED MARGINS) ---------------- */}
+      <div className="relative z-10 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
         
-        {/* LEFT SIDE: INTERACTIVE SCROLLING IMAGES SIDEBAR */}
+        {/* LEFT SIDE: NARROWER SCROLLING IMAGES SIDEBAR WITH MINIMAL LEFT MARGIN */}
         <div 
-          className="lg:col-span-4 relative h-[600px] rounded-md border border-[#c77dff]/40 bg-white/70 backdrop-blur-md shadow-xl p-3 overflow-hidden"
+          className="lg:col-span-3 relative h-[380px] rounded-2xl border border-[#c77dff]/40 bg-white/80 backdrop-blur-md shadow-xl p-2.5 overflow-hidden ml-0"
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
           onTouchStart={() => setIsPaused(true)}
           onTouchEnd={() => setIsPaused(false)}
           onWheel={() => setIsPaused(true)}
         >
-          <div className="absolute top-0 inset-x-0 h-10 bg-gradient-to-b from-white to-transparent z-10 pointer-events-none"></div>
-          <div className="absolute bottom-0 inset-x-0 h-10 bg-gradient-to-t from-white to-transparent z-10 pointer-events-none"></div>
+          <div className="absolute top-0 inset-x-0 h-8 bg-gradient-to-b from-white to-transparent z-10 pointer-events-none"></div>
+          <div className="absolute bottom-0 inset-x-0 h-8 bg-gradient-to-t from-white to-transparent z-10 pointer-events-none"></div>
 
           <div 
             ref={scrollContainerRef}
-            className="h-full overflow-y-auto no-scrollbar flex flex-col gap-3 cursor-grab active:cursor-grabbing"
+            className="h-full overflow-y-auto no-scrollbar flex flex-col gap-2.5 cursor-grab active:cursor-grabbing"
           >
             {[...sidebarImages, ...sidebarImages].map((img, index) => (
-              <div key={index} className="rounded-md overflow-hidden border border-[#c77dff]/30 shadow-sm bg-white shrink-0">
+              <div key={index} className="rounded-xl overflow-hidden border border-[#c77dff]/30 shadow-sm bg-white shrink-0">
                 <img 
                   src={img.src} 
                   alt={img.alt} 
                   draggable="false"
-                  className="w-full h-40 object-cover select-none" 
+                  className="w-full h-36 object-cover select-none" 
                 />
               </div>
             ))}
@@ -109,7 +105,7 @@ export default function Home() {
         </div>
 
         {/* RIGHT SIDE: HERO TEXT & BUTTONS */}
-        <div className="lg:col-span-8 text-center lg:text-left space-y-6">
+        <div className="lg:col-span-9 text-center lg:text-left space-y-5 lg:pl-4">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-md bg-[#c77dff]/20 border border-[#c77dff]/40 text-[#10002b] text-xl font-bold shadow-sm">
             SmartAcademic
           </div>
@@ -125,7 +121,7 @@ export default function Home() {
             Streamline institution-wide management, real-time geo-fenced attendance, live exams, and AI-guided revision under one unified SmartAcademic system.
           </p>
 
-          <div className="flex flex-wrap justify-center lg:justify-start gap-4 pt-4">
+          <div className="flex flex-wrap justify-center lg:justify-start gap-4 pt-2">
             <Link 
               to="/signin" 
               className="px-7 py-3.5 rounded-xl bg-[#c77dff] text-[#10002b] font-extrabold text-sm shadow-xl hover:bg-[#10002b] hover:text-white transition-all transform hover:-translate-y-0.5"

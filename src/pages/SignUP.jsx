@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import regImage from '../components/images/signUp.jpg';
 
 const API_BASE_URL =
   import.meta.env?.VITE_API_BASE_URL || `http://${window.location.hostname}:8000`;
@@ -109,7 +108,7 @@ export default function SignUp() {
           className="hidden lg:flex flex-col justify-between items-center relative overflow-hidden border-r border-[#10002b]/30"
           style={{ backgroundColor: 'var(--sa-surface)' }}
         >
-          <img src={regImage} alt="" className="absolute inset-0 w-full h-full object-cover" />
+          <img src="/images/signUp.jpg" alt="" className="absolute inset-0 w-full h-full object-cover" />
           <div className="absolute inset-0 bg-[#10002b]/60"></div>
           <div className="relative z-10 mt-40 p-8 text-center w-full">
             <h3 className="text-3xl font-extrabold text-white">Join SmartAcademic</h3>

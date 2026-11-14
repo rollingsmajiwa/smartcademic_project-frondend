@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import { GoogleLogin } from '@react-oauth/google';
-import signImage from '../components/images/sign.jpg';
+
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
@@ -102,7 +102,7 @@ export default function SignIn() {
         {/* Left Visual Column */}
         <div className="hidden lg:flex flex-col justify-between items-center relative overflow-hidden border-r border-[#c77dff]/60" style={{ backgroundColor: 'var(--sa-surface)' }}>
           <img 
-            src={signImage} 
+            src="/images/sign.jpg"
             alt="Sign In illustration" 
             className="absolute inset-0 w-full h-full object-cover m-0 p-0 border-0"
           />
