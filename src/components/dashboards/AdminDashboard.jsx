@@ -42,6 +42,7 @@ export default function AdminDashboard() {
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteMessage, setInviteMessage] = useState('');
   const [inviteError, setInviteError] = useState('');
+  const [inviteLink, setInviteLink] = useState('');
 
   const [formData, setFormData] = useState({
     username: '',
@@ -181,28 +182,35 @@ export default function AdminDashboard() {
   };
 
   const handleSendInvite = async (e) => {
-    e.preventDefault();
-    setInviteError('');
-    setInviteMessage('');
-    setInviteLoading(true);
+  e.preventDefault();
+  setInviteError('');
+  setInviteMessage('');
+  setInviteLink(''); // Reset previous link
+  setInviteLoading(true);
 
-    try {
-      const response = await axios.post(
-        `${API_ORIGIN}/api/accounts/admin/invite/`,
-        { email: inviteEmail, role: inviteRole },
-        getAuthConfig()
-      );
+  try {
+    const response = await axios.post(
+      `${API_ORIGIN}/api/accounts/admin/invite/`,
+      { email: inviteEmail, role: inviteRole },
+      getAuthConfig()
+    );
 
-      setInviteMessage(response.data.message || `Invitation successfully sent to ${inviteEmail}`);
-      setInviteEmail('');
-      fetchAdminData();
-    } catch (err) {
-      console.error('Invite failed:', err.response?.data || err);
-      setInviteError(err.response?.data?.error || 'Failed to send invitation. Please try again.');
-    } finally {
-      setInviteLoading(false);
+    setInviteMessage(response.data.message || `Invitation successfully sent to ${inviteEmail}`);
+    
+    // Capture the invite link returned by Django (whether email succeeded or fell back)
+    if (response.data.invite_link) {
+      setInviteLink(response.data.invite_link);
     }
-  };
+
+    setInviteEmail('');
+    fetchAdminData();
+  } catch (err) {
+    console.error('Invite failed:', err.response?.data || err);
+    setInviteError(err.response?.data?.error || 'Failed to send invitation. Please try again.');
+  } finally {
+    setInviteLoading(false);
+  }
+};
 
   const handleSaveUser = async (e) => {
     e.preventDefault();
@@ -746,81 +754,96 @@ export default function AdminDashboard() {
       )}
 
       {/* ADMIN INVITATION MODAL POPUP */}
-      {showInviteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md border border-[#c77dff] shadow-2xl space-y-4">
-            <div className="flex justify-between items-center border-b pb-3">
-              <h3 className="text-base font-extrabold text-[#10002b]">Invite User to SmartAcademic</h3>
-              <button 
-                onClick={() => setShowInviteModal(false)}
-                className="text-gray-400 hover:text-black font-bold text-lg cursor-pointer"
-              >
-                &times;
-              </button>
-            </div>
+{showInviteModal && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+    <div className="bg-white rounded-2xl p-6 w-full max-w-md border border-[#c77dff] shadow-2xl space-y-4">
+      <div className="flex justify-between items-center border-b pb-3">
+        <h3 className="text-base font-extrabold text-[#10002b]">Invite User to SmartAcademic</h3>
+        <button 
+          onClick={() => setShowInviteModal(false)}
+          className="text-gray-400 hover:text-black font-bold text-lg cursor-pointer"
+        >
+          &times;
+        </button>
+      </div>
 
-            <p className="text-xs text-[#10002b]/80">
-              Enter the email address and select the role. The system will dispatch an activation link directly to their email.
-            </p>
+      <p className="text-xs text-[#10002b]/80">
+        Enter the email address and select the role. The system will dispatch an activation link directly to their email.
+      </p>
 
-            {inviteError && (
-              <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-xs font-bold rounded-xl text-center">
-                {inviteError}
-              </div>
-            )}
-
-            {inviteMessage && (
-              <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold rounded-xl text-center">
-                {inviteMessage}
-              </div>
-            )}
-
-            <form onSubmit={handleSendInvite} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-[#10002b] mb-1">Email Address</label>
-                <input
-                  type="email"
-                  required
-                  placeholder="user@smartacademic.com"
-                  value={inviteEmail}
-                  onChange={(e) => setInviteEmail(e.target.value)}
-                  className="w-full px-4 py-3 text-xs rounded-xl bg-gray-50 border border-gray-300 text-[#10002b] focus:outline-none focus:border-[#c77dff]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-[#10002b] mb-1">Role Type</label>
-                <select
-                  value={inviteRole}
-                  onChange={(e) => setInviteRole(e.target.value)}
-                  className="w-full px-4 py-3 text-xs rounded-xl bg-gray-50 border border-gray-300 text-[#10002b] focus:outline-none focus:border-[#c77dff] cursor-pointer"
-                >
-                  <option value="teacher">Teacher</option>
-                  <option value="student">Student</option>
-                  <option value="admin">Administrator</option>
-                </select>
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowInviteModal(false)}
-                  className="px-4 py-2.5 text-xs font-bold rounded-xl bg-gray-200 text-gray-700 hover:bg-gray-300 cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={inviteLoading}
-                  className="px-5 py-2.5 text-xs font-extrabold rounded-xl bg-[#10002b] text-white hover:bg-[#c77dff] hover:text-[#10002b] transition-all cursor-pointer disabled:opacity-50"
-                >
-                  {inviteLoading ? 'Sending Invite...' : 'Send Invitation Email'}
-                </button>
-              </div>
-            </form>
-          </div>
+      {inviteError && (
+        <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-xs font-bold rounded-xl text-center">
+          {inviteError}
         </div>
       )}
+
+      {/*  INVITE MESSAGE */}
+      {inviteMessage && (
+        <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold rounded-xl text-center space-y-2">
+          <p>{inviteMessage}</p>
+          
+          {inviteLink && (
+            <div className="mt-2 p-2 bg-white rounded border border-emerald-300 text-left">
+              <span className="block text-[10px] text-gray-500 uppercase font-semibold">Activation Link (Fallback):</span>
+              <a 
+                href={inviteLink} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-blue-600 underline text-xs break-all block mt-0.5 font-normal"
+              >
+                {inviteLink}
+              </a>
+            </div>
+          )}
+        </div>
+      )}
+
+      <form onSubmit={handleSendInvite} className="space-y-4">
+        <div>
+          <label className="block text-xs font-bold text-[#10002b] mb-1">Email Address</label>
+          <input
+            type="email"
+            required
+            placeholder="user@smartacademic.com"
+            value={inviteEmail}
+            onChange={(e) => setInviteEmail(e.target.value)}
+            className="w-full px-4 py-3 text-xs rounded-xl bg-gray-50 border border-gray-300 text-[#10002b] focus:outline-none focus:border-[#c77dff]"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs font-bold text-[#10002b] mb-1">Role Type</label>
+          <select
+            value={inviteRole}
+            onChange={(e) => setInviteRole(e.target.value)}
+            className="w-full px-4 py-3 text-xs rounded-xl bg-gray-50 border border-gray-300 text-[#10002b] focus:outline-none focus:border-[#c77dff] cursor-pointer"
+          >
+            <option value="teacher">Teacher</option>
+            <option value="student">Student</option>
+            <option value="admin">Administrator</option>
+          </select>
+        </div>
+
+        <div className="flex justify-end gap-2 pt-2">
+          <button
+            type="button"
+            onClick={() => setShowInviteModal(false)}
+            className="px-4 py-2.5 text-xs font-bold rounded-xl bg-gray-200 text-gray-700 hover:bg-gray-300 cursor-pointer"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={inviteLoading}
+            className="px-5 py-2.5 text-xs font-extrabold rounded-xl bg-[#10002b] text-white hover:bg-[#c77dff] hover:text-[#10002b] transition-all cursor-pointer disabled:opacity-50"
+          >
+            {inviteLoading ? 'Sending Invite...' : 'Send Invitation Email'}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
 
       {/* SHARED CREATE/EDIT MODAL */}
       {showModal && (
