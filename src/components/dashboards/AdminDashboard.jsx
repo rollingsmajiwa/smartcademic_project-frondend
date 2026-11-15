@@ -410,8 +410,8 @@ export default function AdminDashboard() {
                 <tr>
                   <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Admission No.</th>
                   <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Name (First, Surname, Last)</th>
+                  <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Username</th>
                   
-                  <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Password</th>
                   <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Gender</th>
                   <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Classroom</th>
                   <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Date Admitted</th>
@@ -441,8 +441,8 @@ export default function AdminDashboard() {
                         <td className="p-4 font-bold text-[#10002b]">
                           {s.first_name || s.user?.first_name || ''} {s.surname ? `, ${s.surname}` : ''} {s.last_name || s.user?.last_name || ''}
                         </td>
+                         <td className="p-4 font-mono text-[#10002b]">{s.username || s.user?.username || 'N/A'}</td>
                         
-                        <td className="p-4 font-mono text-[#10002b]/80">{s.raw_password || s.password || '••••••••'}</td>
                         <td className="p-4 text-[#10002b]">{s.gender || 'N/A'}</td>
                         <td className="p-4 text-[#10002b] font-semibold">{assignedClass}</td>
                         <td className="p-4 text-[#10002b]/80 font-mono">
@@ -784,7 +784,7 @@ export default function AdminDashboard() {
           
           {inviteLink && (
             <div className="mt-2 p-2 bg-white rounded border border-emerald-300 text-left">
-              <span className="block text-[10px] text-gray-500 uppercase font-semibold">Activation Link (Fallback):</span>
+              <span className="block text-[10px] text-gray-500 uppercase font-semibold">Activation Link:</span>
               <a 
                 href={inviteLink} 
                 target="_blank" 
@@ -804,7 +804,7 @@ export default function AdminDashboard() {
           <input
             type="email"
             required
-            placeholder="user@smartacademic.com"
+            placeholder="e.g. rollingsmajiwa@gmail.com"
             value={inviteEmail}
             onChange={(e) => setInviteEmail(e.target.value)}
             className="w-full px-4 py-3 text-xs rounded-xl bg-gray-50 border border-gray-300 text-[#10002b] focus:outline-none focus:border-[#c77dff]"

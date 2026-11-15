@@ -927,7 +927,7 @@ export default function TeacherDashboard() {
                         <div className="space-y-3 w-full">
                           <div className="flex items-center gap-2">
                             <span className="px-2.5 py-1 text-[10px] font-extrabold rounded-lg uppercase tracking-wider bg-[#10002b] text-[#c77dff]">
-                              Learning Area: {sub.learning_area || 'General'}
+                              Learning Area: {sub.learning_area || ' '}
                             </span>
                             <span className="text-xs font-bold text-[#10002b]">
                               Task: {sub.assignment_title || `Assignment ID ${sub.assignment}`}
