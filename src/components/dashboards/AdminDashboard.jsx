@@ -410,7 +410,7 @@ export default function AdminDashboard() {
                 <tr>
                   <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Admission No.</th>
                   <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Name (First, Surname, Last)</th>
-                  <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Username</th>
+                  <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Email</th>
                   
                   <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Gender</th>
                   <th className="p-4 bg-[#10002b] text-white font-bold uppercase tracking-wider text-[10px]">Classroom</th>
