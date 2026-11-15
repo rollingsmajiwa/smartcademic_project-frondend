@@ -4,7 +4,7 @@
   --sa-dark: #10002b;         /* Primary Dark & Secondary Surfaces */
   --sa-purple: #10002b;       /* Accent Brand Color */
   --sa-accent: #c77dff;       /* Highlights, Borders, and Glows */
-  --sa-light: #ffffff;        /* Lightest color (Background & Cards) */
+  --sa-light: #ffffff;        /* Lightest color (Background & Cards) */                                      
   
   --sa-bg: #ffffff;           /* Main dashboard canvas background */
   --sa-surface: rgba(199, 125, 255, 0.12); /* Soft tinted surface for cards and forms */
