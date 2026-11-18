@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import { GoogleLogin } from '@react-oauth/google';
+
 const API_ORIGIN = import.meta.env.VITE_API_URL || 'https://smartcademic-project.onrender.com';
+
 export default function SignIn() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -92,36 +94,38 @@ export default function SignIn() {
   };
 
   return (
-    <div className="auth-page min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden font-sans">
-      <div className="blob-1"></div>
-      <div className="blob-2"></div>
+    <div className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden bg-white text-[#10002b] font-sans">
       
-      <div className="relative z-20 w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 rounded-md overflow-hidden shadow-2xl border border-[#c77dff] backdrop-blur-md" style={{ backgroundColor: 'var(--sa-surface)' }}>
+      {/* Soft background glow matching landing page accents */}
+      <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#c77dff]/20 rounded-full blur-3xl pointer-events-none z-0"></div>
+      <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-[#c77dff]/20 rounded-full blur-3xl pointer-events-none z-0"></div>
+      
+      <div className="relative z-20 w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 rounded-xl overflow-hidden shadow-2xl border border-[#c77dff]/60 bg-white">
         
         {/* Left Visual Column */}
-        <div className="hidden lg:flex flex-col justify-between items-center relative overflow-hidden border-r border-[#c77dff]/60" style={{ backgroundColor: 'var(--sa-surface)' }}>
+        <div className="hidden lg:flex flex-col justify-between items-center relative overflow-hidden border-r border-[#c77dff]/40 bg-[#10002b]">
           <img 
             src="/images/sign.jpg"
             alt="Sign In illustration" 
-            className="absolute inset-0 w-full h-full object-cover m-0 p-0 border-0"
+            className="absolute inset-0 w-full h-full object-cover opacity-60 m-0 p-0 border-0"
           />
-          <div className="absolute inset-0 bg-[#10002b]/40"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-[#10002b]/90 via-[#10002b]/40 to-transparent"></div>
           <div className="relative z-10 mt-40 p-8 text-center w-full">
             <h3 className="text-3xl font-extrabold text-white">Welcome to SmartAcademic</h3>
-            <p className="text-[20px] text-white/90 mt-1 font-medium">
+            <p className="text-[17px] text-white/90 mt-2 font-medium">
               Your portal for seamless academic management.
             </p>
           </div>
         </div>
        
         {/* Right Form Column */}
-        <div className="p-8 sm:p-10 flex flex-col justify-center relative" style={{ backgroundColor: 'var(--sa-surface)' }}>
+        <div className="p-8 sm:p-10 flex flex-col justify-center relative bg-white text-[#10002b]">
           
           {/* Back to Home Button */}
           <div className="absolute top-6 right-6">
             <Link 
               to="/" 
-              className="px-3 py-1.5 rounded-lg bg-[#c77dff]/20 border border-[#c77dff]/50 text-white text-xs font-bold hover:text-[#10002b] transition-all flex items-center gap-1.5 shadow-sm"
+              className="px-3 py-1.5 rounded-lg bg-[#c77dff]/25 border border-[#c77dff]/60 text-[#10002b] text-xs font-bold hover:bg-[#10002b] hover:text-white transition-all flex items-center gap-1.5 shadow-sm"
             >
               Back to Home
             </Link>
@@ -131,56 +135,56 @@ export default function SignIn() {
             <div className="w-10 h-10 rounded-xl flex items-center justify-center font-extrabold text-base text-[#10002b] shadow-md mb-3 bg-[#c77dff]">
               SA
             </div>
-            <h1 className="text-white text-2xl font-extrabold tracking-tight">Sign In</h1>
-            <p className="text-xs text-white/80 mt-1 font-medium">
+            <h1 className="text-[#10002b] text-2xl font-extrabold tracking-tight">Sign In</h1>
+            <p className="text-xs text-[#10002b]/70 mt-1 font-medium">
               Enter your email and password to access your dashboard.
             </p>
           </div>
 
           {error && (
-            <div className="mb-4 p-3 rounded-md bg-red-500/20 border border-red-500/40 text-red-200 text-xs font-bold text-center">
+            <div className="mb-4 p-3 rounded-md bg-red-500/10 border border-red-500/30 text-red-600 text-xs font-bold text-center">
               {error}
             </div>
           )}
 
           <form onSubmit={handleSignIn} className="space-y-4">
             <div className="input-group">
-              <label className="text-white block text-xs font-bold mb-1">Email Address</label>
+              <label className="text-[#10002b] block text-xs font-bold mb-1">Email Address</label>
               <input
                 type="email"
                 placeholder="rollingsmajiwa@gmail.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-3 text-xs rounded-md bg-white border border-[#c77dff] text-[#10002b] focus:outline-none focus:border-[#10002b] focus:ring-2 focus:ring-[#c77dff]/40 shadow-xs"
+                className="w-full px-4 py-3 text-xs rounded-md bg-white border border-[#c77dff]/70 text-[#10002b] focus:outline-none focus:border-[#10002b] focus:ring-2 focus:ring-[#c77dff]/40 shadow-xs"
               />
             </div>
 
             <div className="input-group">
-              <label className="text-white block text-xs font-bold mb-1">Password</label>
+              <label className="text-[#10002b] block text-xs font-bold mb-1">Password</label>
               <input
                 type="password"
-                placeholder=""
+                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full px-4 py-3 text-xs rounded-md bg-white border border-[#c77dff] text-[#10002b] focus:outline-none focus:border-[#10002b] focus:ring-2 focus:ring-[#c77dff]/40 shadow-xs"
+                className="w-full px-4 py-3 text-xs rounded-md bg-white border border-[#c77dff]/70 text-[#10002b] focus:outline-none focus:border-[#10002b] focus:ring-2 focus:ring-[#c77dff]/40 shadow-xs"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="sa-btn-login w-full py-3 rounded-md bg-[#c77dff] text-[#10002b] hover:bg-white transition-all shadow-md font-extrabold text-xs mt-2 disabled:opacity-50 cursor-pointer"
+              className="w-full py-3 rounded-md bg-[#c77dff] text-[#10002b] hover:bg-[#10002b] hover:text-white transition-all shadow-md font-extrabold text-xs mt-2 disabled:opacity-50 cursor-pointer"
             >
               {loading ? 'Signing In...' : 'Sign In'}
             </button>
           </form>
 
           <div className="flex items-center my-5">
-            <div className="flex-grow border-t border-white/20"></div>
-            <span className="px-3 text-white/50 text-[10px] uppercase font-bold">or continue with</span>
-            <div className="flex-grow border-t border-white/20"></div>
+            <div className="flex-grow border-t border-[#10002b]/15"></div>
+            <span className="px-3 text-[#10002b]/50 text-[10px] uppercase font-bold">or continue with</span>
+            <div className="flex-grow border-t border-[#10002b]/15"></div>
           </div>
 
           <div className="flex justify-center w-full">
@@ -190,7 +194,7 @@ export default function SignIn() {
             />
           </div>
 
-          <p className="mt-6 text-xs text-white/80 font-semibold text-center">
+          <p className="mt-6 text-xs text-[#10002b]/70 font-semibold text-center">
             Accounts are activated through admin invitation links.
           </p>
 
