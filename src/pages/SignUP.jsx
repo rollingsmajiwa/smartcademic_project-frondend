@@ -107,7 +107,7 @@ export default function SignUp() {
         <div
           className="hidden lg:flex flex-col justify-between items-center relative overflow-hidden border-r border-[#c77dff]/40 bg-[#10002b]"
         >
-          <img src="/images/signUp.jpg" alt="" className="absolute inset-0 w-full h-full object-cover opacity-60" />
+          <img src="/images/signUp.jpg" alt="" className="absolute inset-0 w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#10002b]/90 via-[#10002b]/40 to-transparent"></div>
           <div className="relative z-10 mt-40 p-8 text-center w-full">
             <h3 className="text-3xl font-extrabold text-white">Join SmartAcademic</h3>

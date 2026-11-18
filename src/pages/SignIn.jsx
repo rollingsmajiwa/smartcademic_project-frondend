@@ -107,7 +107,7 @@ export default function SignIn() {
           <img 
             src="/images/sign.jpg"
             alt="Sign In illustration" 
-            className="absolute inset-0 w-full h-full object-cover opacity-60 m-0 p-0 border-0"
+            className="absolute inset-0 w-full h-full object-cover m-0 p-0 border-0"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#10002b]/90 via-[#10002b]/40 to-transparent"></div>
           <div className="relative z-10 mt-40 p-8 text-center w-full">
