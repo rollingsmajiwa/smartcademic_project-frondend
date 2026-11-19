@@ -4,14 +4,14 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://smartcademic-project.onrender.com';
 
 /**
-- Removes email-client damage from link parameters.
-- - A leading "3D" is what is left of "=3D" when the "=" was consumed as the
--   query separator (?token=3Dabc). Real uids start with M/N/O (base64 of
--   digits) and real tokens are lowercase, so a leading uppercase "3D" is
--   never legitimate.
-- - A stray "=" inside the value is a quoted-printable soft line break
--   ("=" + newline) that wrapped the long URL. Uids and tokens never contain
--   "=", so every "=" and all whitespace can be removed.
+ * Removes email-client damage from link parameters.
+ * - A leading "3D" is what is left of "=3D" when the "=" was consumed as the
+ *   query separator (?token=3Dabc). Real uids start with M/N/O (base64 of
+ *   digits) and real tokens are lowercase, so a leading uppercase "3D" is
+ *   never legitimate.
+ * - A stray "=" inside the value is a quoted-printable soft line break
+ *   ("=" + newline) that wrapped the long URL. Uids and tokens never contain
+ *   "=", so every "=" and all whitespace can be removed.
  */
 const cleanParam = (value) =>
   (value || '')
@@ -43,6 +43,7 @@ export default function SignUp() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [pendingAdminUpdate, setPendingAdminUpdate] = useState(false);
   const redirectTimer = useRef(null);
 
   useEffect(() => () => clearTimeout(redirectTimer.current), []);
@@ -53,6 +54,7 @@ export default function SignUp() {
 
     setError('');
     setMessage('');
+    setPendingAdminUpdate(false);
 
     if (linkMissing) {
       setError('This activation link is incomplete. Open the link from your invitation email again.');
@@ -79,8 +81,18 @@ export default function SignUp() {
       }
 
       if (response.ok) {
-        setMessage('Account activated. Redirecting to sign in...');
-        redirectTimer.current = setTimeout(() => navigate('/signin'), 2000);
+        const needsAdminReview = Boolean(data?.pending_admin_update);
+        setPendingAdminUpdate(needsAdminReview);
+        setMessage(
+          data?.message ||
+            (needsAdminReview
+              ? 'Account activated! An administrator has been notified to review and update your account before you can log in.'
+              : 'Account activated. Redirecting to sign in...')
+        );
+
+        if (!needsAdminReview) {
+          redirectTimer.current = setTimeout(() => navigate('/signin'), 2000);
+        }
       } else {
         setError(extractError(data, `Activation failed (status ${response.status}).`));
       }
@@ -96,17 +108,12 @@ export default function SignUp() {
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden bg-white text-[#10002b] font-sans">
-      
       {/* Soft background glow matching landing page accents */}
       <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#c77dff]/20 rounded-full blur-3xl pointer-events-none z-0"></div>
       <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-[#c77dff]/20 rounded-full blur-3xl pointer-events-none z-0"></div>
 
-      <div
-        className="relative z-20 w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 rounded-xl overflow-hidden shadow-2xl border border-[#c77dff]/60 bg-white"
-      >
-        <div
-          className="hidden lg:flex flex-col justify-between items-center relative overflow-hidden border-r border-[#c77dff]/40 bg-[#10002b]"
-        >
+      <div className="relative z-20 w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 rounded-xl overflow-hidden shadow-2xl border border-[#c77dff]/60 bg-white">
+        <div className="hidden lg:flex flex-col justify-between items-center relative overflow-hidden border-r border-[#c77dff]/40 bg-[#10002b]">
           <img src="/images/signUp.jpg" alt="" className="absolute inset-0 w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#10002b]/90 via-[#10002b]/40 to-transparent"></div>
           <div className="relative z-10 mt-40 p-8 text-center w-full">
@@ -117,9 +124,7 @@ export default function SignUp() {
           </div>
         </div>
 
-        <div
-          className="p-8 sm:p-10 flex flex-col justify-center bg-white text-[#10002b]"
-        >
+        <div className="p-8 sm:p-10 flex flex-col justify-center bg-white text-[#10002b]">
           <div className="mb-6 flex flex-col items-start">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center font-extrabold text-base text-[#10002b] shadow-md mb-3 bg-[#c77dff]">
               SA
@@ -147,7 +152,11 @@ export default function SignUp() {
           {message && (
             <div
               role="status"
-              className="mb-4 p-3 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 text-xs font-bold text-center"
+              className={`mb-4 p-3 rounded-md border text-xs font-bold text-center ${
+                pendingAdminUpdate
+                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-800'
+                  : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700'
+              }`}
             >
               {message}
             </div>
@@ -198,10 +207,21 @@ export default function SignUp() {
           </form>
 
           <p className="mt-6 text-xs text-[#10002b]/70 font-semibold text-center">
-            Already activated?{' '}
-            <Link to="/signin" className="text-[#10002b] hover:underline font-bold">
-              Sign in
-            </Link>
+            {pendingAdminUpdate ? (
+              <>
+                Once an administrator updates your profile,{' '}
+                <Link to="/signin" className="text-[#10002b] hover:underline font-bold">
+                  go to sign in
+                </Link>
+              </>
+            ) : (
+              <>
+                Already activated?{' '}
+                <Link to="/signin" className="text-[#10002b] hover:underline font-bold">
+                  Sign in
+                </Link>
+              </>
+            )}
           </p>
         </div>
       </div>

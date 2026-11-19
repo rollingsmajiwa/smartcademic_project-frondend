@@ -5,6 +5,14 @@ import { GoogleLogin } from '@react-oauth/google';
 
 const API_ORIGIN = import.meta.env.VITE_API_URL || 'https://smartcademic-project.onrender.com';
 
+const parseJsonSafe = async (response) => {
+  try {
+    return await response.json();
+  } catch {
+    return null;
+  }
+};
+
 export default function SignIn() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -17,18 +25,16 @@ export default function SignIn() {
     localStorage.setItem('refresh_token', data.refresh);
 
     let userRole = data.role;
-    
-    // Fallback: Decode JWT access token if top-level data.role is missing
+
     if (!userRole && data.access) {
       try {
         const decoded = jwtDecode(data.access);
         userRole = decoded.role || decoded.user_role || decoded.groups?.[0];
-      } catch (e) {
+      } catch {
         userRole = 'user';
       }
     }
 
-    // Normalize role string to handle capitalization or whitespace mismatches
     const normalizedRole = (userRole || '').trim().toLowerCase();
 
     if (normalizedRole === 'admin') {
@@ -44,6 +50,7 @@ export default function SignIn() {
 
   const handleSignIn = async (e) => {
     e.preventDefault();
+    if (loading) return;
     setError('');
     setLoading(true);
 
@@ -51,17 +58,21 @@ export default function SignIn() {
       const response = await fetch(`${API_ORIGIN}/api/accounts/auth/login/password/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: email.trim(), password }),
       });
 
-      const data = await response.json();
+      const data = await parseJsonSafe(response);
 
-      if (response.ok) {
+      if (response.ok && data) {
         handleAuthSuccess(data);
       } else {
-        setError(data.error || data.detail || 'Invalid email or password.');
+        setError(
+          data?.error ||
+            data?.detail ||
+            `Sign in failed (status ${response.status}). Please try again.`
+        );
       }
-    } catch (err) {
+    } catch {
       setError('Server connection error. Please try again.');
     } finally {
       setLoading(false);
@@ -69,6 +80,7 @@ export default function SignIn() {
   };
 
   const handleGoogleSuccess = async (credentialResponse) => {
+    if (loading) return;
     setError('');
     setLoading(true);
 
@@ -79,14 +91,18 @@ export default function SignIn() {
         body: JSON.stringify({ token: credentialResponse.credential }),
       });
 
-      const data = await response.json();
+      const data = await parseJsonSafe(response);
 
-      if (response.ok) {
+      if (response.ok && data) {
         handleAuthSuccess(data);
       } else {
-        setError(data.error || data.detail || 'Google login failed.');
+        setError(
+          data?.error ||
+            data?.detail ||
+            `Google login failed (status ${response.status}).`
+        );
       }
-    } catch (err) {
+    } catch {
       setError('Server connection error.');
     } finally {
       setLoading(false);
@@ -95,18 +111,16 @@ export default function SignIn() {
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden bg-white text-[#10002b] font-sans">
-      
       {/* Soft background glow matching landing page accents */}
       <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#c77dff]/20 rounded-full blur-3xl pointer-events-none z-0"></div>
       <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-[#c77dff]/20 rounded-full blur-3xl pointer-events-none z-0"></div>
-      
+
       <div className="relative z-20 w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 rounded-xl overflow-hidden shadow-2xl border border-[#c77dff]/60 bg-white">
-        
         {/* Left Visual Column */}
         <div className="hidden lg:flex flex-col justify-between items-center relative overflow-hidden border-r border-[#c77dff]/40 bg-[#10002b]">
-          <img 
+          <img
             src="/images/sign.jpg"
-            alt="Sign In illustration" 
+            alt="Sign In illustration"
             className="absolute inset-0 w-full h-full object-cover m-0 p-0 border-0"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#10002b]/90 via-[#10002b]/40 to-transparent"></div>
@@ -117,14 +131,13 @@ export default function SignIn() {
             </p>
           </div>
         </div>
-       
+
         {/* Right Form Column */}
         <div className="p-8 sm:p-10 flex flex-col justify-center relative bg-white text-[#10002b]">
-          
           {/* Back to Home Button */}
           <div className="absolute top-6 right-6">
-            <Link 
-              to="/" 
+            <Link
+              to="/"
               className="px-3 py-1.5 rounded-lg bg-[#c77dff]/25 border border-[#c77dff]/60 text-[#10002b] text-xs font-bold hover:bg-[#10002b] hover:text-white transition-all flex items-center gap-1.5 shadow-sm"
             >
               Back to Home
@@ -142,7 +155,10 @@ export default function SignIn() {
           </div>
 
           {error && (
-            <div className="mb-4 p-3 rounded-md bg-red-500/10 border border-red-500/30 text-red-600 text-xs font-bold text-center">
+            <div
+              role="alert"
+              className="mb-4 p-3 rounded-md bg-red-500/10 border border-red-500/30 text-red-600 text-xs font-bold text-center"
+            >
               {error}
             </div>
           )}
@@ -197,9 +213,7 @@ export default function SignIn() {
           <p className="mt-6 text-xs text-[#10002b]/70 font-semibold text-center">
             Accounts are activated through admin invitation links.
           </p>
-
         </div>
-
       </div>
     </div>
   );
