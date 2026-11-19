@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { usePagination, Pagination } from './Pagination';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://smartcademic-project.onrender.com';
 const API = `${API_BASE}/api/teachers`;
@@ -23,14 +24,25 @@ const describeError = (err, fallback) => {
   return `${fallback} (${err.message})`;
 };
 
+// ---------- Shared class strings ----------
 const inputClass =
   'w-full p-3.5 text-xs rounded-xl border border-[#c77dff] bg-[#ffffff] text-[#10002b] focus:outline-none focus:border-[#10002b]';
 const primaryBtn =
   'sa-btn-primary w-full py-3.5 bg-[#10002b] text-white hover:bg-[#c77dff] hover:text-[#10002b] transition-all cursor-pointer font-bold rounded-xl mt-2';
 const selectClass =
-  'px-3 py-1.5 border border-[#10002b] rounded-md text-xs font-semibold text-[#10002b] bg-white focus:outline-none focus:ring-2 focus:ring-[#c77dff]';
+  'w-full sm:w-auto px-3 py-2 sm:py-1.5 border border-[#10002b] rounded-md text-xs font-semibold text-[#10002b] bg-white focus:outline-none focus:ring-2 focus:ring-[#c77dff]';
 const smallBtn =
-  'px-4 py-2 bg-[#10002b] text-white rounded-md text-xs font-bold hover:bg-[#c77dff] hover:text-[#10002b] transition shadow-sm cursor-pointer';
+  'w-full sm:w-auto px-4 py-2 bg-[#10002b] text-white rounded-md text-xs font-bold hover:bg-[#c77dff] hover:text-[#10002b] transition shadow-sm cursor-pointer';
+const cardClass =
+  'sa-card border border-[#c77dff] shadow-xs rounded-2xl w-full';
+const fileInputClass =
+  'w-full text-xs text-[#10002b]/70 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#10002b] file:text-white hover:file:bg-[#c77dff] hover:file:text-[#10002b] cursor-pointer';
+const bannerClass =
+  'sa-card border border-[#c77dff] shadow-xs p-4 sm:p-6 rounded-2xl w-full flex flex-col gap-4 md:flex-row md:items-center md:justify-between';
+const gradingPanelClass =
+  'flex flex-col gap-3 p-4 rounded-xl border border-[#c77dff] bg-gray-50 shadow-xs w-full md:w-72 md:shrink-0';
+const errorBoxClass =
+  'p-3 bg-[#10002b] text-[#c77dff] text-xs font-bold rounded-md border border-[#c77dff] break-words';
 
 // Shared class + term dropdowns used by Marks, Analysis and Analytics tabs
 function ClassTermSelectors({ classes, selectedClass, setSelectedClass, term, setTerm }) {
@@ -113,6 +125,12 @@ export default function TeacherDashboard() {
   const [analysisData, setAnalysisData] = useState(null);
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [analysisError, setAnalysisError] = useState('');
+
+  // ---------- Pagination ----------
+  const assignmentSubsPager = usePagination(submissions, 5);
+  const examSubsPager = usePagination(examSubmissions, 5);
+  const marksPager = usePagination(studentsTable, 15);
+  const analysisPager = usePagination(analysisData?.student_performance_table ?? [], 15);
 
   // ---------- Fetchers ----------
   const fetchTeachers = async () => {
@@ -268,6 +286,13 @@ export default function TeacherDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, className, term]);
 
+  // Jump back to page 1 whenever a different class or term is selected
+  useEffect(() => {
+    marksPager.setPage(1);
+    analysisPager.setPage(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [className, term]);
+
   // ---------- Post handlers ----------
   const handlePostAssignment = async (e) => {
     e.preventDefault();
@@ -367,7 +392,7 @@ export default function TeacherDashboard() {
       return;
     }
     try {
-      // URL fixed to match Django: exam-submissions/<pk>/grade/
+      // URL matches Django: exam-submissions/<pk>/grade/
       // Both keys are sent because the exam serializer may use either `score` or `grade`;
       // DRF ignores the one it does not know.
       await axios.patch(
@@ -528,117 +553,121 @@ export default function TeacherDashboard() {
   };
 
   // ---------- Render ----------
+  // pt-20 clears the 56px fixed mobile top bar from the Sidebar; lg+ has no top bar.
+  // min-w-0 lets this flex child shrink so wide tables scroll inside their own box
+  // instead of pushing the whole page sideways.
   return (
     <div
-      className="flex-1 p-6 lg:p-8 overflow-y-auto min-h-screen font-sans space-y-6"
+      className="flex-1 min-w-0 pt-20 px-4 pb-6 sm:px-6 lg:pt-8 lg:px-8 overflow-y-auto min-h-screen font-sans space-y-6"
       style={{ backgroundColor: 'var(--sa-bg)', color: 'var(--sa-text)' }}
     >
-{/* OVERVIEW TAB */}
-{activeTab === 'overview' && (
-  <div className="space-y-6 w-full px-4 sm:px-6">
-    <div
-      className="sa-banner sa-flex-between border border-[#c77dff] shadow-xs p-6 rounded-2xl w-full"
-      style={{ backgroundColor: 'var(--sa-surface)' }}
-    >
-      <div>
-        <h2 className="text-xl font-extrabold text-[#10002b]">Teacher Overview Dashboard</h2>
-        <p className="text-xs mt-1 text-[#10002b]/70">
-          Quick summary of your assignments, exams, and student submissions.
-        </p>
-      </div>
-    </div>
-
-    <div className="sa-grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
-      {[
-        { 
-          label: 'Assignments Posted', 
-          value: overview?.total_assignments_posted || 0, 
-          actionLabel: 'Add Assignment', 
-          to: '/dashboard/teacher/assignments' 
-        },
-        { 
-          label: 'Exams Created', 
-          value: overview?.total_exams_created || 0, 
-          actionLabel: 'Add Exam', 
-          to: '/dashboard/teacher/exams' 
-        },
-        { 
-          label: 'Submissions Received', 
-          value: overview?.total_submissions_received || 0, 
-          actionLabel: 'View Submissions', 
-          to: '/dashboard/teacher/submissions' 
-        },
-        { 
-          label: 'Revision Materials', 
-          value: revisionsList.length, 
-          actionLabel: 'Add Materials', 
-          to: '/dashboard/teacher/revisions' 
-        },
-      ].map((card) => (
-        <div
-          key={card.label}
-          className="sa-card border border-[#c77dff] shadow-xs p-5 rounded-2xl w-full flex flex-col justify-between space-y-4"
-          style={{ backgroundColor: 'var(--sa-surface)' }}
-        >
-          <div>
-            <p className="sa-card-title text-[#10002b] text-xs font-bold uppercase tracking-wider">{card.label}</p>
-            <p className="sa-card-value text-[#10002b] text-2xl font-extrabold mt-2">{card.value}</p>
+      {/* OVERVIEW TAB */}
+      {activeTab === 'overview' && (
+        <div className="space-y-6 w-full">
+          <div className={bannerClass} style={{ backgroundColor: 'var(--sa-surface)' }}>
+            <div>
+              <h2 className="text-lg sm:text-xl font-extrabold text-[#10002b]">Teacher Overview Dashboard</h2>
+              <p className="text-xs mt-1 text-[#10002b]/70">
+                Quick summary of your assignments, exams, and student submissions.
+              </p>
+            </div>
           </div>
-          
-          <button 
-            onClick={() => navigate(card.to)}
-            className="w-full py-2 px-3 rounded-md bg-[#c77dff]/20 border border-[#c77dff] text-[#10002b] hover:bg-[#10002b] hover:text-white transition-all text-xs font-extrabold cursor-pointer shadow-xs"
-          >
-            {card.actionLabel}
-          </button>
-        </div>
-      ))}
-    </div>
 
-    <div
-      className="sa-card border border-[#c77dff] space-y-4 shadow-xs p-6 rounded-2xl w-full"
-      style={{ backgroundColor: 'var(--sa-surface)' }}
-    >
-      <h3 className="text-xs font-extrabold uppercase tracking-wider text-[#10002b]">Quick Actions</h3>
-      <div className="flex flex-wrap gap-3 w-full">
-        <button
-          onClick={() => navigate('/dashboard/teacher/assignments')}
-          className="sa-btn-primary py-2.5 px-4 rounded-xl text-xs font-bold bg-[#10002b] text-white hover:bg-[#c77dff] hover:text-[#10002b] transition-all cursor-pointer shadow-xs"
-        >
-          Post Assignment
-        </button>
-        <button
-          onClick={() => navigate('/dashboard/teacher/exams')}
-          className="sa-btn-primary py-2.5 px-4 rounded-xl text-xs font-bold bg-[#10002b] text-white hover:bg-[#c77dff] hover:text-[#10002b] transition-all cursor-pointer shadow-xs"
-        >
-          Create Exam
-        </button>
-        <button
-          onClick={() => navigate('/dashboard/teacher/revisions')}
-          className="sa-btn-secondary py-2.5 px-4 rounded-xl text-xs font-bold bg-white text-[#10002b] border border-[#c77dff] hover:bg-[#c77dff] hover:text-[#10002b] transition-all cursor-pointer shadow-xs"
-        >
-          Upload Revision Material
-        </button>
-        <button
-          onClick={() => navigate('/dashboard/teacher/submissions')}
-          className="sa-btn-secondary py-2.5 px-4 rounded-xl text-xs font-bold bg-white text-[#10002b] border border-[#c77dff] hover:bg-[#c77dff] hover:text-[#10002b] transition-all cursor-pointer shadow-xs"
-        >
-          Grade Submissions
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 w-full">
+            {[
+              {
+                label: 'Assignments Posted',
+                value: overview?.total_assignments_posted || 0,
+                actionLabel: 'Add Assignment',
+                to: '/dashboard/teacher/assignments',
+              },
+              {
+                label: 'Exams Created',
+                value: overview?.total_exams_created || 0,
+                actionLabel: 'Add Exam',
+                to: '/dashboard/teacher/exams',
+              },
+              {
+                label: 'Submissions Received',
+                value: overview?.total_submissions_received || 0,
+                actionLabel: 'View Submissions',
+                to: '/dashboard/teacher/submissions',
+              },
+              {
+                label: 'Revision Materials',
+                value: revisionsList.length,
+                actionLabel: 'Add Materials',
+                to: '/dashboard/teacher/revisions',
+              },
+            ].map((card) => (
+              <div
+                key={card.label}
+                className={`${cardClass} p-5 flex flex-col justify-between gap-4`}
+                style={{ backgroundColor: 'var(--sa-surface)' }}
+              >
+                <div>
+                  <p className="sa-card-title text-[#10002b] text-xs font-bold uppercase tracking-wider">
+                    {card.label}
+                  </p>
+                  <p className="sa-card-value text-[#10002b] text-2xl font-extrabold mt-2">{card.value}</p>
+                </div>
+
+                <button
+                  onClick={() => navigate(card.to)}
+                  className="w-full py-2.5 px-3 rounded-md bg-[#c77dff]/20 border border-[#c77dff] text-[#10002b] hover:bg-[#10002b] hover:text-white transition-all text-xs font-extrabold cursor-pointer shadow-xs"
+                >
+                  {card.actionLabel}
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <div
+            className={`${cardClass} space-y-4 p-4 sm:p-6`}
+            style={{ backgroundColor: 'var(--sa-surface)' }}
+          >
+            <h3 className="text-xs font-extrabold uppercase tracking-wider text-[#10002b]">Quick Actions</h3>
+            <div className="grid grid-cols-1 sm:flex sm:flex-wrap gap-3 w-full">
+              <button
+                onClick={() => navigate('/dashboard/teacher/assignments')}
+                className="sa-btn-primary py-2.5 px-4 rounded-xl text-xs font-bold bg-[#10002b] text-white hover:bg-[#c77dff] hover:text-[#10002b] transition-all cursor-pointer shadow-xs"
+              >
+                Post Assignment
+              </button>
+              <button
+                onClick={() => navigate('/dashboard/teacher/exams')}
+                className="sa-btn-primary py-2.5 px-4 rounded-xl text-xs font-bold bg-[#10002b] text-white hover:bg-[#c77dff] hover:text-[#10002b] transition-all cursor-pointer shadow-xs"
+              >
+                Create Exam
+              </button>
+              <button
+                onClick={() => navigate('/dashboard/teacher/revisions')}
+                className="sa-btn-secondary py-2.5 px-4 rounded-xl text-xs font-bold bg-white text-[#10002b] border border-[#c77dff] hover:bg-[#c77dff] hover:text-[#10002b] transition-all cursor-pointer shadow-xs"
+              >
+                Upload Revision Material
+              </button>
+              <button
+                onClick={() => navigate('/dashboard/teacher/submissions')}
+                className="sa-btn-secondary py-2.5 px-4 rounded-xl text-xs font-bold bg-white text-[#10002b] border border-[#c77dff] hover:bg-[#c77dff] hover:text-[#10002b] transition-all cursor-pointer shadow-xs"
+              >
+                Grade Submissions
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ATTENDANCE & GEOFENCE TAB */}
       {activeTab === 'attendance' && (
-        <div className="w-full px-4 sm:px-8 lg:px-12 py-8">
+        <div className="w-full py-2 sm:py-6">
           <div
-            className="sa-card border border-[#c77dff] space-y-6 shadow-xs p-6 sm:p-10 rounded-2xl w-full max-w-4xl mx-auto"
+            className={`${cardClass} space-y-6 p-4 sm:p-8 lg:p-10 max-w-4xl mx-auto`}
             style={{ backgroundColor: 'var(--sa-surface)' }}
           >
             <div className="border-b border-[#c77dff]/20 pb-4">
-              <h2 className="text-lg font-bold text-[#10002b]">School Compound Geofenced Attendance</h2>
+              <h2 className="text-base sm:text-lg font-bold text-[#10002b]">
+                School Compound Geofenced Attendance
+              </h2>
               <p className="text-xs text-[#10002b]/70 mt-1">
                 Verify your location within the school premises to clock in or out.
               </p>
@@ -656,11 +685,11 @@ export default function TeacherDashboard() {
                 />
               </div>
 
-              <div className="p-4 rounded-xl border border-[#c77dff]/40 bg-gray-50 text-xs text-center font-bold text-[#10002b]">
+              <div className="p-4 rounded-xl border border-[#c77dff]/40 bg-gray-50 text-xs text-center font-bold text-[#10002b] break-words">
                 Status: {statusText}
               </div>
 
-              <div className="flex gap-4 pt-2">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2">
                 <button
                   onClick={() => runGeoFence('IN')}
                   disabled={geoLoading}
@@ -683,13 +712,13 @@ export default function TeacherDashboard() {
 
       {/* REVISION MATERIALS TAB */}
       {activeTab === 'materials' && (
-        <div className="w-full space-y-6 px-4 sm:px-6">
+        <div className="w-full space-y-6">
           <div
-            className="sa-card border border-[#c77dff] space-y-4 shadow-xs p-6 sm:p-8 rounded-2xl w-full"
+            className={`${cardClass} space-y-4 p-4 sm:p-8`}
             style={{ backgroundColor: 'var(--sa-surface)' }}
           >
             <div>
-              <h2 className="text-lg font-bold text-[#10002b]">Upload Revision Material</h2>
+              <h2 className="text-base sm:text-lg font-bold text-[#10002b]">Upload Revision Material</h2>
               <p className="text-xs text-[#10002b]/70 mt-1">
                 Upload study guides and revision documents for your students.
               </p>
@@ -732,7 +761,7 @@ export default function TeacherDashboard() {
                 <input
                   type="file"
                   onChange={(e) => setRevisionForm({ ...revisionForm, file: e.target.files[0] })}
-                  className="w-full text-xs text-[#10002b]/70 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#10002b] file:text-white hover:file:bg-[#c77dff] hover:file:text-[#10002b] cursor-pointer"
+                  className={fileInputClass}
                 />
               </div>
               <button type="submit" className={primaryBtn}>
@@ -745,13 +774,13 @@ export default function TeacherDashboard() {
 
       {/* ASSIGNMENTS TAB */}
       {activeTab === 'assignments' && (
-        <div className="w-full space-y-6 px-4 sm:px-6">
+        <div className="w-full space-y-6">
           <div
-            className="sa-card border border-[#c77dff] space-y-4 shadow-xs p-6 sm:p-8 rounded-2xl w-full"
+            className={`${cardClass} space-y-4 p-4 sm:p-8`}
             style={{ backgroundColor: 'var(--sa-surface)' }}
           >
             <div>
-              <h2 className="text-lg font-bold text-[#10002b]">Post New Assignment</h2>
+              <h2 className="text-base sm:text-lg font-bold text-[#10002b]">Post New Assignment</h2>
               <p className="text-xs text-[#10002b]/70 mt-1">Fill out the details below to publish an assignment.</p>
             </div>
 
@@ -793,33 +822,37 @@ export default function TeacherDashboard() {
                   className={inputClass}
                 />
               </div>
-              <div>
-                <label className="block text-xs font-bold mb-1.5 text-[#10002b]">Deadline</label>
-                <input
-                  type="datetime-local"
-                  value={assignmentForm.deadline}
-                  onChange={(e) => setAssignmentForm({ ...assignmentForm, deadline: e.target.value })}
-                  required
-                  className={inputClass}
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold mb-1.5 text-[#10002b]">Deadline</label>
+                  <input
+                    type="datetime-local"
+                    value={assignmentForm.deadline}
+                    onChange={(e) => setAssignmentForm({ ...assignmentForm, deadline: e.target.value })}
+                    required
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold mb-1.5 text-[#10002b]">Target Class</label>
+                  <input
+                    type="text"
+                    placeholder="Target Class (e.g. Grade 8)"
+                    value={assignmentForm.class_name}
+                    onChange={(e) => setAssignmentForm({ ...assignmentForm, class_name: e.target.value })}
+                    className={inputClass}
+                  />
+                </div>
               </div>
               <div>
-                <label className="block text-xs font-bold mb-1.5 text-[#10002b]">Target Class</label>
-                <input
-                  type="text"
-                  placeholder="Target Class (e.g. Grade 8)"
-                  value={assignmentForm.class_name}
-                  onChange={(e) => setAssignmentForm({ ...assignmentForm, class_name: e.target.value })}
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold mb-1.5 text-[#10002b]">Attach Reference File / PDF</label>
+                <label className="block text-xs font-bold mb-1.5 text-[#10002b]">
+                  Attach Reference File / PDF
+                </label>
                 <input
                   type="file"
                   accept=".pdf"
                   onChange={(e) => setAssignmentForm({ ...assignmentForm, file: e.target.files[0] })}
-                  className="w-full text-xs text-[#10002b]/70 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#10002b] file:text-white hover:file:bg-[#c77dff]"
+                  className={fileInputClass}
                 />
               </div>
               <button type="submit" className={primaryBtn}>
@@ -832,38 +865,40 @@ export default function TeacherDashboard() {
 
       {/* EXAMS TAB */}
       {activeTab === 'exams' && (
-        <div className="w-full space-y-6 px-4 sm:px-6">
+        <div className="w-full space-y-6">
           <div
-            className="sa-card border border-[#c77dff] space-y-4 shadow-xs p-6 sm:p-8 rounded-2xl w-full"
+            className={`${cardClass} space-y-4 p-4 sm:p-8`}
             style={{ backgroundColor: 'var(--sa-surface)' }}
           >
             <div>
-              <h2 className="text-lg font-bold text-[#10002b]">Create New Exam</h2>
+              <h2 className="text-base sm:text-lg font-bold text-[#10002b]">Create New Exam</h2>
               <p className="text-xs text-[#10002b]/70 mt-1">Set up exam specifications and upload the paper.</p>
             </div>
 
             <form onSubmit={handlePostExam} className="space-y-4 w-full">
-              <div>
-                <label className="block text-xs font-bold mb-1.5 text-[#10002b]">Exam Title</label>
-                <input
-                  type="text"
-                  placeholder="Exam Title (e.g. Midterm Physics)"
-                  value={examForm.title}
-                  onChange={(e) => setExamForm({ ...examForm, title: e.target.value })}
-                  className={inputClass}
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold mb-1.5 text-[#10002b]">Term</label>
-                <input
-                  type="text"
-                  placeholder="Term (e.g. Term 1)"
-                  value={examForm.term}
-                  onChange={(e) => setExamForm({ ...examForm, term: e.target.value })}
-                  className={inputClass}
-                  required
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold mb-1.5 text-[#10002b]">Exam Title</label>
+                  <input
+                    type="text"
+                    placeholder="Exam Title (e.g. Midterm Physics)"
+                    value={examForm.title}
+                    onChange={(e) => setExamForm({ ...examForm, title: e.target.value })}
+                    className={inputClass}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold mb-1.5 text-[#10002b]">Term</label>
+                  <input
+                    type="text"
+                    placeholder="Term (e.g. Term 1)"
+                    value={examForm.term}
+                    onChange={(e) => setExamForm({ ...examForm, term: e.target.value })}
+                    className={inputClass}
+                    required
+                  />
+                </div>
               </div>
               <div>
                 <label className="block text-xs font-bold mb-1.5 text-[#10002b]">Exam Description</label>
@@ -881,7 +916,7 @@ export default function TeacherDashboard() {
                   type="file"
                   accept=".pdf"
                   onChange={(e) => setExamForm({ ...examForm, file: e.target.files[0] })}
-                  className="w-full text-xs text-[#10002b]/70 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#10002b] file:text-white hover:file:bg-[#c77dff]"
+                  className={fileInputClass}
                 />
               </div>
               <button type="submit" className={primaryBtn}>
@@ -894,9 +929,9 @@ export default function TeacherDashboard() {
 
       {/* SUBMISSIONS & GRADING TAB */}
       {activeTab === 'submissions' && (
-        <div className="w-full space-y-6 px-4 sm:px-6">
-          <div className="flex justify-between items-center w-full">
-            <h2 className="text-lg font-extrabold text-[#10002b]">Student Submissions & Grading</h2>
+        <div className="w-full space-y-6">
+          <div className="flex flex-wrap justify-between items-center gap-3 w-full">
+            <h2 className="text-base sm:text-lg font-extrabold text-[#10002b]">Student Submissions & Grading</h2>
             <button
               onClick={fetchAllSubmissions}
               className="sa-btn-secondary py-2 px-3 text-xs bg-white text-[#10002b] border border-[#c77dff] hover:bg-[#c77dff] transition-all rounded-xl cursor-pointer font-bold"
@@ -917,23 +952,23 @@ export default function TeacherDashboard() {
                 {submissions.length === 0 ? (
                   <p className="text-xs text-[#10002b]/70">No assignment submissions found.</p>
                 ) : (
-                  submissions.map((sub) => (
+                  assignmentSubsPager.pageItems.map((sub) => (
                     <div
                       key={`assignment-sub-${sub.id}`}
-                      className="sa-card border border-[#c77dff] space-y-4 shadow-xs p-6 rounded-2xl w-full bg-white"
+                      className={`${cardClass} space-y-4 p-4 sm:p-6 bg-white`}
                       style={{ backgroundColor: 'var(--sa-surface)' }}
                     >
-                      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 w-full">
-                        <div className="space-y-3 w-full">
-                          <div className="flex items-center gap-2">
+                      <div className="flex flex-col md:flex-row justify-between items-stretch md:items-start gap-4 w-full">
+                        <div className="space-y-3 w-full min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
                             <span className="px-2.5 py-1 text-[10px] font-extrabold rounded-lg uppercase tracking-wider bg-[#10002b] text-[#c77dff]">
                               Learning Area: {sub.learning_area || ' '}
                             </span>
-                            <span className="text-xs font-bold text-[#10002b]">
+                            <span className="text-xs font-bold text-[#10002b] break-words">
                               Task: {sub.assignment_title || `Assignment ID ${sub.assignment}`}
                             </span>
                           </div>
-                          <p className="text-xs font-bold text-[#10002b]">
+                          <p className="text-xs font-bold text-[#10002b] break-words">
                             Submitted by Student: {sub.student_name || sub.student_username || `ID ${sub.student}`}
                           </p>
 
@@ -941,14 +976,16 @@ export default function TeacherDashboard() {
                             <span className="font-bold block text-[#10002b] uppercase text-[10px]">
                               Student Typed Responses / Notes:
                             </span>
-                            <p className="whitespace-pre-wrap font-mono text-[#10002b]/85">
+                            <p className="whitespace-pre-wrap break-words font-mono text-[#10002b]/85">
                               {renderStudentAnswers(sub)}
                             </p>
                           </div>
 
                           {sub.file && (
                             <div className="space-y-1">
-                              <span className="font-bold text-[10px] uppercase text-[#10002b]">Attached Answer File:</span>
+                              <span className="font-bold text-[10px] uppercase text-[#10002b]">
+                                Attached Answer File:
+                              </span>
                               <a
                                 href={fileHref(sub)}
                                 target="_blank"
@@ -962,9 +999,11 @@ export default function TeacherDashboard() {
                         </div>
 
                         {/* Grading & feedback inputs */}
-                        <div className="flex flex-col gap-3 p-4 rounded-xl border border-[#c77dff] bg-gray-50 shadow-xs min-w-[280px]">
+                        <div className={gradingPanelClass}>
                           <div>
-                            <label className="block text-[10px] font-bold mb-1 text-[#10002b]">Award Marks / Grade</label>
+                            <label className="block text-[10px] font-bold mb-1 text-[#10002b]">
+                              Award Marks / Grade
+                            </label>
                             <input
                               type="text"
                               placeholder={sub.grade || 'e.g. 85% or A'}
@@ -985,13 +1024,15 @@ export default function TeacherDashboard() {
                                   ? gradeDescriptions[sub.id]
                                   : sub.grade_description || ''
                               }
-                              onChange={(e) => setGradeDescriptions({ ...gradeDescriptions, [sub.id]: e.target.value })}
+                              onChange={(e) =>
+                                setGradeDescriptions({ ...gradeDescriptions, [sub.id]: e.target.value })
+                              }
                               className="w-full p-2 text-xs border border-[#c77dff] rounded-lg bg-white text-[#10002b] focus:outline-none"
                             />
                           </div>
                           <button
                             onClick={() => handleGradeSubmit(sub.id)}
-                            className="sa-btn-primary py-2 px-4 text-xs bg-[#10002b] text-white hover:bg-[#c77dff] hover:text-[#10002b] font-bold rounded-lg transition-all cursor-pointer shadow-xs"
+                            className="sa-btn-primary py-2.5 px-4 text-xs bg-[#10002b] text-white hover:bg-[#c77dff] hover:text-[#10002b] font-bold rounded-lg transition-all cursor-pointer shadow-xs"
                           >
                             Save Marks & Feedback
                           </button>
@@ -1000,6 +1041,7 @@ export default function TeacherDashboard() {
                     </div>
                   ))
                 )}
+                <Pagination pager={assignmentSubsPager} pageSizeOptions={[5, 10, 25]} />
               </div>
 
               {/* Exam submissions */}
@@ -1010,22 +1052,22 @@ export default function TeacherDashboard() {
                 {examSubmissions.length === 0 ? (
                   <p className="text-xs text-[#10002b]/70">No exam submissions found.</p>
                 ) : (
-                  examSubmissions.map((sub) => (
+                  examSubsPager.pageItems.map((sub) => (
                     <div
                       key={`exam-sub-${sub.id}`}
-                      className="sa-card border border-[#c77dff] shadow-xs p-6 rounded-2xl w-full bg-white"
+                      className={`${cardClass} p-4 sm:p-6 bg-white`}
                       style={{ backgroundColor: 'var(--sa-surface)' }}
                     >
-                      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 w-full">
-                        <div className="space-y-3 w-full">
-                          <span className="text-xs font-bold text-[#10002b]">
+                      <div className="flex flex-col md:flex-row justify-between items-stretch md:items-start gap-4 w-full">
+                        <div className="space-y-3 w-full min-w-0">
+                          <span className="text-xs font-bold text-[#10002b] break-words block">
                             Exam: {sub.exam_title || `Exam ID ${sub.exam}`}
                           </span>
-                          <p className="text-xs font-bold text-[#10002b]">
+                          <p className="text-xs font-bold text-[#10002b] break-words">
                             Submitted by Student: {sub.student_name || sub.student_username || `ID ${sub.student}`}
                           </p>
                           <div className="p-3.5 rounded-xl border border-[#c77dff]/60 text-xs bg-gray-50 w-full max-h-48 overflow-y-auto">
-                            <p className="whitespace-pre-wrap font-mono text-[#10002b]/85">
+                            <p className="whitespace-pre-wrap break-words font-mono text-[#10002b]/85">
                               {renderStudentAnswers(sub)}
                             </p>
                           </div>
@@ -1041,7 +1083,7 @@ export default function TeacherDashboard() {
                           )}
                         </div>
 
-                        <div className="flex flex-col gap-3 p-4 rounded-xl border border-[#c77dff] bg-gray-50 shadow-xs min-w-[280px]">
+                        <div className={gradingPanelClass}>
                           <label className="block text-[10px] font-bold text-[#10002b]">Exam Score</label>
                           <input
                             type="text"
@@ -1056,7 +1098,7 @@ export default function TeacherDashboard() {
                           />
                           <button
                             onClick={() => handleExamGradeSubmit(sub.id)}
-                            className="sa-btn-primary py-2 px-4 text-xs bg-[#10002b] text-white hover:bg-[#c77dff] hover:text-[#10002b] font-bold rounded-lg transition-all cursor-pointer shadow-xs"
+                            className="sa-btn-primary py-2.5 px-4 text-xs bg-[#10002b] text-white hover:bg-[#c77dff] hover:text-[#10002b] font-bold rounded-lg transition-all cursor-pointer shadow-xs"
                           >
                             Save Exam Score
                           </button>
@@ -1065,6 +1107,7 @@ export default function TeacherDashboard() {
                     </div>
                   ))
                 )}
+                <Pagination pager={examSubsPager} pageSizeOptions={[5, 10, 25]} />
               </div>
             </div>
           )}
@@ -1073,17 +1116,16 @@ export default function TeacherDashboard() {
 
       {/* CLASS MARKS GRID TAB */}
       {activeTab === 'marks' && (
-        <div className="p-6 bg-white rounded-lg shadow-md space-y-6">
-          <div className="sa-banner sa-flex-between border border-[#c77dff] shadow-xs p-6 rounded-2xl w-full"
-            style={{ backgroundColor: 'var(--sa-surface)' }}>
+        <div className="p-3 sm:p-6 bg-white rounded-lg shadow-md space-y-6 w-full min-w-0">
+          <div className={bannerClass} style={{ backgroundColor: 'var(--sa-surface)' }}>
             <div>
-              <h2 className="text-xl font-extrabold text-[#10002b]">Class Marks Entry</h2>
+              <h2 className="text-lg sm:text-xl font-extrabold text-[#10002b]">Class Marks Entry</h2>
               <p className="text-xs text-[#10002b]/70">
                 Record marks across all 9 subjects, then save them for the selected class and term.
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 w-full md:w-auto">
               <ClassTermSelectors
                 classes={classes}
                 selectedClass={className}
@@ -1097,7 +1139,7 @@ export default function TeacherDashboard() {
               <button
                 onClick={handleBulkSaveMarks}
                 disabled={savingMarks}
-                className="px-4 py-2 bg-[#c77dff] text-[#10002b] rounded-md text-xs font-extrabold hover:bg-[#10002b] hover:text-white transition shadow-sm disabled:opacity-50 cursor-pointer"
+                className="w-full sm:w-auto px-4 py-2 bg-[#c77dff] text-[#10002b] rounded-md text-xs font-extrabold hover:bg-[#10002b] hover:text-white transition shadow-sm disabled:opacity-50 cursor-pointer"
               >
                 {savingMarks ? 'Saving...' : 'Save All Marks'}
               </button>
@@ -1115,41 +1157,44 @@ export default function TeacherDashboard() {
               </button>
             </div>
           )}
-          {marksError && (
-            <div className="p-3 bg-[#10002b] text-[#c77dff] text-xs font-bold rounded-md border border-[#c77dff]">
-              {marksError}
-            </div>
-          )}
+          {marksError && <div className={errorBoxClass}>{marksError}</div>}
 
           {marksLoading ? (
             <p className="text-xs text-[#10002b] py-6 text-center font-bold">Loading grade entry sheet...</p>
           ) : studentsTable.length === 0 && !marksError ? (
             <p className="text-xs text-[#10002b]/70 py-6 text-center">No students found for {className}.</p>
           ) : (
-            <div className="overflow-x-auto border border-[#10002b] rounded-md shadow-sm">
+            <div className="overflow-x-auto border border-[#10002b] rounded-md shadow-sm max-w-full">
               <table className="min-w-full divide-y divide-[#c77dff]/30 text-xs">
                 <thead className="bg-[#10002b] text-white">
                   <tr>
-                    <th className="px-4 py-3 text-left font-bold">Adm No</th>
-                    <th className="px-4 py-3 text-left font-bold">Student Name</th>
+                    <th className="px-3 sm:px-4 py-3 text-left font-bold whitespace-nowrap">Adm No</th>
+                    <th className="px-3 sm:px-4 py-3 text-left font-bold whitespace-nowrap sticky left-0 z-10 bg-[#10002b]">
+                      Student Name
+                    </th>
                     {subjects.map((sub) => (
-                      <th key={sub.key} className="px-3 py-3 text-center font-bold">
+                      <th key={sub.key} className="px-3 py-3 text-center font-bold whitespace-nowrap">
                         {sub.label}
                       </th>
                     ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#10002b]/20 bg-white">
-                  {studentsTable.map((student) => (
+                  {marksPager.pageItems.map((student) => (
                     <tr key={student.student_id} className="hover:bg-[#c77dff]/10">
-                      <td className="px-4 py-3 font-semibold text-[#10002b]">{student.admission_number}</td>
-                      <td className="px-4 py-3 font-medium text-[#10002b]">{student.student_name}</td>
+                      <td className="px-3 sm:px-4 py-3 font-semibold text-[#10002b] whitespace-nowrap">
+                        {student.admission_number}
+                      </td>
+                      <td className="px-3 sm:px-4 py-3 font-medium text-[#10002b] whitespace-nowrap sticky left-0 z-10 bg-white">
+                        {student.student_name}
+                      </td>
                       {subjects.map((sub) => (
                         <td key={sub.key} className="px-3 py-2 text-center">
                           <input
                             type="number"
                             min="0"
                             max="100"
+                            inputMode="decimal"
                             value={student.marks[sub.key] ?? ''}
                             onChange={(e) => handleGridMarkChange(student.student_id, sub.key, e.target.value)}
                             className="w-16 px-2 py-1 text-center border border-[#10002b]/30 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-[#c77dff] text-[#10002b] font-semibold"
@@ -1162,22 +1207,24 @@ export default function TeacherDashboard() {
               </table>
             </div>
           )}
+          {!marksLoading && <Pagination pager={marksPager} pageSizeOptions={[10, 15, 30, 50]} />}
         </div>
       )}
 
       {/* CLASS ANALYSIS REPORT TAB */}
       {activeTab === 'analysis' && (
-        <div className="p-6 bg-white rounded-lg shadow-md space-y-6">
-          <div className="sa-banner sa-flex-between border border-[#c77dff] shadow-xs p-6 rounded-2xl w-full"
-      style={{ backgroundColor: 'var(--sa-surface)' }}>
+        <div className="p-3 sm:p-6 bg-white rounded-lg shadow-md space-y-6 w-full min-w-0">
+          <div className={bannerClass} style={{ backgroundColor: 'var(--sa-surface)' }}>
             <div>
-              <h2 className="text-xl font-extrabold text-[#10002b]">Class Performance & Analysis Report</h2>
+              <h2 className="text-lg sm:text-xl font-extrabold text-[#10002b]">
+                Class Performance & Analysis Report
+              </h2>
               <p className="text-xs text-[#10002b]/70">
                 Review rankings, subject means, and grade levels (EE, ME, AE, BE).
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 w-full md:w-auto">
               <ClassTermSelectors
                 classes={classes}
                 selectedClass={className}
@@ -1191,11 +1238,7 @@ export default function TeacherDashboard() {
             </div>
           </div>
 
-          {analysisError && (
-            <div className="p-3 bg-[#10002b] text-[#c77dff] text-xs font-bold rounded-md border border-[#c77dff]">
-              {analysisError}
-            </div>
-          )}
+          {analysisError && <div className={errorBoxClass}>{analysisError}</div>}
 
           {analysisLoading ? (
             <p className="text-xs text-[#10002b] py-6 text-center font-bold">
@@ -1215,7 +1258,7 @@ export default function TeacherDashboard() {
             </div>
           ) : analysisData ? (
             <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="p-4 bg-[#c77dff]/10 border border-[#c77dff] rounded-md">
                   <p className="text-xs font-bold text-[#10002b]/70">Total Class Mean</p>
                   <p className="text-lg font-extrabold text-[#10002b]">{analysisData.total_class_mean}</p>
@@ -1234,17 +1277,17 @@ export default function TeacherDashboard() {
                 </div>
               </div>
 
-              <div className="overflow-x-auto border border-[#10002b] rounded-md shadow-sm">
+              <div className="overflow-x-auto border border-[#10002b] rounded-md shadow-sm max-w-full">
                 <table className="min-w-full divide-y divide-[#c77dff]/30 text-xs">
                   <thead className="bg-[#10002b] text-white">
                     <tr>
                       <th className="px-3 py-3 text-left font-bold">Rank</th>
-                      <th className="px-3 py-3 text-left font-bold">Adm No</th>
-                      <th className="px-3 py-3 text-left font-bold">Student Name</th>
+                      <th className="px-3 py-3 text-left font-bold whitespace-nowrap">Adm No</th>
+                      <th className="px-3 py-3 text-left font-bold whitespace-nowrap">Student Name</th>
                       {analysisData.subject_columns.map((sub) => (
                         <th
                           key={sub}
-                          className="px-3 py-3 text-center font-bold border-l border-white/20"
+                          className="px-3 py-3 text-center font-bold border-l border-white/20 whitespace-nowrap"
                           colSpan="2"
                         >
                           {sub.replace(/_/g, ' ').toUpperCase()}
@@ -1264,11 +1307,13 @@ export default function TeacherDashboard() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#10002b]/20 bg-white">
-                    {analysisData.student_performance_table.map((student) => (
+                    {analysisPager.pageItems.map((student) => (
                       <tr key={student.admission_number} className="hover:bg-[#c77dff]/10">
                         <td className="px-3 py-2 font-extrabold text-[#10002b]">#{student.rank}</td>
-                        <td className="px-3 py-2 font-semibold text-[#10002b]/80">{student.admission_number}</td>
-                        <td className="px-3 py-2 font-medium text-[#10002b]">{student.name}</td>
+                        <td className="px-3 py-2 font-semibold text-[#10002b]/80 whitespace-nowrap">
+                          {student.admission_number}
+                        </td>
+                        <td className="px-3 py-2 font-medium text-[#10002b] whitespace-nowrap">{student.name}</td>
                         {analysisData.subject_columns.map((sub) => {
                           const subData = student.subjects[sub] || { score: 0, level: 'BE' };
                           return (
@@ -1290,7 +1335,7 @@ export default function TeacherDashboard() {
                   </tbody>
                   <tfoot className="bg-[#10002b] text-white font-bold">
                     <tr>
-                      <td colSpan="3" className="px-3 py-3 text-right">
+                      <td colSpan="3" className="px-3 py-3 text-right whitespace-nowrap">
                         SUBJECT MEANS:
                       </td>
                       {analysisData.subject_columns.map((sub) => (
@@ -1303,6 +1348,8 @@ export default function TeacherDashboard() {
                   </tfoot>
                 </table>
               </div>
+              <Pagination pager={analysisPager} pageSizeOptions={[10, 15, 30, 50]} />
+              <p className="text-[11px] text-[#10002b]/60 sm:hidden">Swipe the table sideways to see all subjects.</p>
             </div>
           ) : null}
         </div>
@@ -1310,14 +1357,15 @@ export default function TeacherDashboard() {
 
       {/* CLASS ANALYTICS TAB (subject means + level distribution) */}
       {activeTab === 'analytics' && (
-        <div className="p-6 bg-white rounded-lg shadow-md space-y-6">
-          <div className="sa-banner sa-flex-between border border-[#c77dff] shadow-xs p-6 rounded-2xl w-full"
-      style={{ backgroundColor: 'var(--sa-surface)' }}>
+        <div className="p-3 sm:p-6 bg-white rounded-lg shadow-md space-y-6 w-full min-w-0">
+          <div className={bannerClass} style={{ backgroundColor: 'var(--sa-surface)' }}>
             <div>
-              <h2 className="text-xl font-extrabold text-[#10002b]">Class Analytics</h2>
-              <p className="text-xs text-[#10002b]/70">Subject means and level distribution for the selected class.</p>
+              <h2 className="text-lg sm:text-xl font-extrabold text-[#10002b]">Class Analytics</h2>
+              <p className="text-xs text-[#10002b]/70">
+                Subject means and level distribution for the selected class.
+              </p>
             </div>
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 w-full md:w-auto">
               <ClassTermSelectors
                 classes={classes}
                 selectedClass={className}
@@ -1328,11 +1376,7 @@ export default function TeacherDashboard() {
             </div>
           </div>
 
-          {analysisError && (
-            <div className="p-3 bg-[#10002b] text-[#c77dff] text-xs font-bold rounded-md border border-[#c77dff]">
-              {analysisError}
-            </div>
-          )}
+          {analysisError && <div className={errorBoxClass}>{analysisError}</div>}
 
           {analysisLoading ? (
             <p className="text-xs text-[#10002b] py-6 text-center font-bold">Loading analytics...</p>
@@ -1344,8 +1388,8 @@ export default function TeacherDashboard() {
                   const mean = analysisData.subject_means[sub] || 0;
                   return (
                     <div key={sub} className="space-y-1">
-                      <div className="flex justify-between text-xs text-[#10002b]">
-                        <span className="font-semibold">{sub.replace(/_/g, ' ')}</span>
+                      <div className="flex justify-between gap-2 text-xs text-[#10002b]">
+                        <span className="font-semibold break-words">{sub.replace(/_/g, ' ')}</span>
                         <span className="font-extrabold">{mean}</span>
                       </div>
                       <div className="h-2.5 w-full bg-[#c77dff]/20 rounded-full overflow-hidden">
@@ -1381,9 +1425,7 @@ export default function TeacherDashboard() {
                     </div>
                   ));
                 })()}
-                <p className="text-[11px] text-[#10002b]/60">
-                  EE 90+, ME 70-89, AE 40-69, BE below 40.
-                </p>
+                <p className="text-[11px] text-[#10002b]/60">EE 90+, ME 70-89, AE 40-69, BE below 40.</p>
               </div>
             </div>
           ) : null}
