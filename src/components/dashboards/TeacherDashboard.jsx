@@ -7,14 +7,23 @@ const API_BASE = import.meta.env.VITE_API_URL || 'https://smartcademic-project.o
 const API = `${API_BASE}/api/teachers`;
 const HOST = `${API_BASE}`;
 
-// Build auth headers fresh on every call so a new login is always picked up
-const authConfig = () => ({
-  headers: {
-    Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-  },
-});
+const getStoredToken = () =>
+  localStorage.getItem('access_token') || localStorage.getItem('access') || '';
 
-// Turn an axios error into a message that shows the HTTP status and server detail
+const authConfig = () => {
+  const token = getStoredToken();
+  return {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  };
+};
+
+const clearStoredTokens = () => {
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('access');
+  localStorage.removeItem('refresh_token');
+  localStorage.removeItem('refresh');
+};
+
 const describeError = (err, fallback) => {
   const status = err.response?.status;
   const data = err.response?.data;
@@ -44,7 +53,6 @@ const gradingPanelClass =
 const errorBoxClass =
   'p-3 bg-[#10002b] text-[#c77dff] text-xs font-bold rounded-md border border-[#c77dff] break-words';
 
-// Shared class + term dropdowns used by Marks, Analysis and Analytics tabs
 function ClassTermSelectors({ classes, selectedClass, setSelectedClass, term, setTerm }) {
   return (
     <>
@@ -69,6 +77,18 @@ export default function TeacherDashboard() {
   const location = useLocation();
   const navigate = useNavigate();
 
+  const handleAuthFailure = (err) => {
+    if (err.response?.status === 401) {
+      clearStoredTokens();
+      navigate('/signin', {
+        replace: true,
+        state: { message: 'Your session expired. Please sign in again.' },
+      });
+      return true;
+    }
+    return false;
+  };
+
   const getActiveTab = () => {
     const path = location.pathname;
     if (path.includes('/revisions') || path.includes('/materials')) return 'materials';
@@ -90,6 +110,7 @@ export default function TeacherDashboard() {
   const [examSubmissions, setExamSubmissions] = useState([]);
   const [revisionsList, setRevisionsList] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [dashError, setDashError] = useState('');
 
   const [grades, setGrades] = useState({});
   const [gradeDescriptions, setGradeDescriptions] = useState({});
@@ -134,33 +155,37 @@ export default function TeacherDashboard() {
 
   // ---------- Fetchers ----------
   const fetchTeachers = async () => {
+    setDashError('');
     try {
       const res = await axios.get(`${API}/list/`, authConfig());
-      setTeachersList(res.data);
+      setTeachersList(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
-      console.error('Failed to load teachers list:', err);
+      if (handleAuthFailure(err)) return;
+      setDashError(describeError(err, 'Failed to load teachers list'));
     }
   };
 
   const fetchRevisions = async () => {
+    setDashError('');
     try {
       const res = await axios.get(`${API}/revisions/`, authConfig());
-      setRevisionsList(res.data);
+      setRevisionsList(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
-      console.error('Failed to load revision materials:', err);
+      if (handleAuthFailure(err)) return;
+      setDashError(describeError(err, 'Failed to load revision materials'));
     }
   };
 
-  // Classes created by the admin; the dropdowns are built from this list
   const fetchClasses = async () => {
     try {
       const res = await axios.get(`${API}/classes/`, authConfig());
-      setClasses(res.data);
-      if (res.data.length > 0 && !res.data.some((c) => c.name === className)) {
-        setClassName(res.data[0].name);
+      const list = Array.isArray(res.data) ? res.data : [];
+      setClasses(list);
+      if (list.length > 0 && !list.some((c) => c.name === className)) {
+        setClassName(list[0].name);
       }
     } catch (err) {
-      console.error('Failed to load classes:', err);
+      if (handleAuthFailure(err)) return;
       const msg = describeError(err, 'Could not load the class list');
       setMarksError(msg);
       setAnalysisError(msg);
@@ -168,11 +193,13 @@ export default function TeacherDashboard() {
   };
 
   const fetchOverview = async () => {
+    setDashError('');
     try {
       const res = await axios.get(`${API}/overview/`, authConfig());
       setOverview(res.data);
     } catch (err) {
-      console.error('Failed to load overview:', err);
+      if (handleAuthFailure(err)) return;
+      setDashError(describeError(err, 'Failed to load overview'));
     }
   };
 
@@ -184,9 +211,11 @@ export default function TeacherDashboard() {
           const fileUrl = sub.file.startsWith('http') ? sub.file : `${HOST}${sub.file}`;
           const response = await axios.get(fileUrl, { ...authConfig(), responseType: 'blob' });
           const blob = new Blob([response.data], { type: 'application/pdf' });
-          blobMap[`${fileUrl}`] = URL.createObjectURL(blob);
-          blobMap[sub.id] = blobMap[`${fileUrl}`];
+          const objectUrl = URL.createObjectURL(blob);
+          blobMap[fileUrl] = objectUrl;
+          blobMap[sub.id] = objectUrl;
         } catch (err) {
+          if (handleAuthFailure(err)) return;
           console.error(`Failed to load file for submission ${sub.id}:`, err);
         }
       }
@@ -196,16 +225,20 @@ export default function TeacherDashboard() {
 
   const fetchAllSubmissions = async () => {
     setLoading(true);
+    setDashError('');
     try {
       const [assignmentRes, examRes] = await Promise.all([
         axios.get(`${API}/assignment-submissions/`, authConfig()),
         axios.get(`${API}/exam-submissions/`, authConfig()),
       ]);
-      setSubmissions(assignmentRes.data);
-      setExamSubmissions(examRes.data);
-      await loadPdfBlobs(assignmentRes.data);
+      const assignList = Array.isArray(assignmentRes.data) ? assignmentRes.data : [];
+      const examList = Array.isArray(examRes.data) ? examRes.data : [];
+      setSubmissions(assignList);
+      setExamSubmissions(examList);
+      await loadPdfBlobs(assignList);
     } catch (err) {
-      console.error('Failed to load submissions:', err);
+      if (handleAuthFailure(err)) return;
+      setDashError(describeError(err, 'Failed to load submissions'));
     } finally {
       setLoading(false);
     }
@@ -219,10 +252,10 @@ export default function TeacherDashboard() {
         `${API}/grades/${encodeURIComponent(className)}/${encodeURIComponent(term)}/marks-table/`,
         authConfig()
       );
-      setSubjects(res.data.subjects);
-      setStudentsTable(res.data.students_table);
+      setSubjects(res.data.subjects || []);
+      setStudentsTable(res.data.students_table || []);
     } catch (err) {
-      console.error('Failed to load marks table:', err);
+      if (handleAuthFailure(err)) return;
       setSubjects([]);
       setStudentsTable([]);
       setMarksError(describeError(err, 'Failed to load student marks for this class/term'));
@@ -241,7 +274,7 @@ export default function TeacherDashboard() {
       );
       setAnalysisData(res.data);
     } catch (err) {
-      console.error('Failed to load class analysis:', err);
+      if (handleAuthFailure(err)) return;
       setAnalysisError(describeError(err, 'Could not load class analysis'));
       setAnalysisData(null);
     } finally {
@@ -251,6 +284,10 @@ export default function TeacherDashboard() {
 
   // ---------- Effects ----------
   useEffect(() => {
+    if (!getStoredToken()) {
+      navigate('/signin', { replace: true });
+      return;
+    }
     if (activeTab === 'assignments') fetchTeachers();
     if (activeTab === 'materials') fetchRevisions();
     if (activeTab === 'overview') {
@@ -266,8 +303,6 @@ export default function TeacherDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, location.pathname]);
 
-  // Load the admin's classes when one of these tabs opens, and again whenever the
-  // browser tab regains focus, so a class added meanwhile appears without a reload
   useEffect(() => {
     if (!['marks', 'analysis', 'analytics'].includes(activeTab)) return undefined;
     fetchClasses();
@@ -286,7 +321,6 @@ export default function TeacherDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, className, term]);
 
-  // Jump back to page 1 whenever a different class or term is selected
   useEffect(() => {
     marksPager.setPage(1);
     analysisPager.setPage(1);
@@ -311,8 +345,8 @@ export default function TeacherDashboard() {
       alert('Assignment posted successfully!');
       setAssignmentForm({ title: '', description: '', class_name: '', deadline: '', teacher: '', file: null });
     } catch (err) {
-      console.error('Error posting assignment:', err.response?.data || err);
-      alert(JSON.stringify(err.response?.data) || 'Failed to post assignment.');
+      if (handleAuthFailure(err)) return;
+      alert(describeError(err, 'Failed to post assignment'));
     }
   };
 
@@ -334,8 +368,8 @@ export default function TeacherDashboard() {
       alert('Exam posted successfully!');
       setExamForm({ title: '', term: '', description: '', duration_mins: 60, start_time: '', end_time: '', file: null });
     } catch (err) {
-      console.error('Error posting exam:', err.response?.data || err);
-      alert(JSON.stringify(err.response?.data) || 'Failed to post exam.');
+      if (handleAuthFailure(err)) return;
+      alert(describeError(err, 'Failed to post exam'));
     }
   };
 
@@ -355,8 +389,8 @@ export default function TeacherDashboard() {
       setRevisionForm({ title: '', description: '', class_name: '', file: null });
       fetchRevisions();
     } catch (err) {
-      console.error('Error posting revision:', err.response?.data || err);
-      alert(JSON.stringify(err.response?.data) || 'Failed to upload revision material.');
+      if (handleAuthFailure(err)) return;
+      alert(describeError(err, 'Failed to upload revision material'));
     }
   };
 
@@ -372,7 +406,7 @@ export default function TeacherDashboard() {
       await axios.patch(
         `${API}/assignment-submissions/${submissionId}/grade/`,
         {
-          grade: gradeVal, // change to 'score' if your serializer uses 'score'
+          grade: gradeVal,
           grade_description: descVal || '',
         },
         authConfig()
@@ -380,8 +414,8 @@ export default function TeacherDashboard() {
       alert('Score and review saved successfully!');
       fetchAllSubmissions();
     } catch (err) {
-      console.error('Error saving score:', err.response?.data || err);
-      alert(JSON.stringify(err.response?.data) || 'Failed to save score.');
+      if (handleAuthFailure(err)) return;
+      alert(describeError(err, 'Failed to save score'));
     }
   };
 
@@ -392,9 +426,6 @@ export default function TeacherDashboard() {
       return;
     }
     try {
-      // URL matches Django: exam-submissions/<pk>/grade/
-      // Both keys are sent because the exam serializer may use either `score` or `grade`;
-      // DRF ignores the one it does not know.
       await axios.patch(
         `${API}/exam-submissions/${submissionId}/grade/`,
         { score: gradeVal, grade: gradeVal },
@@ -403,8 +434,8 @@ export default function TeacherDashboard() {
       alert('Exam score saved successfully!');
       fetchAllSubmissions();
     } catch (err) {
-      console.error('Error saving exam score:', err.response?.data || err);
-      alert(JSON.stringify(err.response?.data) || 'Failed to save exam score.');
+      if (handleAuthFailure(err)) return;
+      alert(describeError(err, 'Failed to save exam score'));
     }
   };
 
@@ -441,7 +472,7 @@ export default function TeacherDashboard() {
             setStatusText(`Success! Clocked ${statusDirect}`);
           }
         } catch (error) {
-          console.error('API Error:', error.response?.data || error);
+          if (handleAuthFailure(error)) return;
           const backendMsg = error.response?.data?.message || error.response?.data?.error;
           setStatusText(backendMsg || 'You are outside the school compound');
         } finally {
@@ -493,14 +524,13 @@ export default function TeacherDashboard() {
       setMarksMessage('Marks saved successfully!');
       fetchClassGradesTable();
     } catch (err) {
-      console.error('Error saving marks in bulk:', err);
+      if (handleAuthFailure(err)) return;
       setMarksError(describeError(err, 'Failed to save marks'));
     } finally {
       setSavingMarks(false);
     }
   };
 
-  // PDF export: uses the Authorization header, so the token is never put in the URL
   const handlePdfReportExport = async () => {
     const setErr = activeTab === 'marks' ? setMarksError : setAnalysisError;
     setErr('');
@@ -518,7 +548,7 @@ export default function TeacherDashboard() {
       link.remove();
       URL.revokeObjectURL(url);
     } catch (err) {
-      console.error('PDF export failed:', err);
+      if (handleAuthFailure(err)) return;
       setErr(describeError(err, 'Could not export the PDF report (save marks for this class and term first)'));
     }
   };
@@ -540,7 +570,6 @@ export default function TeacherDashboard() {
   const fileHref = (sub) =>
     pdfBlobs[sub.id] || (sub.file.startsWith('http') ? sub.file : `${HOST}${sub.file}`);
 
-  // Level distribution for the analytics tab (EE / ME / AE / BE)
   const levelCounts = () => {
     const counts = { EE: 0, ME: 0, AE: 0, BE: 0 };
     if (!analysisData) return counts;
@@ -552,15 +581,13 @@ export default function TeacherDashboard() {
     return counts;
   };
 
-  // ---------- Render ----------
-  // pt-20 clears the 56px fixed mobile top bar from the Sidebar; lg+ has no top bar.
-  // min-w-0 lets this flex child shrink so wide tables scroll inside their own box
-  // instead of pushing the whole page sideways.
   return (
     <div
       className="flex-1 min-w-0 pt-20 px-4 pb-6 sm:px-6 lg:pt-8 lg:px-8 overflow-y-auto min-h-screen font-sans space-y-6"
       style={{ backgroundColor: 'var(--sa-bg)', color: 'var(--sa-text)' }}
     >
+      {dashError && <div className={errorBoxClass}>{dashError}</div>}
+
       {/* OVERVIEW TAB */}
       {activeTab === 'overview' && (
         <div className="space-y-6 w-full">
@@ -613,6 +640,7 @@ export default function TeacherDashboard() {
                 </div>
 
                 <button
+                  type="button"
                   onClick={() => navigate(card.to)}
                   className="w-full py-2.5 px-3 rounded-md bg-[#c77dff]/20 border border-[#c77dff] text-[#10002b] hover:bg-[#10002b] hover:text-white transition-all text-xs font-extrabold cursor-pointer shadow-xs"
                 >
@@ -629,24 +657,28 @@ export default function TeacherDashboard() {
             <h3 className="text-xs font-extrabold uppercase tracking-wider text-[#10002b]">Quick Actions</h3>
             <div className="grid grid-cols-1 sm:flex sm:flex-wrap gap-3 w-full">
               <button
+                type="button"
                 onClick={() => navigate('/dashboard/teacher/assignments')}
                 className="sa-btn-primary py-2.5 px-4 rounded-xl text-xs font-bold bg-[#10002b] text-white hover:bg-[#c77dff] hover:text-[#10002b] transition-all cursor-pointer shadow-xs"
               >
                 Post Assignment
               </button>
               <button
+                type="button"
                 onClick={() => navigate('/dashboard/teacher/exams')}
                 className="sa-btn-primary py-2.5 px-4 rounded-xl text-xs font-bold bg-[#10002b] text-white hover:bg-[#c77dff] hover:text-[#10002b] transition-all cursor-pointer shadow-xs"
               >
                 Create Exam
               </button>
               <button
+                type="button"
                 onClick={() => navigate('/dashboard/teacher/revisions')}
                 className="sa-btn-secondary py-2.5 px-4 rounded-xl text-xs font-bold bg-white text-[#10002b] border border-[#c77dff] hover:bg-[#c77dff] hover:text-[#10002b] transition-all cursor-pointer shadow-xs"
               >
                 Upload Revision Material
               </button>
               <button
+                type="button"
                 onClick={() => navigate('/dashboard/teacher/submissions')}
                 className="sa-btn-secondary py-2.5 px-4 rounded-xl text-xs font-bold bg-white text-[#10002b] border border-[#c77dff] hover:bg-[#c77dff] hover:text-[#10002b] transition-all cursor-pointer shadow-xs"
               >
@@ -691,6 +723,7 @@ export default function TeacherDashboard() {
 
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2">
                 <button
+                  type="button"
                   onClick={() => runGeoFence('IN')}
                   disabled={geoLoading}
                   className="flex-1 py-3.5 bg-[#10002b] text-white font-bold rounded-xl text-xs hover:bg-[#10002b]/70 transition-all cursor-pointer disabled:opacity-50 shadow-xs"
@@ -698,6 +731,7 @@ export default function TeacherDashboard() {
                   {geoLoading ? 'Checking...' : 'Clock In'}
                 </button>
                 <button
+                  type="button"
                   onClick={() => runGeoFence('OUT')}
                   disabled={geoLoading}
                   className="flex-1 py-3.5 bg-[#10002b] text-white font-bold rounded-xl text-xs hover:bg-[#10002b]/70 transition-all cursor-pointer disabled:opacity-50 shadow-xs"
@@ -933,6 +967,7 @@ export default function TeacherDashboard() {
           <div className="flex flex-wrap justify-between items-center gap-3 w-full">
             <h2 className="text-base sm:text-lg font-extrabold text-[#10002b]">Student Submissions & Grading</h2>
             <button
+              type="button"
               onClick={fetchAllSubmissions}
               className="sa-btn-secondary py-2 px-3 text-xs bg-white text-[#10002b] border border-[#c77dff] hover:bg-[#c77dff] transition-all rounded-xl cursor-pointer font-bold"
             >
@@ -944,7 +979,6 @@ export default function TeacherDashboard() {
             <p className="text-xs text-[#10002b]/70">Loading submissions...</p>
           ) : (
             <div className="space-y-8 w-full">
-              {/* Assignment submissions */}
               <div className="space-y-4 w-full">
                 <h3 className="text-xs font-extrabold uppercase tracking-wider pb-1 border-b border-[#c77dff]/60 text-[#10002b]">
                   Assignment Submissions & Review
@@ -998,7 +1032,6 @@ export default function TeacherDashboard() {
                           )}
                         </div>
 
-                        {/* Grading & feedback inputs */}
                         <div className={gradingPanelClass}>
                           <div>
                             <label className="block text-[10px] font-bold mb-1 text-[#10002b]">
@@ -1031,6 +1064,7 @@ export default function TeacherDashboard() {
                             />
                           </div>
                           <button
+                            type="button"
                             onClick={() => handleGradeSubmit(sub.id)}
                             className="sa-btn-primary py-2.5 px-4 text-xs bg-[#10002b] text-white hover:bg-[#c77dff] hover:text-[#10002b] font-bold rounded-lg transition-all cursor-pointer shadow-xs"
                           >
@@ -1044,7 +1078,6 @@ export default function TeacherDashboard() {
                 <Pagination pager={assignmentSubsPager} pageSizeOptions={[5, 10, 25]} />
               </div>
 
-              {/* Exam submissions */}
               <div className="space-y-4 w-full">
                 <h3 className="text-xs font-extrabold uppercase tracking-wider pb-1 border-b border-[#c77dff]/60 text-[#10002b]">
                   Exam Submissions
@@ -1097,6 +1130,7 @@ export default function TeacherDashboard() {
                             className="w-full p-2 text-xs border border-[#c77dff] rounded-lg bg-white text-[#10002b] focus:outline-none"
                           />
                           <button
+                            type="button"
                             onClick={() => handleExamGradeSubmit(sub.id)}
                             className="sa-btn-primary py-2.5 px-4 text-xs bg-[#10002b] text-white hover:bg-[#c77dff] hover:text-[#10002b] font-bold rounded-lg transition-all cursor-pointer shadow-xs"
                           >
@@ -1133,10 +1167,11 @@ export default function TeacherDashboard() {
                 term={term}
                 setTerm={setTerm}
               />
-              <button onClick={handlePdfReportExport} className={smallBtn}>
+              <button type="button" onClick={handlePdfReportExport} className={smallBtn}>
                 Export PDF Report
               </button>
               <button
+                type="button"
                 onClick={handleBulkSaveMarks}
                 disabled={savingMarks}
                 className="w-full sm:w-auto px-4 py-2 bg-[#c77dff] text-[#10002b] rounded-md text-xs font-extrabold hover:bg-[#10002b] hover:text-white transition shadow-sm disabled:opacity-50 cursor-pointer"
@@ -1150,6 +1185,7 @@ export default function TeacherDashboard() {
             <div className="p-3 bg-[#c77dff]/20 text-[#10002b] text-xs font-bold rounded-md border border-[#c77dff] flex flex-wrap items-center justify-between gap-3">
               <span>{marksMessage}</span>
               <button
+                type="button"
                 onClick={() => navigate('/dashboard/teacher/analysis')}
                 className="px-3 py-1.5 bg-[#10002b] text-white rounded-md text-xs font-bold hover:bg-[#c77dff] hover:text-[#10002b] transition cursor-pointer"
               >
@@ -1232,7 +1268,7 @@ export default function TeacherDashboard() {
                 term={term}
                 setTerm={setTerm}
               />
-              <button onClick={handlePdfReportExport} className={smallBtn}>
+              <button type="button" onClick={handlePdfReportExport} className={smallBtn}>
                 Download PDF Report
               </button>
             </div>
@@ -1250,6 +1286,7 @@ export default function TeacherDashboard() {
                 No marks saved for {className}, {term} yet.
               </p>
               <button
+                type="button"
                 onClick={() => navigate('/dashboard/teacher/marks')}
                 className="px-4 py-2 bg-[#10002b] text-white rounded-md text-xs font-bold hover:bg-[#c77dff] hover:text-[#10002b] transition cursor-pointer"
               >
@@ -1355,7 +1392,7 @@ export default function TeacherDashboard() {
         </div>
       )}
 
-      {/* CLASS ANALYTICS TAB (subject means + level distribution) */}
+      {/* CLASS ANALYTICS TAB */}
       {activeTab === 'analytics' && (
         <div className="p-3 sm:p-6 bg-white rounded-lg shadow-md space-y-6 w-full min-w-0">
           <div className={bannerClass} style={{ backgroundColor: 'var(--sa-surface)' }}>
