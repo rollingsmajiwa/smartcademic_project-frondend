@@ -2,10 +2,15 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import * as pdfjsLib from 'pdfjs-dist';
+// Bundled by Vite so the worker version always matches the installed pdfjs-dist.
+// If your pdfjs-dist is 3.x, change the file name to pdf.worker.min.js
+// (check node_modules/pdfjs-dist/build/ for the exact name).
+import pdfWorkerSrc from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import { usePagination, Pagination } from './Pagination';
 
 const API_ORIGIN = import.meta.env.VITE_API_URL || 'https://smartcademic-project.onrender.com';
 const EMAIL_REGEX = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g;
+const BULK_BATCH_SIZE = 10;
 
 // ---------- Shared class strings ----------
 const thClass =
@@ -25,9 +30,9 @@ const deleteBtnClass =
 async function extractEmailsFromPdf(file) {
   const arrayBuffer = await file.arrayBuffer();
 
-  if (pdfjsLib?.GlobalWorkerOptions && !pdfjsLib.GlobalWorkerOptions.workerSrc) {
-    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
-  }
+  // Always set the worker here. Another dashboard file may have set a different
+  // (mismatched) worker version earlier, which breaks PDF parsing.
+  pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerSrc;
 
   const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
   const pdfDoc = await loadingTask.promise;
@@ -173,9 +178,11 @@ export default function AdminDashboard() {
   const [pdfParsing, setPdfParsing] = useState(false);
   const [inviteRole, setInviteRole] = useState('teacher');
   const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteProgress, setInviteProgress] = useState('');
   const [inviteMessage, setInviteMessage] = useState('');
   const [inviteError, setInviteError] = useState('');
   const [inviteLink, setInviteLink] = useState('');
+  const [singleEmailError, setSingleEmailError] = useState('');
   const [bulkResult, setBulkResult] = useState(null);
 
   const [formData, setFormData] = useState({
@@ -292,10 +299,32 @@ export default function AdminDashboard() {
     } catch (pdfErr) {
       console.error('PDF parsing failed:', pdfErr);
       setInviteError(
-        'Could not read the PDF file. Ensure pdfjs-dist is installed and the PDF is not password-protected.'
+        `Could not read the PDF file (${pdfErr?.message || 'unknown error'}). Make sure it is not password-protected, or paste the emails below instead.`
       );
     } finally {
       setPdfParsing(false);
+    }
+  };
+
+  const copyAllLinks = async () => {
+    const text = (bulkResult?.invites || [])
+      .map((i) => `${i.email}\t${i.invite_link}`)
+      .join('\n');
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      alert('All activation links copied!');
+    } catch {
+      window.prompt('Copy these links:', text);
+    }
+  };
+
+  const copySingleLink = async (link) => {
+    try {
+      await navigator.clipboard.writeText(link);
+      alert('Link copied!');
+    } catch {
+      window.prompt('Copy this link:', link);
     }
   };
 
@@ -384,7 +413,9 @@ export default function AdminDashboard() {
     setInviteError('');
     setInviteMessage('');
     setInviteLink('');
+    setSingleEmailError('');
     setBulkResult(null);
+    setInviteProgress('');
     setInviteLoading(true);
 
     try {
@@ -395,14 +426,49 @@ export default function AdminDashboard() {
           return;
         }
 
-        const response = await axios.post(
-          `${API_ORIGIN}/api/accounts/admin/invite/bulk/`,
-          { emails: parsedBulkEmails, role: inviteRole },
-          getAuthConfig()
-        );
+        // Send in small batches so one slow request cannot time out on Render,
+        // and so a failed batch never hides the results of the others.
+        const total = {
+          created_count: 0,
+          emails_sent: 0,
+          skipped: [],
+          invites: [],
+          failed_email_deliveries: [],
+          email_error: '',
+        };
 
-        setInviteMessage(response.data.message || 'Bulk invitations processed.');
-        setBulkResult(response.data);
+        for (let i = 0; i < parsedBulkEmails.length; i += BULK_BATCH_SIZE) {
+          const chunk = parsedBulkEmails.slice(i, i + BULK_BATCH_SIZE);
+          setInviteProgress(
+            `Processing ${Math.min(i + BULK_BATCH_SIZE, parsedBulkEmails.length)} of ${parsedBulkEmails.length}...`
+          );
+          try {
+            const { data } = await axios.post(
+              `${API_ORIGIN}/api/accounts/admin/invite/bulk/`,
+              { emails: chunk, role: inviteRole },
+              { ...getAuthConfig(), timeout: 60000 }
+            );
+            total.created_count += data.created_count || 0;
+            total.emails_sent += data.emails_sent || 0;
+            total.skipped.push(...(data.skipped || []));
+            total.invites.push(...(data.invites || []));
+            total.failed_email_deliveries.push(...(data.failed_email_deliveries || []));
+            if (data.email_error) total.email_error = data.email_error;
+          } catch (err) {
+            const reason =
+              err.response?.data?.error ||
+              (err.response ? `HTTP ${err.response.status}` : err.message);
+            chunk.forEach((email) => total.skipped.push({ email, reason }));
+          }
+        }
+
+        const failedCount = total.failed_email_deliveries.length;
+        setInviteMessage(
+          failedCount > 0
+            ? `Processed ${parsedBulkEmails.length} email(s). ${failedCount} email(s) could not be delivered; use the activation links below for them.`
+            : `Processed ${parsedBulkEmails.length} email(s).`
+        );
+        setBulkResult(total);
         setBulkInviteText('');
         setPdfFileName('');
       } else {
@@ -416,15 +482,22 @@ export default function AdminDashboard() {
         if (response.data.invite_link) {
           setInviteLink(response.data.invite_link);
         }
+        if (response.data.email_error) {
+          setSingleEmailError(response.data.email_error);
+        }
         setInviteEmail('');
       }
 
       fetchAdminData();
     } catch (err) {
       console.error('Invite failed:', err.response?.data || err);
-      setInviteError(err.response?.data?.error || 'Failed to send invitation. Please try again.');
+      setInviteError(
+        err.response?.data?.error ||
+          (err.response ? `Failed to send invitation (HTTP ${err.response.status}).` : `Network error: ${err.message}`)
+      );
     } finally {
       setInviteLoading(false);
+      setInviteProgress('');
     }
   };
 
@@ -568,6 +641,7 @@ export default function AdminDashboard() {
             setInviteError('');
             setInviteMessage('');
             setInviteLink('');
+            setSingleEmailError('');
             setBulkResult(null);
             setPdfFileName('');
             setShowInviteModal(true);
@@ -1085,6 +1159,7 @@ export default function AdminDashboard() {
                   setInviteError('');
                   setInviteMessage('');
                   setInviteLink('');
+                  setSingleEmailError('');
                 }}
                 className={`py-2 rounded-lg text-xs font-extrabold transition-all cursor-pointer ${
                   inviteMode === 'bulk'
@@ -1103,7 +1178,7 @@ export default function AdminDashboard() {
             </p>
 
             {inviteError && (
-              <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-xs font-bold rounded-xl text-center">
+              <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-xs font-bold rounded-xl text-center break-words">
                 {inviteError}
               </div>
             )}
@@ -1112,9 +1187,24 @@ export default function AdminDashboard() {
               <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold rounded-xl space-y-2">
                 <p className="text-center">{inviteMessage}</p>
 
+                {singleEmailError && (
+                  <p className="text-[11px] text-red-600 font-normal break-words text-left">
+                    Email error: {singleEmailError}
+                  </p>
+                )}
+
                 {inviteLink && (
                   <div className="mt-2 p-2 bg-white rounded border border-emerald-300 text-left">
-                    <span className="block text-[10px] text-gray-500 uppercase font-semibold">Activation Link:</span>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="block text-[10px] text-gray-500 uppercase font-semibold">Activation Link:</span>
+                      <button
+                        type="button"
+                        onClick={() => copySingleLink(inviteLink)}
+                        className="px-2.5 py-1 rounded-lg bg-[#10002b] text-white text-[10px] font-bold cursor-pointer"
+                      >
+                        Copy
+                      </button>
+                    </div>
                     <a
                       href={inviteLink}
                       target="_blank"
@@ -1127,17 +1217,57 @@ export default function AdminDashboard() {
                 )}
 
                 {bulkResult && (
-                  <div className="mt-2 p-2.5 bg-white rounded border border-emerald-300 text-left space-y-1.5 font-normal text-[#10002b]">
+                  <div className="mt-2 p-2.5 bg-white rounded border border-emerald-300 text-left space-y-2 font-normal text-[#10002b]">
                     <p className="text-xs font-bold">
                       Created: {bulkResult.created_count} | Emails Sent: {bulkResult.emails_sent}
                     </p>
+
+                    {bulkResult.email_error && (
+                      <p className="text-[11px] text-red-600 break-words">
+                        Email error: {bulkResult.email_error}
+                      </p>
+                    )}
+
                     {Array.isArray(bulkResult.skipped) && bulkResult.skipped.length > 0 && (
                       <div className="text-[11px] text-amber-800 bg-amber-50 p-2 rounded border border-amber-200">
                         <span className="font-bold block mb-1">Skipped ({bulkResult.skipped.length}):</span>
                         <ul className="list-disc pl-4 space-y-0.5">
                           {bulkResult.skipped.map((item, i) => (
-                            <li key={i}>
+                            <li key={i} className="break-words">
                               {item.email}: {item.reason}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {Array.isArray(bulkResult.invites) && bulkResult.invites.length > 0 && (
+                      <div className="text-[11px] bg-gray-50 p-2 rounded border border-emerald-300 space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-bold">
+                            Activation links ({bulkResult.invites.length})
+                          </span>
+                          <button
+                            type="button"
+                            onClick={copyAllLinks}
+                            className="px-2.5 py-1 rounded-lg bg-[#10002b] text-white font-bold cursor-pointer"
+                          >
+                            Copy all
+                          </button>
+                        </div>
+                        <ul className="space-y-1.5 max-h-48 overflow-y-auto">
+                          {bulkResult.invites.map((inv) => (
+                            <li key={inv.email} className="break-all">
+                              <span className="font-bold">{inv.email}</span>
+                              <br />
+                              <a
+                                href={inv.invite_link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 underline font-normal"
+                              >
+                                {inv.invite_link}
+                              </a>
                             </li>
                           ))}
                         </ul>
@@ -1208,6 +1338,10 @@ export default function AdminDashboard() {
                   <option value="admin">Administrator</option>
                 </select>
               </div>
+
+              {inviteLoading && inviteProgress && (
+                <p className="text-[11px] font-semibold text-[#10002b]/70 text-center">{inviteProgress}</p>
+              )}
 
               <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2">
                 <button

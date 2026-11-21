@@ -33,6 +33,22 @@ const describeError = (err, fallback) => {
   return `${fallback} (${err.message})`;
 };
 
+// ---------- Accepted file types & client-side check ----------
+const ACCEPTED_DOC_TYPES = ['.pdf', '.ppt', '.pptx'];
+
+const validateFileType = (file, allowedExts = ['.pdf']) => {
+  if (!file) return { ok: true };
+  const lower = file.name.toLowerCase();
+  const valid = allowedExts.some((ext) => lower.endsWith(ext));
+  if (!valid) {
+    return {
+      ok: false,
+      message: `Unsupported file type "${file.name}". Allowed formats: ${allowedExts.join(', ')}.`,
+    };
+  }
+  return { ok: true };
+};
+
 // ---------- Shared class strings ----------
 const inputClass =
   'w-full p-3.5 text-xs rounded-xl border border-[#c77dff] bg-[#ffffff] text-[#10002b] focus:outline-none focus:border-[#10002b]';
@@ -52,6 +68,8 @@ const gradingPanelClass =
   'flex flex-col gap-3 p-4 rounded-xl border border-[#c77dff] bg-gray-50 shadow-xs w-full md:w-72 md:shrink-0';
 const errorBoxClass =
   'p-3 bg-[#10002b] text-[#c77dff] text-xs font-bold rounded-md border border-[#c77dff] break-words';
+const hintClass = 'text-[11px] font-medium text-[#10002b]/70 mt-1.5';
+const fileErrorClass = 'text-[11px] font-bold text-red-600 mt-1.5 break-words';
 
 function ClassTermSelectors({ classes, selectedClass, setSelectedClass, term, setTerm }) {
   return (
@@ -126,6 +144,11 @@ export default function TeacherDashboard() {
   const [revisionForm, setRevisionForm] = useState({
     title: '', description: '', class_name: '', file: null,
   });
+
+  // ---------- File validation state ----------
+  const [fileError, setFileError] = useState('');
+  // Bumped after a successful post so uncontrolled file inputs reset visually
+  const [fileInputKey, setFileInputKey] = useState(0);
 
   // ---------- Geofence attendance state ----------
   const [teacherId, setTeacherId] = useState('');
@@ -327,9 +350,31 @@ export default function TeacherDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [className, term]);
 
+  // Clear any file error when switching tabs
+  useEffect(() => {
+    setFileError('');
+  }, [activeTab]);
+
+  // ---------- File picker helper ----------
+  const pickFile = (e, allowedExts, onValid) => {
+    const file = e.target.files?.[0] || null;
+    const check = validateFileType(file, allowedExts);
+    if (!check.ok) {
+      setFileError(check.message);
+      e.target.value = ''; // clear the rejected file from the input
+      onValid(null);
+      return;
+    }
+    setFileError('');
+    onValid(file);
+  };
+
   // ---------- Post handlers ----------
   const handlePostAssignment = async (e) => {
     e.preventDefault();
+    const check = validateFileType(assignmentForm.file, ['.pdf']);
+    if (!check.ok) { setFileError(check.message); return; }
+
     const formData = new FormData();
     formData.append('title', assignmentForm.title);
     formData.append('description', assignmentForm.description);
@@ -344,6 +389,8 @@ export default function TeacherDashboard() {
       });
       alert('Assignment posted successfully!');
       setAssignmentForm({ title: '', description: '', class_name: '', deadline: '', teacher: '', file: null });
+      setFileError('');
+      setFileInputKey((k) => k + 1);
     } catch (err) {
       if (handleAuthFailure(err)) return;
       alert(describeError(err, 'Failed to post assignment'));
@@ -352,6 +399,9 @@ export default function TeacherDashboard() {
 
   const handlePostExam = async (e) => {
     e.preventDefault();
+    const check = validateFileType(examForm.file, ['.pdf']);
+    if (!check.ok) { setFileError(check.message); return; }
+
     const formData = new FormData();
     formData.append('title', examForm.title);
     formData.append('term', examForm.term);
@@ -367,6 +417,8 @@ export default function TeacherDashboard() {
       });
       alert('Exam posted successfully!');
       setExamForm({ title: '', term: '', description: '', duration_mins: 60, start_time: '', end_time: '', file: null });
+      setFileError('');
+      setFileInputKey((k) => k + 1);
     } catch (err) {
       if (handleAuthFailure(err)) return;
       alert(describeError(err, 'Failed to post exam'));
@@ -375,6 +427,9 @@ export default function TeacherDashboard() {
 
   const handlePostRevision = async (e) => {
     e.preventDefault();
+    const check = validateFileType(revisionForm.file, ACCEPTED_DOC_TYPES);
+    if (!check.ok) { setFileError(check.message); return; }
+
     const formData = new FormData();
     formData.append('title', revisionForm.title);
     formData.append('description', revisionForm.description || '');
@@ -387,6 +442,8 @@ export default function TeacherDashboard() {
       });
       alert('Revision material uploaded successfully!');
       setRevisionForm({ title: '', description: '', class_name: '', file: null });
+      setFileError('');
+      setFileInputKey((k) => k + 1);
       fetchRevisions();
     } catch (err) {
       if (handleAuthFailure(err)) return;
@@ -581,6 +638,15 @@ export default function TeacherDashboard() {
     return counts;
   };
 
+  // Unmarked submissions, used by the marking reminder
+  const isBlank = (val) => val === null || val === undefined || String(val).trim() === '';
+
+  const unmarkedAssignmentsCount = submissions.filter((sub) => isBlank(sub.grade)).length;
+  const unmarkedExamsCount = examSubmissions.filter(
+    (sub) => isBlank(sub.score) && isBlank(sub.grade)
+  ).length;
+  const totalUnmarkedCount = unmarkedAssignmentsCount + unmarkedExamsCount;
+
   return (
     <div
       className="flex-1 min-w-0 pt-20 px-4 pb-6 sm:px-6 lg:pt-8 lg:px-8 overflow-y-auto min-h-screen font-sans space-y-6"
@@ -599,6 +665,29 @@ export default function TeacherDashboard() {
               </p>
             </div>
           </div>
+
+          {/* Marking reminder banner */}
+          {totalUnmarkedCount > 0 && (
+            <div className="p-4 rounded-2xl border border-[#c77dff] bg-[#c77dff]/15 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <p className="text-xs font-extrabold uppercase tracking-wider text-[#10002b]">
+                  Marking Reminder
+                </p>
+                <p className="text-xs font-semibold text-[#10002b] mt-0.5">
+                  You have {totalUnmarkedCount} unmarked submission{totalUnmarkedCount > 1 ? 's' : ''} (
+                  {unmarkedAssignmentsCount} assignment{unmarkedAssignmentsCount === 1 ? '' : 's'} and{' '}
+                  {unmarkedExamsCount} exam{unmarkedExamsCount === 1 ? '' : 's'}). Marking promptly helps learners get their results sooner.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => navigate('/dashboard/teacher/submissions')}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-[#10002b] text-white hover:bg-[#c77dff] hover:text-[#10002b] transition cursor-pointer shrink-0"
+              >
+                Mark Now
+              </button>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 w-full">
             {[
@@ -793,10 +882,18 @@ export default function TeacherDashboard() {
               <div>
                 <label className="block text-xs font-bold mb-1.5 text-[#10002b]">Attach Material Document</label>
                 <input
+                  key={`rev-file-${fileInputKey}`}
                   type="file"
-                  onChange={(e) => setRevisionForm({ ...revisionForm, file: e.target.files[0] })}
+                  accept=".pdf,.ppt,.pptx"
+                  onChange={(e) =>
+                    pickFile(e, ACCEPTED_DOC_TYPES, (f) => setRevisionForm({ ...revisionForm, file: f }))
+                  }
                   className={fileInputClass}
                 />
+                <p className={hintClass}>
+                  Accepted file types: PDF (.pdf) for assignments and exams; PDF (.pdf) or PPT/PPTX (.ppt, .pptx) for revision materials. Other formats are not accepted.
+                </p>
+                {fileError && <p className={fileErrorClass}>{fileError}</p>}
               </div>
               <button type="submit" className={primaryBtn}>
                 Upload Revision Material
@@ -883,11 +980,16 @@ export default function TeacherDashboard() {
                   Attach Reference File / PDF
                 </label>
                 <input
+                  key={`assign-file-${fileInputKey}`}
                   type="file"
                   accept=".pdf"
-                  onChange={(e) => setAssignmentForm({ ...assignmentForm, file: e.target.files[0] })}
+                  onChange={(e) =>
+                    pickFile(e, ['.pdf'], (f) => setAssignmentForm({ ...assignmentForm, file: f }))
+                  }
                   className={fileInputClass}
                 />
+                <p className={hintClass}>Accepted file type: PDF (.pdf) only.</p>
+                {fileError && <p className={fileErrorClass}>{fileError}</p>}
               </div>
               <button type="submit" className={primaryBtn}>
                 Publish Assignment
@@ -947,11 +1049,14 @@ export default function TeacherDashboard() {
               <div>
                 <label className="block text-xs font-bold mb-1.5 text-[#10002b]">Attach Exam Paper PDF</label>
                 <input
+                  key={`exam-file-${fileInputKey}`}
                   type="file"
                   accept=".pdf"
-                  onChange={(e) => setExamForm({ ...examForm, file: e.target.files[0] })}
+                  onChange={(e) => pickFile(e, ['.pdf'], (f) => setExamForm({ ...examForm, file: f }))}
                   className={fileInputClass}
                 />
+                <p className={hintClass}>Accepted file type: PDF (.pdf) only.</p>
+                {fileError && <p className={fileErrorClass}>{fileError}</p>}
               </div>
               <button type="submit" className={primaryBtn}>
                 Publish Exam
