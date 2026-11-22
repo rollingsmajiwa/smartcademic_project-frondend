@@ -1496,7 +1496,7 @@ export default function TeacherDashboard({
             <div>
               <h2 className="text-lg sm:text-xl font-extrabold text-[#10002b]">AI Student Report Forms</h2>
               <p className="text-xs text-[#10002b]/70">
-                Uses the saved class marks. Use the school default layout (optional logo) or customize it with AI, then export PDFs.
+                Uses saved class marks and class rankings. Starts with the Ngegu Primary &amp; Junior School default layout, with optional logo and optional AI layout editing.
               </p>
             </div>
             <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 w-full md:w-auto">
@@ -1532,27 +1532,45 @@ export default function TeacherDashboard({
           {reportError && <div className={errorBoxClass}>{reportError}</div>}
 
           <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-4 pt-4 border-t border-[#c77dff]/30">
-            {/* Option 1: Primary Default School Template */}
-            <div className="p-3.5 border border-[#d8b4fe] rounded-[10px] bg-[#faf5ff]">
-              <div className="font-bold text-[#10002b] mb-1.5 text-sm">
+            {/* Option 1: Primary Default School Template & Logo */}
+            <div className="p-3.5 border border-[#d8b4fe] rounded-lg bg-[#faf5ff] space-y-2.5">
+              <div className="font-bold text-[#10002b] text-sm">
                 Option 1 (Default): Ngegu Primary &amp; Junior School Report Layout
               </div>
-              <p className="text-[13px] text-gray-600 mb-2.5">
-                Uses the official school header, logo, CBC grading scale, and class ranks automatically.
+              <p className="text-xs text-gray-600">
+                Keeps the official school header, logo, CBC grading scale, and class ranks automatically.
               </p>
-              <label className="block text-[13px] font-semibold mb-1.5 text-[#10002b]">
-                Upload School Logo (PNG/JPG — optional)
-              </label>
-              <input
-                key={`logo-file-${fileInputKey}`}
-                type="file"
-                accept={ACCEPTED_LOGO_EXTS.join(',')}
-                onChange={(e) => pickFile(e, ACCEPTED_LOGO_EXTS, setTemplateFile)}
-                className={fileInputClass}
-              />
-              <p className={hintClass}>Accepted image types: PNG, JPG, JPEG, WEBP.</p>
+
+              {/* Logo Image Insertion Spot: Current / Selected Logo Preview */}
+              <div className="flex items-center gap-3 p-2.5 bg-white border border-[#e9d5ff] rounded-md">
+                <img
+                  src={templateFile ? URL.createObjectURL(templateFile) : '/images/logo.jpg'}
+                  alt="Ngegu Primary & Junior School Logo"
+                  className="w-12 h-12 object-contain rounded border border-gray-200 bg-white shrink-0"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs font-semibold text-[#10002b]">
+                    Upload School Logo (PNG/JPG — optional)
+                  </div>
+                  <input
+                    key={`logo-file-${fileInputKey}`}
+                    type="file"
+                    accept={ACCEPTED_LOGO_EXTS.join(',')}
+                    onChange={(e) => pickFile(e, ACCEPTED_LOGO_EXTS, setTemplateFile)}
+                    className={`${fileInputClass} mt-1`}
+                  />
+                </div>
+              </div>
+
+              <p className={hintClass}>
+                Place your default crest at <code>public/images/logo.jpg</code> or upload an image (PNG, JPG, JPEG, WEBP).
+              </p>
               {fileError && <p className={fileErrorClass}>{fileError}</p>}
-              <div className="mt-2.5 flex gap-2 flex-wrap">
+
+              <div className="pt-1 flex gap-2 flex-wrap">
                 <button
                   type="button"
                   onClick={() => handleSaveTemplate(false)}
