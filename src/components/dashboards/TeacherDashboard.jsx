@@ -49,7 +49,7 @@ const validateFileType = (file, allowedExts = ['.pdf']) => {
   return { ok: true };
 };
 
-const ACCEPTED_TEMPLATE_EXTS = ['.pdf', '.html', '.htm'];
+const ACCEPTED_LOGO_EXTS = ['.png', '.jpg', '.jpeg', '.webp'];
 
 const isBlank = (val) =>
   val === null || val === undefined || String(val).trim() === '';
@@ -200,7 +200,7 @@ export default function TeacherDashboard({
   const [year, setYear] = useState(new Date().getFullYear());
   const [useDefaultTemplate, setUseDefaultTemplate] = useState(true);
   const [templateFile, setTemplateFile] = useState(null);
-  const [aiTemplatePrompt, setAiTemplatePrompt] = useState('');
+  const [aiEditInstruction, setAiEditInstruction] = useState('');
   const [generatedReports, setGeneratedReports] = useState([]);
   const [reportsLoading, setReportsLoading] = useState(false);
   const [reportMessage, setReportMessage] = useState('');
@@ -599,36 +599,44 @@ export default function TeacherDashboard({
   };
 
   // ---------- Report forms ----------
-  const handleApplyTemplate = async () => {
-    const check = validateFileType(templateFile, ACCEPTED_TEMPLATE_EXTS);
+  // withAi = false -> Option 1 (school default layout, optional logo)
+  // withAi = true  -> Option 2 (apply the AI layout instruction)
+  const handleSaveTemplate = async (withAi) => {
+    const check = validateFileType(templateFile, ACCEPTED_LOGO_EXTS);
     if (!check.ok) { setFileError(check.message); return; }
+    if (withAi && !aiEditInstruction.trim()) return;
 
     setReportsLoading(true);
     setReportMessage('');
     setReportError('');
     try {
       const formData = new FormData();
-      formData.append('use_default_template', String(useDefaultTemplate));
-      if (templateFile) formData.append('template_file', templateFile);
-      if (aiTemplatePrompt.trim()) formData.append('ai_edit_instruction', aiTemplatePrompt.trim());
+      // Option 1 selects the school default; Option 2 keeps whichever template is currently saved
+      formData.append('use_default_template', String(withAi ? useDefaultTemplate : true));
+      if (!withAi && templateFile) formData.append('logo_file', templateFile);
+      if (withAi) formData.append('ai_edit_instruction', aiEditInstruction.trim());
 
       const res = await axios.post(`${API}/reports/template/`, formData, {
         headers: { ...authConfig().headers, 'Content-Type': 'multipart/form-data' },
       });
-      const usingDefault = Boolean(res.data?.use_default_template);
-      setUseDefaultTemplate(usingDefault);
-      setAiTemplatePrompt('');
-      setTemplateFile(null);
+      setUseDefaultTemplate(Boolean(res.data?.use_default_template));
+      if (withAi) {
+        setAiEditInstruction('');
+      } else {
+        setTemplateFile(null);
+        setFileInputKey((k) => k + 1);
+      }
       setFileError('');
-      setFileInputKey((k) => k + 1);
       setReportMessage(
-        usingDefault
-          ? 'Using the SmartAcademic default report form template.'
-          : 'Report template saved for report generation.'
+        withAi
+          ? 'AI layout edit applied to the report form.'
+          : templateFile
+          ? 'School default layout selected and logo saved.'
+          : 'School default report layout selected.'
       );
     } catch (err) {
       if (handleAuthFailure(err)) return;
-      setReportError(describeError(err, 'Could not update report template'));
+      setReportError(describeError(err, 'Could not update the report layout'));
     } finally {
       setReportsLoading(false);
     }
@@ -1488,7 +1496,7 @@ export default function TeacherDashboard({
             <div>
               <h2 className="text-lg sm:text-xl font-extrabold text-[#10002b]">AI Student Report Forms</h2>
               <p className="text-xs text-[#10002b]/70">
-                Uses the saved class marks. Upload an optional template or use the default layout, edit it with AI, then export PDFs.
+                Uses the saved class marks. Use the school default layout (optional logo) or customize it with AI, then export PDFs.
               </p>
             </div>
             <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 w-full md:w-auto">
@@ -1523,51 +1531,58 @@ export default function TeacherDashboard({
           )}
           {reportError && <div className={errorBoxClass}>{reportError}</div>}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-[#c77dff]/30">
-            <div className="space-y-2">
-              <label className="block text-xs font-bold text-[#10002b]">Optional Report Form Template</label>
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-4 pt-4 border-t border-[#c77dff]/30">
+            {/* Option 1: Primary Default School Template */}
+            <div className="p-3.5 border border-[#d8b4fe] rounded-[10px] bg-[#faf5ff]">
+              <div className="font-bold text-[#10002b] mb-1.5 text-sm">
+                Option 1 (Default): Ngegu Primary &amp; Junior School Report Layout
+              </div>
+              <p className="text-[13px] text-gray-600 mb-2.5">
+                Uses the official school header, logo, CBC grading scale, and class ranks automatically.
+              </p>
+              <label className="block text-[13px] font-semibold mb-1.5 text-[#10002b]">
+                Upload School Logo (PNG/JPG — optional)
+              </label>
               <input
-                key={`template-file-${fileInputKey}`}
+                key={`logo-file-${fileInputKey}`}
                 type="file"
-                accept={ACCEPTED_TEMPLATE_EXTS.join(',')}
-                onChange={(e) =>
-                  pickFile(e, ACCEPTED_TEMPLATE_EXTS, (f) => {
-                    setTemplateFile(f);
-                    if (f) setUseDefaultTemplate(false);
-                  })
-                }
+                accept={ACCEPTED_LOGO_EXTS.join(',')}
+                onChange={(e) => pickFile(e, ACCEPTED_LOGO_EXTS, setTemplateFile)}
                 className={fileInputClass}
               />
-              <p className={hintClass}>
-                Optional: upload {ACCEPTED_TEMPLATE_EXTS.join(', ')} or leave empty to use the default report form.
-              </p>
+              <p className={hintClass}>Accepted image types: PNG, JPG, JPEG, WEBP.</p>
               {fileError && <p className={fileErrorClass}>{fileError}</p>}
-              <label className="inline-flex items-center gap-2 text-xs font-semibold text-[#10002b] cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={useDefaultTemplate}
-                  onChange={(e) => setUseDefaultTemplate(e.target.checked)}
-                />
-                Use default report form template
-              </label>
+              <div className="mt-2.5 flex gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => handleSaveTemplate(false)}
+                  disabled={reportsLoading}
+                  className="bg-[#10002b] text-white px-3.5 py-2 rounded-lg text-xs font-bold cursor-pointer hover:bg-[#c77dff] hover:text-[#10002b] transition disabled:opacity-50"
+                >
+                  Use School Default / Save Logo
+                </button>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="block text-xs font-bold text-[#10002b]">Edit Report Template with AI</label>
+            {/* Option 2: Optional AI Layout Adjustment */}
+            <div className="p-3.5 border border-gray-200 rounded-[10px] bg-white">
+              <div className="font-bold text-[#10002b] mb-1.5 text-sm">
+                Option 2 (Optional): Customize Layout with AI
+              </div>
               <textarea
-                rows="3"
-                value={aiTemplatePrompt}
-                onChange={(e) => setAiTemplatePrompt(e.target.value)}
-                placeholder="e.g. Add a parent signature line and make the header more formal..."
-                className={inputClass}
+                rows={3}
+                value={aiEditInstruction}
+                onChange={(e) => setAiEditInstruction(e.target.value)}
+                placeholder="Optional: e.g. Add a parent signature line at the bottom"
+                className="w-full p-2 rounded-lg border border-gray-300 text-xs text-[#10002b] focus:outline-none focus:border-[#10002b]"
               />
               <button
                 type="button"
-                onClick={handleApplyTemplate}
-                disabled={reportsLoading}
-                className="px-4 py-2 rounded-xl text-xs font-bold border border-[#10002b] text-[#10002b] hover:bg-[#c77dff]/25 transition cursor-pointer disabled:opacity-50"
+                disabled={!aiEditInstruction.trim() || reportsLoading}
+                onClick={() => handleSaveTemplate(true)}
+                className="mt-2.5 bg-[#6b21a8] text-white px-3.5 py-2 rounded-lg text-xs font-bold cursor-pointer disabled:opacity-50"
               >
-                Save Template / Apply AI Edit
+                Apply AI Edit (Option 2)
               </button>
             </div>
           </div>
