@@ -10,8 +10,8 @@ const HOST = `${API_BASE}`;
 const getStoredToken = () =>
   localStorage.getItem('access_token') || localStorage.getItem('access') || '';
 
-const authConfig = () => {
-  const token = getStoredToken();
+const buildAuthConfig = (tokenOverride) => {
+  const token = tokenOverride || getStoredToken();
   return {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   };
@@ -48,6 +48,11 @@ const validateFileType = (file, allowedExts = ['.pdf']) => {
   }
   return { ok: true };
 };
+
+const ACCEPTED_TEMPLATE_EXTS = ['.pdf', '.html', '.htm'];
+
+const isBlank = (val) =>
+  val === null || val === undefined || String(val).trim() === '';
 
 // ---------- Shared class strings ----------
 const inputClass =
@@ -91,9 +96,17 @@ function ClassTermSelectors({ classes, selectedClass, setSelectedClass, term, se
   );
 }
 
-export default function TeacherDashboard() {
+export default function TeacherDashboard({
+  token: propToken,
+  activeTab: controlledTab,
+  setActiveTab: setControlledTab,
+}) {
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Token: prop first, then whatever is stored in localStorage
+  const getToken = () => propToken || getStoredToken();
+  const authConfig = () => buildAuthConfig(propToken);
 
   const handleAuthFailure = (err) => {
     if (err.response?.status === 401) {
@@ -117,9 +130,37 @@ export default function TeacherDashboard() {
     if (path.includes('/analysis')) return 'analysis';
     if (path.includes('/analytics')) return 'analytics';
     if (path.includes('/attendance') || path.includes('/geo')) return 'attendance';
+    if (path.includes('/reports')) return 'reports';
     return 'overview';
   };
-  const activeTab = getActiveTab();
+
+  // Tab ids used inside this component, mapped to their routes.
+  const TAB_ROUTES = {
+    overview: '/dashboard/teacher/overview',
+    materials: '/dashboard/teacher/revisions',
+    assignments: '/dashboard/teacher/assignments',
+    exams: '/dashboard/teacher/exams',
+    submissions: '/dashboard/teacher/submissions',
+    marks: '/dashboard/teacher/marks',
+    analysis: '/dashboard/teacher/analysis',
+    analytics: '/dashboard/teacher/analytics',
+    attendance: '/dashboard/teacher/attendance',
+    reports: '/dashboard/teacher/reports',
+  };
+  // Alternative names a parent might use for the same tab
+  const TAB_ALIASES = { revisions: 'materials', grading: 'submissions', geo: 'attendance' };
+
+  // If a parent controls the tab, use it; otherwise follow the URL
+  const routeTab = getActiveTab();
+  const activeTab = controlledTab ? TAB_ALIASES[controlledTab] || controlledTab : routeTab;
+
+  // One way to switch tabs: tell the parent (if it controls the tab) and update the URL
+  const goToTab = (tab) => {
+    const id = TAB_ALIASES[tab] || tab;
+    if (setControlledTab) setControlledTab(id === 'materials' ? 'revisions' : id);
+    // Always update the URL too, so the sidebar, refresh and back button stay in sync
+    navigate(TAB_ROUTES[id] || TAB_ROUTES.overview);
+  };
 
   // ---------- General state ----------
   const [teachersList, setTeachersList] = useState([]);
@@ -149,6 +190,21 @@ export default function TeacherDashboard() {
   const [fileError, setFileError] = useState('');
   // Bumped after a successful post so uncontrolled file inputs reset visually
   const [fileInputKey, setFileInputKey] = useState(0);
+
+  // ---------- AI assistive marking state ----------
+  const [markingKey, setMarkingKey] = useState(null);
+  const [manualReviewFlags, setManualReviewFlags] = useState({});
+  const [examFeedback, setExamFeedback] = useState({});
+
+  // ---------- Report forms state ----------
+  const [year, setYear] = useState(new Date().getFullYear());
+  const [useDefaultTemplate, setUseDefaultTemplate] = useState(true);
+  const [templateFile, setTemplateFile] = useState(null);
+  const [aiTemplatePrompt, setAiTemplatePrompt] = useState('');
+  const [generatedReports, setGeneratedReports] = useState([]);
+  const [reportsLoading, setReportsLoading] = useState(false);
+  const [reportMessage, setReportMessage] = useState('');
+  const [reportError, setReportError] = useState('');
 
   // ---------- Geofence attendance state ----------
   const [teacherId, setTeacherId] = useState('');
@@ -212,6 +268,7 @@ export default function TeacherDashboard() {
       const msg = describeError(err, 'Could not load the class list');
       setMarksError(msg);
       setAnalysisError(msg);
+      setReportError(msg);
     }
   };
 
@@ -307,7 +364,7 @@ export default function TeacherDashboard() {
 
   // ---------- Effects ----------
   useEffect(() => {
-    if (!getStoredToken()) {
+    if (!getToken()) {
       navigate('/signin', { replace: true });
       return;
     }
@@ -327,7 +384,7 @@ export default function TeacherDashboard() {
   }, [activeTab, location.pathname]);
 
   useEffect(() => {
-    if (!['marks', 'analysis', 'analytics'].includes(activeTab)) return undefined;
+    if (!['marks', 'analysis', 'analytics', 'reports'].includes(activeTab)) return undefined;
     fetchClasses();
     window.addEventListener('focus', fetchClasses);
     return () => window.removeEventListener('focus', fetchClasses);
@@ -353,6 +410,24 @@ export default function TeacherDashboard() {
   // Clear any file error when switching tabs
   useEffect(() => {
     setFileError('');
+  }, [activeTab]);
+
+  // Load saved report template config when opening the Report Forms tab
+  useEffect(() => {
+    if (activeTab !== 'reports') return;
+    setReportMessage('');
+    setReportError('');
+    const loadTemplateConfig = async () => {
+      try {
+        const res = await axios.get(`${API}/reports/template/`, authConfig());
+        setUseDefaultTemplate(Boolean(res.data?.use_default_template));
+      } catch (err) {
+        if (handleAuthFailure(err)) return;
+        // Non-fatal: keep the default template selected
+      }
+    };
+    loadTemplateConfig();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
   // ---------- File picker helper ----------
@@ -485,7 +560,7 @@ export default function TeacherDashboard() {
     try {
       await axios.patch(
         `${API}/exam-submissions/${submissionId}/grade/`,
-        { score: gradeVal, grade: gradeVal },
+        { score: gradeVal, grade: gradeVal, grade_description: examFeedback[submissionId] || '' },
         authConfig()
       );
       alert('Exam score saved successfully!');
@@ -494,6 +569,115 @@ export default function TeacherDashboard() {
       if (handleAuthFailure(err)) return;
       alert(describeError(err, 'Failed to save exam score'));
     }
+  };
+
+  // ---------- AI assistive marking ----------
+  const handleAIDraftMark = async (submissionId, kind) => {
+    const key = `${kind}-${submissionId}`;
+    setMarkingKey(key);
+    try {
+      const res = await axios.post(
+        `${API}/submissions/ai-mark/`,
+        { submission_id: submissionId, submission_type: kind, max_score: 100 },
+        authConfig()
+      );
+      const data = res.data || {};
+      if (kind === 'exam') {
+        setExamGrades((prev) => ({ ...prev, [submissionId]: data.suggested_score ?? '' }));
+        setExamFeedback((prev) => ({ ...prev, [submissionId]: data.feedback ?? '' }));
+      } else {
+        setGrades((prev) => ({ ...prev, [submissionId]: data.suggested_score ?? '' }));
+        setGradeDescriptions((prev) => ({ ...prev, [submissionId]: data.feedback ?? '' }));
+      }
+      setManualReviewFlags((prev) => ({ ...prev, [key]: Boolean(data.needs_manual_review) }));
+    } catch (err) {
+      if (handleAuthFailure(err)) return;
+      alert(describeError(err, 'Could not generate AI draft mark'));
+    } finally {
+      setMarkingKey(null);
+    }
+  };
+
+  // ---------- Report forms ----------
+  const handleApplyTemplate = async () => {
+    const check = validateFileType(templateFile, ACCEPTED_TEMPLATE_EXTS);
+    if (!check.ok) { setFileError(check.message); return; }
+
+    setReportsLoading(true);
+    setReportMessage('');
+    setReportError('');
+    try {
+      const formData = new FormData();
+      formData.append('use_default_template', String(useDefaultTemplate));
+      if (templateFile) formData.append('template_file', templateFile);
+      if (aiTemplatePrompt.trim()) formData.append('ai_edit_instruction', aiTemplatePrompt.trim());
+
+      const res = await axios.post(`${API}/reports/template/`, formData, {
+        headers: { ...authConfig().headers, 'Content-Type': 'multipart/form-data' },
+      });
+      const usingDefault = Boolean(res.data?.use_default_template);
+      setUseDefaultTemplate(usingDefault);
+      setAiTemplatePrompt('');
+      setTemplateFile(null);
+      setFileError('');
+      setFileInputKey((k) => k + 1);
+      setReportMessage(
+        usingDefault
+          ? 'Using the SmartAcademic default report form template.'
+          : 'Report template saved for report generation.'
+      );
+    } catch (err) {
+      if (handleAuthFailure(err)) return;
+      setReportError(describeError(err, 'Could not update report template'));
+    } finally {
+      setReportsLoading(false);
+    }
+  };
+
+  const handleGenerateReports = async () => {
+    if (!className) {
+      setReportError('Select a class first.');
+      return;
+    }
+    setReportsLoading(true);
+    setReportMessage('');
+    setReportError('');
+    try {
+      const res = await axios.post(
+        `${API}/reports/generate/`,
+        { class_name: className, term, year: Number(year) },
+        authConfig()
+      );
+      const list = Array.isArray(res.data?.reports) ? res.data.reports : [];
+      setGeneratedReports(list);
+      setReportMessage(`Generated ${list.length} student report form(s) for ${className} (${term}).`);
+    } catch (err) {
+      if (handleAuthFailure(err)) return;
+      setReportError(describeError(err, 'Could not generate report forms'));
+    } finally {
+      setReportsLoading(false);
+    }
+  };
+
+  const handleExportReportPDFs = () => {
+    if (!generatedReports.length) return;
+    const win = window.open('', '_blank', 'width=920,height=720');
+    if (!win) {
+      setReportError('Allow pop-ups in your browser to export report PDFs.');
+      return;
+    }
+    const body = generatedReports
+      .map(
+        (r, idx) =>
+          `<div style="${idx > 0 ? 'page-break-before: always;' : ''} margin-bottom: 20px;">${r.rendered_html}</div>`
+      )
+      .join('');
+    win.document.write(
+      `<html><head><title>${className} - ${term} Report Forms</title></head><body>${body}</body></html>`
+    );
+    win.document.close();
+    win.focus();
+    win.print();
   };
 
   // ---------- Geofence ----------
@@ -638,8 +822,29 @@ export default function TeacherDashboard() {
     return counts;
   };
 
+  const renderAIDraftRow = (kind, sub) => {
+    const key = `${kind}-${sub.id}`;
+    const needsManual = Boolean(manualReviewFlags[key] || sub.ai_needs_manual_review);
+    return (
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          disabled={markingKey === key}
+          onClick={() => handleAIDraftMark(sub.id, kind)}
+          className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#c77dff]/25 text-[#10002b] hover:bg-[#c77dff] transition cursor-pointer disabled:opacity-50"
+        >
+          {markingKey === key ? 'Drafting...' : 'AI Draft Mark'}
+        </button>
+        {needsManual && (
+          <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-[#c77dff]/25 text-[#10002b]">
+            Manual Review Suggested
+          </span>
+        )}
+      </div>
+    );
+  };
+
   // Unmarked submissions, used by the marking reminder
-  const isBlank = (val) => val === null || val === undefined || String(val).trim() === '';
 
   const unmarkedAssignmentsCount = submissions.filter((sub) => isBlank(sub.grade)).length;
   const unmarkedExamsCount = examSubmissions.filter(
@@ -681,7 +886,7 @@ export default function TeacherDashboard() {
               </div>
               <button
                 type="button"
-                onClick={() => navigate('/dashboard/teacher/submissions')}
+                onClick={() => goToTab('submissions')}
                 className="px-4 py-2 rounded-xl text-xs font-bold bg-[#10002b] text-white hover:bg-[#c77dff] hover:text-[#10002b] transition cursor-pointer shrink-0"
               >
                 Mark Now
@@ -695,25 +900,25 @@ export default function TeacherDashboard() {
                 label: 'Assignments Posted',
                 value: overview?.total_assignments_posted || 0,
                 actionLabel: 'Add Assignment',
-                to: '/dashboard/teacher/assignments',
+                to: 'assignments',
               },
               {
                 label: 'Exams Created',
                 value: overview?.total_exams_created || 0,
                 actionLabel: 'Add Exam',
-                to: '/dashboard/teacher/exams',
+                to: 'exams',
               },
               {
                 label: 'Submissions Received',
                 value: overview?.total_submissions_received || 0,
                 actionLabel: 'View Submissions',
-                to: '/dashboard/teacher/submissions',
+                to: 'submissions',
               },
               {
                 label: 'Revision Materials',
                 value: revisionsList.length,
                 actionLabel: 'Add Materials',
-                to: '/dashboard/teacher/revisions',
+                to: 'revisions',
               },
             ].map((card) => (
               <div
@@ -730,7 +935,7 @@ export default function TeacherDashboard() {
 
                 <button
                   type="button"
-                  onClick={() => navigate(card.to)}
+                  onClick={() => goToTab(card.to)}
                   className="w-full py-2.5 px-3 rounded-md bg-[#c77dff]/20 border border-[#c77dff] text-[#10002b] hover:bg-[#10002b] hover:text-white transition-all text-xs font-extrabold cursor-pointer shadow-xs"
                 >
                   {card.actionLabel}
@@ -747,31 +952,38 @@ export default function TeacherDashboard() {
             <div className="grid grid-cols-1 sm:flex sm:flex-wrap gap-3 w-full">
               <button
                 type="button"
-                onClick={() => navigate('/dashboard/teacher/assignments')}
+                onClick={() => goToTab('assignments')}
                 className="sa-btn-primary py-2.5 px-4 rounded-xl text-xs font-bold bg-[#10002b] text-white hover:bg-[#c77dff] hover:text-[#10002b] transition-all cursor-pointer shadow-xs"
               >
                 Post Assignment
               </button>
               <button
                 type="button"
-                onClick={() => navigate('/dashboard/teacher/exams')}
+                onClick={() => goToTab('exams')}
                 className="sa-btn-primary py-2.5 px-4 rounded-xl text-xs font-bold bg-[#10002b] text-white hover:bg-[#c77dff] hover:text-[#10002b] transition-all cursor-pointer shadow-xs"
               >
                 Create Exam
               </button>
               <button
                 type="button"
-                onClick={() => navigate('/dashboard/teacher/revisions')}
+                onClick={() => goToTab('revisions')}
                 className="sa-btn-secondary py-2.5 px-4 rounded-xl text-xs font-bold bg-white text-[#10002b] border border-[#c77dff] hover:bg-[#c77dff] hover:text-[#10002b] transition-all cursor-pointer shadow-xs"
               >
                 Upload Revision Material
               </button>
               <button
                 type="button"
-                onClick={() => navigate('/dashboard/teacher/submissions')}
+                onClick={() => goToTab('submissions')}
                 className="sa-btn-secondary py-2.5 px-4 rounded-xl text-xs font-bold bg-white text-[#10002b] border border-[#c77dff] hover:bg-[#c77dff] hover:text-[#10002b] transition-all cursor-pointer shadow-xs"
               >
                 Grade Submissions
+              </button>
+              <button
+                type="button"
+                onClick={() => goToTab('reports')}
+                className="sa-btn-secondary py-2.5 px-4 rounded-xl text-xs font-bold bg-white text-[#10002b] border border-[#c77dff] hover:bg-[#c77dff] hover:text-[#10002b] transition-all cursor-pointer shadow-xs"
+              >
+                Generate Report Forms
               </button>
             </div>
           </div>
@@ -843,7 +1055,7 @@ export default function TeacherDashboard() {
             <div>
               <h2 className="text-base sm:text-lg font-bold text-[#10002b]">Upload Revision Material</h2>
               <p className="text-xs text-[#10002b]/70 mt-1">
-                Upload study guides and revision documents for your students.
+                Upload study guides and revision documents for your students. Mwalimu AI reads these notes to guide learners during revision.
               </p>
             </div>
 
@@ -1138,6 +1350,7 @@ export default function TeacherDashboard() {
                         </div>
 
                         <div className={gradingPanelClass}>
+                          {renderAIDraftRow('assignment', sub)}
                           <div>
                             <label className="block text-[10px] font-bold mb-1 text-[#10002b]">
                               Award Marks / Grade
@@ -1222,6 +1435,7 @@ export default function TeacherDashboard() {
                         </div>
 
                         <div className={gradingPanelClass}>
+                          {renderAIDraftRow('exam', sub)}
                           <label className="block text-[10px] font-bold text-[#10002b]">Exam Score</label>
                           <input
                             type="text"
@@ -1232,6 +1446,20 @@ export default function TeacherDashboard() {
                                 : sub.score ?? sub.grade ?? ''
                             }
                             onChange={(e) => setExamGrades({ ...examGrades, [sub.id]: e.target.value })}
+                            className="w-full p-2 text-xs border border-[#c77dff] rounded-lg bg-white text-[#10002b] focus:outline-none"
+                          />
+                          <label className="block text-[10px] font-bold text-[#10002b]">
+                            Feedback / Remarks
+                          </label>
+                          <textarea
+                            rows="3"
+                            placeholder="Review AI draft feedback or write your own..."
+                            value={
+                              examFeedback[sub.id] !== undefined
+                                ? examFeedback[sub.id]
+                                : sub.grade_description || ''
+                            }
+                            onChange={(e) => setExamFeedback({ ...examFeedback, [sub.id]: e.target.value })}
                             className="w-full p-2 text-xs border border-[#c77dff] rounded-lg bg-white text-[#10002b] focus:outline-none"
                           />
                           <button
@@ -1247,6 +1475,135 @@ export default function TeacherDashboard() {
                   ))
                 )}
                 <Pagination pager={examSubsPager} pageSizeOptions={[5, 10, 25]} />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* REPORT FORMS TAB */}
+      {activeTab === 'reports' && (
+        <div className="p-3 sm:p-6 bg-white rounded-lg shadow-md space-y-6 w-full min-w-0">
+          <div className={bannerClass} style={{ backgroundColor: 'var(--sa-surface)' }}>
+            <div>
+              <h2 className="text-lg sm:text-xl font-extrabold text-[#10002b]">AI Student Report Forms</h2>
+              <p className="text-xs text-[#10002b]/70">
+                Uses the saved class marks. Upload an optional template or use the default layout, edit it with AI, then export PDFs.
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 w-full md:w-auto">
+              <ClassTermSelectors
+                classes={classes}
+                selectedClass={className}
+                setSelectedClass={setClassName}
+                term={term}
+                setTerm={setTerm}
+              />
+              <input
+                type="number"
+                value={year}
+                onChange={(e) => setYear(e.target.value)}
+                className="w-full sm:w-24 px-3 py-2 sm:py-1.5 border border-[#10002b] rounded-md text-xs font-semibold text-[#10002b] bg-white focus:outline-none focus:ring-2 focus:ring-[#c77dff]"
+              />
+              <button
+                type="button"
+                onClick={handleGenerateReports}
+                disabled={reportsLoading}
+                className={`${smallBtn} disabled:opacity-50`}
+              >
+                {reportsLoading ? 'Working...' : 'Generate Report Forms'}
+              </button>
+            </div>
+          </div>
+
+          {reportMessage && (
+            <div className="p-3 bg-[#c77dff]/20 text-[#10002b] text-xs font-bold rounded-md border border-[#c77dff] break-words">
+              {reportMessage}
+            </div>
+          )}
+          {reportError && <div className={errorBoxClass}>{reportError}</div>}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-[#c77dff]/30">
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-[#10002b]">Optional Report Form Template</label>
+              <input
+                key={`template-file-${fileInputKey}`}
+                type="file"
+                accept={ACCEPTED_TEMPLATE_EXTS.join(',')}
+                onChange={(e) =>
+                  pickFile(e, ACCEPTED_TEMPLATE_EXTS, (f) => {
+                    setTemplateFile(f);
+                    if (f) setUseDefaultTemplate(false);
+                  })
+                }
+                className={fileInputClass}
+              />
+              <p className={hintClass}>
+                Optional: upload {ACCEPTED_TEMPLATE_EXTS.join(', ')} or leave empty to use the default report form.
+              </p>
+              {fileError && <p className={fileErrorClass}>{fileError}</p>}
+              <label className="inline-flex items-center gap-2 text-xs font-semibold text-[#10002b] cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={useDefaultTemplate}
+                  onChange={(e) => setUseDefaultTemplate(e.target.checked)}
+                />
+                Use default report form template
+              </label>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-[#10002b]">Edit Report Template with AI</label>
+              <textarea
+                rows="3"
+                value={aiTemplatePrompt}
+                onChange={(e) => setAiTemplatePrompt(e.target.value)}
+                placeholder="e.g. Add a parent signature line and make the header more formal..."
+                className={inputClass}
+              />
+              <button
+                type="button"
+                onClick={handleApplyTemplate}
+                disabled={reportsLoading}
+                className="px-4 py-2 rounded-xl text-xs font-bold border border-[#10002b] text-[#10002b] hover:bg-[#c77dff]/25 transition cursor-pointer disabled:opacity-50"
+              >
+                Save Template / Apply AI Edit
+              </button>
+            </div>
+          </div>
+
+          {generatedReports.length > 0 && (
+            <div className="space-y-3 pt-4 border-t border-[#c77dff]/30">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="text-xs font-extrabold text-[#10002b]">
+                  Generated Student Reports ({generatedReports.length})
+                </p>
+                <button
+                  type="button"
+                  onClick={handleExportReportPDFs}
+                  className="px-4 py-2 rounded-xl text-xs font-bold bg-[#c77dff] text-[#10002b] hover:bg-[#10002b] hover:text-white transition cursor-pointer"
+                >
+                  Export PDFs
+                </button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
+                {generatedReports.map((r, idx) => (
+                  <div
+                    key={r.student_id || idx}
+                    className="rounded-xl border border-[#c77dff]/50 p-3 bg-gray-50 space-y-1.5"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-extrabold text-[#10002b]">{r.name}</span>
+                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#c77dff]/25 text-[#10002b]">
+                        Mean: {r.mean_score}%
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#10002b]">{r.class_teacher_comment}</p>
+                    <p className="text-[11px] text-[#10002b]/70">
+                      <strong>Improvement:</strong> {r.areas_for_improvement}
+                    </p>
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -1291,7 +1648,7 @@ export default function TeacherDashboard() {
               <span>{marksMessage}</span>
               <button
                 type="button"
-                onClick={() => navigate('/dashboard/teacher/analysis')}
+                onClick={() => goToTab('analysis')}
                 className="px-3 py-1.5 bg-[#10002b] text-white rounded-md text-xs font-bold hover:bg-[#c77dff] hover:text-[#10002b] transition cursor-pointer"
               >
                 View analysis
@@ -1392,7 +1749,7 @@ export default function TeacherDashboard() {
               </p>
               <button
                 type="button"
-                onClick={() => navigate('/dashboard/teacher/marks')}
+                onClick={() => goToTab('marks')}
                 className="px-4 py-2 bg-[#10002b] text-white rounded-md text-xs font-bold hover:bg-[#c77dff] hover:text-[#10002b] transition cursor-pointer"
               >
                 Enter marks

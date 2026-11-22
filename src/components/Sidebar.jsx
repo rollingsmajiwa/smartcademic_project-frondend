@@ -16,6 +16,7 @@ import {
   BookOpenCheck,
   BarChart3,
   FileCheck,
+  Award,
   Menu,
   X,
 } from 'lucide-react';
@@ -36,6 +37,7 @@ export default function Sidebar({ userRole, baseRole, activeTab, setActiveTab, o
       { id: 'marks', label: 'Class Marks Grid', icon: ClipboardList },
       { id: 'analysis', label: 'Class Analysis Report', icon: BarChart3 },
       { id: 'analytics', label: 'Class Analytics', icon: BarChart3 },
+      { id: 'reports', label: 'Report Forms', icon: Award },
       { id: 'attendance', label: 'Geo Attendance', icon: MapPin },
     ],
     student: [
@@ -105,8 +107,11 @@ export default function Sidebar({ userRole, baseRole, activeTab, setActiveTab, o
   }, []);
 
   const handleSignOut = () => {
+    // Clear every key the dashboards may read the session from
     localStorage.removeItem('access_token');
+    localStorage.removeItem('access');
     localStorage.removeItem('refresh_token');
+    localStorage.removeItem('refresh');
     navigate('/signin');
   };
 
