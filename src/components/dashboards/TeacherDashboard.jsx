@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { usePagination, Pagination } from './Pagination';
@@ -24,17 +24,28 @@ const clearStoredTokens = () => {
   localStorage.removeItem('refresh');
 };
 
+// Turns an axios error into one readable line, including the backend's own message
 const describeError = (err, fallback) => {
   const status = err.response?.status;
   const data = err.response?.data;
-  const detail =
-    (data && typeof data === 'object' && (data.detail || data.error || data.message)) || '';
-  if (status) return `${fallback} (HTTP ${status}${detail ? `: ${detail}` : ''})`;
+  let detail = '';
+  if (data && typeof data === 'object') {
+    detail = data.detail || data.error || data.message || '';
+    if (!detail) {
+      const first = Object.entries(data)[0];
+      if (first) {
+        const [field, value] = first;
+        detail = `${field}: ${Array.isArray(value) ? value.join(' ') : String(value)}`;
+      }
+    }
+  }
+  if (status) return `${fallback} (HTTP ${status}${detail ? `: ${String(detail).slice(0, 300)}` : ''})`;
   return `${fallback} (${err.message})`;
 };
 
 // ---------- Accepted file types & client-side check ----------
 const ACCEPTED_DOC_TYPES = ['.pdf', '.ppt', '.pptx'];
+const ACCEPTED_LOGO_EXTS = ['.png', '.jpg', '.jpeg', '.webp'];
 
 const validateFileType = (file, allowedExts = ['.pdf']) => {
   if (!file) return { ok: true };
@@ -49,10 +60,11 @@ const validateFileType = (file, allowedExts = ['.pdf']) => {
   return { ok: true };
 };
 
-const ACCEPTED_LOGO_EXTS = ['.png', '.jpg', '.jpeg', '.webp'];
-
 const isBlank = (val) =>
   val === null || val === undefined || String(val).trim() === '';
+
+const escapeHtml = (text) =>
+  String(text).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 // ---------- Shared class strings ----------
 const inputClass =
@@ -73,10 +85,18 @@ const gradingPanelClass =
   'flex flex-col gap-3 p-4 rounded-xl border border-[#c77dff] bg-gray-50 shadow-xs w-full md:w-72 md:shrink-0';
 const errorBoxClass =
   'p-3 bg-[#10002b] text-[#c77dff] text-xs font-bold rounded-md border border-[#c77dff] break-words';
+const noticeBoxClass =
+  'p-3 bg-[#c77dff]/20 text-[#10002b] text-xs font-bold rounded-md border border-[#c77dff] break-words';
 const hintClass = 'text-[11px] font-medium text-[#10002b]/70 mt-1.5';
 const fileErrorClass = 'text-[11px] font-bold text-red-600 mt-1.5 break-words';
 
-function ClassTermSelectors({ classes, selectedClass, setSelectedClass, term, setTerm }) {
+// Keep in sync with EXAM_TYPES in views.py
+const EXAM_TYPES = ['Opener', 'Mid Term', 'End Term'];
+
+const LEVEL_KEY_TEXT =
+  'EE1 90-99, EE2 75-89, ME1 58-74, ME2 41-57, AE1 31-40, AE2 21-30, BE1 11-20, BE2 1-10.';
+
+function ClassTermSelectors({ classes, selectedClass, setSelectedClass, term, setTerm, exam, setExam }) {
   return (
     <>
       <select value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)} className={selectClass}>
@@ -92,6 +112,15 @@ function ClassTermSelectors({ classes, selectedClass, setSelectedClass, term, se
         <option value="Term 2">Term 2</option>
         <option value="Term 3">Term 3</option>
       </select>
+      {setExam && (
+        <select value={exam} onChange={(e) => setExam(e.target.value)} className={selectClass}>
+          {EXAM_TYPES.map((x) => (
+            <option key={x} value={x}>
+              {x} exam
+            </option>
+          ))}
+        </select>
+      )}
     </>
   );
 }
@@ -175,6 +204,7 @@ export default function TeacherDashboard({
   const [gradeDescriptions, setGradeDescriptions] = useState({});
   const [examGrades, setExamGrades] = useState({});
   const [pdfBlobs, setPdfBlobs] = useState({});
+  const pdfBlobUrlsRef = useRef([]);
 
   const [assignmentForm, setAssignmentForm] = useState({
     title: '', description: '', class_name: '', deadline: '', teacher: '', file: null,
@@ -195,15 +225,28 @@ export default function TeacherDashboard({
   const [markingKey, setMarkingKey] = useState(null);
   const [manualReviewFlags, setManualReviewFlags] = useState({});
   const [examFeedback, setExamFeedback] = useState({});
+  const [aiMarkErrors, setAiMarkErrors] = useState({});
 
   // ---------- Report forms state ----------
   const [year, setYear] = useState(new Date().getFullYear());
   const [useDefaultTemplate, setUseDefaultTemplate] = useState(true);
   const [templateFile, setTemplateFile] = useState(null);
+  const [logoPreviewUrl, setLogoPreviewUrl] = useState('');
   const [aiEditInstruction, setAiEditInstruction] = useState('');
+  const [templatePreviewHtml, setTemplatePreviewHtml] = useState('');
+  const [showTemplatePreview, setShowTemplatePreview] = useState(true);
+  const [useAiRemarks, setUseAiRemarks] = useState(true);
+  // The teacher chooses: one exam, or two exams to compare
+  const [reportMode, setReportMode] = useState('single');
+  const [reportExam, setReportExam] = useState('End Term');
+  const [compareFrom, setCompareFrom] = useState('Opener');
+  const [compareTo, setCompareTo] = useState('End Term');
+  const [templatePreviewCompareHtml, setTemplatePreviewCompareHtml] = useState('');
   const [generatedReports, setGeneratedReports] = useState([]);
+  const [previewIdx, setPreviewIdx] = useState(null);
   const [reportsLoading, setReportsLoading] = useState(false);
   const [reportMessage, setReportMessage] = useState('');
+  const [reportWarnings, setReportWarnings] = useState([]);
   const [reportError, setReportError] = useState('');
 
   // ---------- Geofence attendance state ----------
@@ -215,6 +258,7 @@ export default function TeacherDashboard({
   const [classes, setClasses] = useState([]);
   const [className, setClassName] = useState('');
   const [term, setTerm] = useState('Term 1');
+  const [examType, setExamType] = useState('End Term');
   const [subjects, setSubjects] = useState([]);
   const [studentsTable, setStudentsTable] = useState([]);
   const [marksLoading, setMarksLoading] = useState(false);
@@ -283,8 +327,10 @@ export default function TeacherDashboard({
     }
   };
 
+  // Loads submitted PDFs as blob URLs (so the auth header is sent). Old URLs are released.
   const loadPdfBlobs = async (subList) => {
     const blobMap = {};
+    const created = [];
     for (const sub of subList) {
       if (sub.file) {
         try {
@@ -292,15 +338,17 @@ export default function TeacherDashboard({
           const response = await axios.get(fileUrl, { ...authConfig(), responseType: 'blob' });
           const blob = new Blob([response.data], { type: 'application/pdf' });
           const objectUrl = URL.createObjectURL(blob);
+          created.push(objectUrl);
           blobMap[fileUrl] = objectUrl;
-          blobMap[sub.id] = objectUrl;
         } catch (err) {
           if (handleAuthFailure(err)) return;
           console.error(`Failed to load file for submission ${sub.id}:`, err);
         }
       }
     }
-    setPdfBlobs((prev) => ({ ...prev, ...blobMap }));
+    pdfBlobUrlsRef.current.forEach((u) => URL.revokeObjectURL(u));
+    pdfBlobUrlsRef.current = created;
+    setPdfBlobs(blobMap);
   };
 
   const fetchAllSubmissions = async () => {
@@ -315,7 +363,7 @@ export default function TeacherDashboard({
       const examList = Array.isArray(examRes.data) ? examRes.data : [];
       setSubmissions(assignList);
       setExamSubmissions(examList);
-      await loadPdfBlobs(assignList);
+      await loadPdfBlobs([...assignList, ...examList]);
     } catch (err) {
       if (handleAuthFailure(err)) return;
       setDashError(describeError(err, 'Failed to load submissions'));
@@ -330,7 +378,7 @@ export default function TeacherDashboard({
     try {
       const res = await axios.get(
         `${API}/grades/${encodeURIComponent(className)}/${encodeURIComponent(term)}/marks-table/`,
-        authConfig()
+        { ...authConfig(), params: { exam: examType } }
       );
       setSubjects(res.data.subjects || []);
       setStudentsTable(res.data.students_table || []);
@@ -350,7 +398,7 @@ export default function TeacherDashboard({
     try {
       const res = await axios.get(
         `${API}/grades/analysis/${encodeURIComponent(className)}/${encodeURIComponent(term)}/`,
-        authConfig()
+        { ...authConfig(), params: { exam: examType } }
       );
       setAnalysisData(res.data);
     } catch (err) {
@@ -394,33 +442,55 @@ export default function TeacherDashboard({
   useEffect(() => {
     if (activeTab === 'marks' && className) fetchClassGradesTable();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, className, term]);
+  }, [activeTab, className, term, examType]);
 
   useEffect(() => {
     if ((activeTab === 'analysis' || activeTab === 'analytics') && className) fetchClassAnalysis();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, className, term]);
+  }, [activeTab, className, term, examType]);
 
   useEffect(() => {
     marksPager.setPage(1);
     analysisPager.setPage(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [className, term]);
+  }, [className, term, examType]);
 
   // Clear any file error when switching tabs
   useEffect(() => {
     setFileError('');
   }, [activeTab]);
 
-  // Load saved report template config when opening the Report Forms tab
+  // Release blob URLs when the dashboard closes
+  useEffect(
+    () => () => {
+      pdfBlobUrlsRef.current.forEach((u) => URL.revokeObjectURL(u));
+    },
+    []
+  );
+
+  // Preview of a newly selected logo file
+  useEffect(() => {
+    if (!templateFile) {
+      setLogoPreviewUrl('');
+      return undefined;
+    }
+    const url = URL.createObjectURL(templateFile);
+    setLogoPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [templateFile]);
+
+  // Load saved report template config (and a live preview) when opening the Report Forms tab
   useEffect(() => {
     if (activeTab !== 'reports') return;
     setReportMessage('');
     setReportError('');
+    setReportWarnings([]);
     const loadTemplateConfig = async () => {
       try {
         const res = await axios.get(`${API}/reports/template/`, authConfig());
         setUseDefaultTemplate(Boolean(res.data?.use_default_template));
+        setTemplatePreviewHtml(res.data?.preview_html || '');
+        setTemplatePreviewCompareHtml(res.data?.preview_compare_html || '');
       } catch (err) {
         if (handleAuthFailure(err)) return;
         // Non-fatal: keep the default template selected
@@ -530,7 +600,7 @@ export default function TeacherDashboard({
   const handleGradeSubmit = async (submissionId) => {
     const gradeVal = grades[submissionId];
     const descVal = gradeDescriptions[submissionId];
-    if (!gradeVal) {
+    if (isBlank(gradeVal)) {
       alert('Please enter a score / grade.');
       return;
     }
@@ -553,7 +623,7 @@ export default function TeacherDashboard({
 
   const handleExamGradeSubmit = async (submissionId) => {
     const gradeVal = examGrades[submissionId];
-    if (!gradeVal) {
+    if (isBlank(gradeVal)) {
       alert('Please enter an exam score.');
       return;
     }
@@ -572,9 +642,11 @@ export default function TeacherDashboard({
   };
 
   // ---------- AI assistive marking ----------
+  // The AI only drafts a score and feedback into the boxes. The teacher reviews and saves.
   const handleAIDraftMark = async (submissionId, kind) => {
     const key = `${kind}-${submissionId}`;
     setMarkingKey(key);
+    setAiMarkErrors((prev) => ({ ...prev, [key]: '' }));
     try {
       const res = await axios.post(
         `${API}/submissions/ai-mark/`,
@@ -582,17 +654,18 @@ export default function TeacherDashboard({
         authConfig()
       );
       const data = res.data || {};
+      const score = data.suggested_score ?? ''; // null means "nothing the AI could read"
       if (kind === 'exam') {
-        setExamGrades((prev) => ({ ...prev, [submissionId]: data.suggested_score ?? '' }));
+        setExamGrades((prev) => ({ ...prev, [submissionId]: score }));
         setExamFeedback((prev) => ({ ...prev, [submissionId]: data.feedback ?? '' }));
       } else {
-        setGrades((prev) => ({ ...prev, [submissionId]: data.suggested_score ?? '' }));
+        setGrades((prev) => ({ ...prev, [submissionId]: score }));
         setGradeDescriptions((prev) => ({ ...prev, [submissionId]: data.feedback ?? '' }));
       }
       setManualReviewFlags((prev) => ({ ...prev, [key]: Boolean(data.needs_manual_review) }));
     } catch (err) {
       if (handleAuthFailure(err)) return;
-      alert(describeError(err, 'Could not generate AI draft mark'));
+      setAiMarkErrors((prev) => ({ ...prev, [key]: describeError(err, 'Could not generate AI draft mark') }));
     } finally {
       setMarkingKey(null);
     }
@@ -600,7 +673,7 @@ export default function TeacherDashboard({
 
   // ---------- Report forms ----------
   // withAi = false -> Option 1 (school default layout, optional logo)
-  // withAi = true  -> Option 2 (apply the AI layout instruction)
+  // withAi = true  -> Option 2 (apply the AI layout instruction to the saved template)
   const handleSaveTemplate = async (withAi) => {
     const check = validateFileType(templateFile, ACCEPTED_LOGO_EXTS);
     if (!check.ok) { setFileError(check.message); return; }
@@ -608,29 +681,35 @@ export default function TeacherDashboard({
 
     setReportsLoading(true);
     setReportMessage('');
+    setReportWarnings([]);
     setReportError('');
     try {
       const formData = new FormData();
-      // Option 1 selects the school default; Option 2 keeps whichever template is currently saved
+      // Option 1 resets to the school default; Option 2 edits whichever layout is currently saved
       formData.append('use_default_template', String(withAi ? useDefaultTemplate : true));
-      if (!withAi && templateFile) formData.append('logo_file', templateFile);
+      if (templateFile) formData.append('logo_file', templateFile);
       if (withAi) formData.append('ai_edit_instruction', aiEditInstruction.trim());
 
       const res = await axios.post(`${API}/reports/template/`, formData, {
         headers: { ...authConfig().headers, 'Content-Type': 'multipart/form-data' },
       });
       setUseDefaultTemplate(Boolean(res.data?.use_default_template));
-      if (withAi) {
-        setAiEditInstruction('');
-      } else {
+      setTemplatePreviewHtml(res.data?.preview_html || '');
+        setTemplatePreviewCompareHtml(res.data?.preview_compare_html || '');
+      setShowTemplatePreview(true);
+      if (withAi) setAiEditInstruction('');
+      const hadLogo = Boolean(templateFile);
+      if (templateFile) {
         setTemplateFile(null);
         setFileInputKey((k) => k + 1);
       }
       setFileError('');
+      setGeneratedReports([]);
+      setPreviewIdx(null);
       setReportMessage(
         withAi
-          ? 'AI layout edit applied to the report form.'
-          : templateFile
+          ? 'AI layout edit applied. Check the preview below, then generate the report forms.'
+          : hadLogo
           ? 'School default layout selected and logo saved.'
           : 'School default report layout selected.'
       );
@@ -647,18 +726,35 @@ export default function TeacherDashboard({
       setReportError('Select a class first.');
       return;
     }
+    // One exam, or two different exams to compare (earlier exam first)
+    let exams = [reportExam];
+    if (reportMode === 'compare') {
+      if (compareFrom === compareTo) {
+        setReportError('Choose two different exams to compare.');
+        return;
+      }
+      exams = [compareFrom, compareTo];
+    }
     setReportsLoading(true);
     setReportMessage('');
+    setReportWarnings([]);
     setReportError('');
+    setPreviewIdx(null);
     try {
       const res = await axios.post(
         `${API}/reports/generate/`,
-        { class_name: className, term, year: Number(year) },
+        { class_name: className, term, year: Number(year), exams, use_ai: useAiRemarks },
         authConfig()
       );
       const list = Array.isArray(res.data?.reports) ? res.data.reports : [];
       setGeneratedReports(list);
-      setReportMessage(`Generated ${list.length} student report form(s) for ${className} (${term}).`);
+      const aiUsed = res.data?.ai_used ?? 0;
+      const examText = (res.data?.exams || exams).join(' vs ');
+      setReportMessage(
+        `Generated ${list.length} student report form(s) for ${className} (${term}, ${examText}).` +
+          (useAiRemarks ? ` AI wrote remarks for ${aiUsed} of ${list.length}.` : ' Remarks use the standard template.')
+      );
+      setReportWarnings(Array.isArray(res.data?.warnings) ? res.data.warnings : []);
     } catch (err) {
       if (handleAuthFailure(err)) return;
       setReportError(describeError(err, 'Could not generate report forms'));
@@ -677,11 +773,13 @@ export default function TeacherDashboard({
     const body = generatedReports
       .map(
         (r, idx) =>
-          `<div style="${idx > 0 ? 'page-break-before: always;' : ''} margin-bottom: 20px;">${r.rendered_html}</div>`
+          `<div style="${idx > 0 ? 'page-break-before: always;' : ''}">${r.rendered_html}</div>`
       )
       .join('');
     win.document.write(
-      `<html><head><title>${className} - ${term} Report Forms</title></head><body>${body}</body></html>`
+      `<html><head><title>${escapeHtml(className)} - ${escapeHtml(term)} Report Forms</title>` +
+        `<style>@page{margin:10mm}body{margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}</style>` +
+        `</head><body>${body}</body></html>`
     );
     win.document.close();
     win.focus();
@@ -718,12 +816,12 @@ export default function TeacherDashboard({
             authConfig()
           );
           if (response.status === 200 || response.status === 201) {
-            setStatusText(`Success! Clocked ${statusDirect}`);
+            setStatusText(response.data?.message || `Success! Clocked ${statusDirect}`);
           }
         } catch (error) {
           if (handleAuthFailure(error)) return;
           const backendMsg = error.response?.data?.message || error.response?.data?.error;
-          setStatusText(backendMsg || 'You are outside the school compound');
+          setStatusText(backendMsg || 'Could not record attendance. Please try again.');
         } finally {
           setGeoLoading(false);
         }
@@ -755,22 +853,29 @@ export default function TeacherDashboard({
     setMarksMessage('');
     setMarksError('');
 
+    // Only marks the teacher actually entered are sent. Blank boxes are never saved as 0.
     const entries = [];
     studentsTable.forEach((student) => {
       Object.entries(student.marks).forEach(([subject, markVal]) => {
-        if (markVal !== '' && !isNaN(markVal)) {
-          entries.push({ student_id: student.student_id, subject, marks: markVal });
-        }
+        if (markVal === '' || markVal === null || markVal === undefined) return;
+        if (Number.isNaN(Number(markVal))) return;
+        entries.push({ student_id: student.student_id, subject, marks: Number(markVal) });
       });
     });
 
+    if (entries.length === 0) {
+      setMarksError('Enter at least one mark before saving.');
+      setSavingMarks(false);
+      return;
+    }
+
     try {
-      await axios.post(
+      const res = await axios.post(
         `${API}/grades/marks/bulk-save/`,
-        { class_name: className, term, entries },
+        { class_name: className, term, exam_type: examType, entries },
         authConfig()
       );
-      setMarksMessage('Marks saved successfully!');
+      setMarksMessage(res.data?.detail || 'Marks saved successfully!');
       fetchClassGradesTable();
     } catch (err) {
       if (handleAuthFailure(err)) return;
@@ -786,12 +891,12 @@ export default function TeacherDashboard({
     try {
       const res = await axios.get(
         `${API}/grades/analysis/${encodeURIComponent(className)}/${encodeURIComponent(term)}/`,
-        { ...authConfig(), params: { export: 'pdf' }, responseType: 'blob' }
+        { ...authConfig(), params: { export: 'pdf', exam: examType }, responseType: 'blob' }
       );
       const url = URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
       const link = document.createElement('a');
       link.href = url;
-      link.download = `${className}_${term}_Class_Report.pdf`.replace(/\s+/g, '_');
+      link.download = `${className}_${term}_${examType}_Class_Report.pdf`.replace(/\s+/g, '_');
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -816,15 +921,21 @@ export default function TeacherDashboard({
     return rawText || 'No text answers provided.';
   };
 
-  const fileHref = (sub) =>
-    pdfBlobs[sub.id] || (sub.file.startsWith('http') ? sub.file : `${HOST}${sub.file}`);
+  // Keyed by file URL, so an assignment and an exam with the same id never share a link
+  const fileHref = (sub) => {
+    const fileUrl = sub.file.startsWith('http') ? sub.file : `${HOST}${sub.file}`;
+    return pdfBlobs[fileUrl] || fileUrl;
+  };
 
+  // Level bands (EE, ME, AE, BE). The backend sends the counts; compute them if it does not.
   const levelCounts = () => {
+    const fromApi = analysisData?.level_distribution;
+    if (fromApi) return fromApi;
     const counts = { EE: 0, ME: 0, AE: 0, BE: 0 };
-    if (!analysisData) return counts;
-    analysisData.student_performance_table.forEach((student) => {
+    (analysisData?.student_performance_table || []).forEach((student) => {
       Object.values(student.subjects).forEach((s) => {
-        if (counts[s.level] !== undefined) counts[s.level] += 1;
+        const band = String(s.level || '').slice(0, 2);
+        if (counts[band] !== undefined) counts[band] += 1;
       });
     });
     return counts;
@@ -834,26 +945,28 @@ export default function TeacherDashboard({
     const key = `${kind}-${sub.id}`;
     const needsManual = Boolean(manualReviewFlags[key] || sub.ai_needs_manual_review);
     return (
-      <div className="flex flex-wrap items-center gap-2">
-        <button
-          type="button"
-          disabled={markingKey === key}
-          onClick={() => handleAIDraftMark(sub.id, kind)}
-          className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#c77dff]/25 text-[#10002b] hover:bg-[#c77dff] transition cursor-pointer disabled:opacity-50"
-        >
-          {markingKey === key ? 'Drafting...' : 'AI Draft Mark'}
-        </button>
-        {needsManual && (
-          <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-[#c77dff]/25 text-[#10002b]">
-            Manual Review Suggested
-          </span>
-        )}
+      <div className="space-y-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            disabled={markingKey === key}
+            onClick={() => handleAIDraftMark(sub.id, kind)}
+            className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#c77dff]/25 text-[#10002b] hover:bg-[#c77dff] transition cursor-pointer disabled:opacity-50"
+          >
+            {markingKey === key ? 'Drafting...' : 'AI Draft Mark'}
+          </button>
+          {needsManual && (
+            <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-[#c77dff]/25 text-[#10002b]">
+              Manual Review Suggested
+            </span>
+          )}
+        </div>
+        {aiMarkErrors[key] && <p className="text-[11px] font-bold text-red-600 break-words">{aiMarkErrors[key]}</p>}
       </div>
     );
   };
 
   // Unmarked submissions, used by the marking reminder
-
   const unmarkedAssignmentsCount = submissions.filter((sub) => isBlank(sub.grade)).length;
   const unmarkedExamsCount = examSubmissions.filter(
     (sub) => isBlank(sub.score) && isBlank(sub.grade)
@@ -1208,7 +1321,9 @@ export default function TeacherDashboard({
                   }
                   className={fileInputClass}
                 />
-                <p className={hintClass}>Accepted file type: PDF (.pdf) only.</p>
+                <p className={hintClass}>
+                  Accepted file type: PDF (.pdf) only. AI marking uses this file as the question paper.
+                </p>
                 {fileError && <p className={fileErrorClass}>{fileError}</p>}
               </div>
               <button type="submit" className={primaryBtn}>
@@ -1275,7 +1390,9 @@ export default function TeacherDashboard({
                   onChange={(e) => pickFile(e, ['.pdf'], (f) => setExamForm({ ...examForm, file: f }))}
                   className={fileInputClass}
                 />
-                <p className={hintClass}>Accepted file type: PDF (.pdf) only.</p>
+                <p className={hintClass}>
+                  Accepted file type: PDF (.pdf) only. AI marking uses this file as the question paper.
+                </p>
                 {fileError && <p className={fileErrorClass}>{fileError}</p>}
               </div>
               <button type="submit" className={primaryBtn}>
@@ -1496,7 +1613,7 @@ export default function TeacherDashboard({
             <div>
               <h2 className="text-lg sm:text-xl font-extrabold text-[#10002b]">AI Student Report Forms</h2>
               <p className="text-xs text-[#10002b]/70">
-                Uses saved class marks and class rankings. Starts with the Ngegu Primary &amp; Junior School default layout, with optional logo and optional AI layout editing.
+                Uses saved class marks and class positions. Starts with the Ngegu Primary &amp; Junior School layout. Show one exam, or compare two exams. Optional logo and optional AI layout editing.
               </p>
             </div>
             <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 w-full md:w-auto">
@@ -1513,6 +1630,15 @@ export default function TeacherDashboard({
                 onChange={(e) => setYear(e.target.value)}
                 className="w-full sm:w-24 px-3 py-2 sm:py-1.5 border border-[#10002b] rounded-md text-xs font-semibold text-[#10002b] bg-white focus:outline-none focus:ring-2 focus:ring-[#c77dff]"
               />
+              <label className="flex items-center gap-2 text-xs font-semibold text-[#10002b] cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={useAiRemarks}
+                  onChange={(e) => setUseAiRemarks(e.target.checked)}
+                  className="accent-[#10002b]"
+                />
+                AI remarks
+              </label>
               <button
                 type="button"
                 onClick={handleGenerateReports}
@@ -1524,36 +1650,105 @@ export default function TeacherDashboard({
             </div>
           </div>
 
-          {reportMessage && (
-            <div className="p-3 bg-[#c77dff]/20 text-[#10002b] text-xs font-bold rounded-md border border-[#c77dff] break-words">
-              {reportMessage}
+          {reportMessage && <div className={noticeBoxClass}>{reportMessage}</div>}
+          {reportWarnings.length > 0 && (
+            <div className="p-3 bg-amber-50 text-amber-900 text-xs font-semibold rounded-md border border-amber-300 break-words space-y-1">
+              <p className="font-extrabold">Some remarks were not written by the AI</p>
+              {reportWarnings.map((w) => (
+                <p key={w}>{w}</p>
+              ))}
             </div>
           )}
           {reportError && <div className={errorBoxClass}>{reportError}</div>}
 
+          {/* The teacher chooses: one exam, or two exams to compare */}
+          <div className="p-3.5 border border-[#c77dff] rounded-lg bg-[#faf5ff] space-y-3">
+            <div className="font-bold text-[#10002b] text-sm">Exams shown on the report form</div>
+            <div className="flex flex-wrap gap-5 text-xs font-semibold text-[#10002b]">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="report-mode"
+                  checked={reportMode === 'single'}
+                  onChange={() => setReportMode('single')}
+                  className="accent-[#10002b]"
+                />
+                One exam
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="report-mode"
+                  checked={reportMode === 'compare'}
+                  onChange={() => setReportMode('compare')}
+                  className="accent-[#10002b]"
+                />
+                Compare two exams
+              </label>
+            </div>
+            {reportMode === 'single' ? (
+              <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-[#10002b]">
+                <span>Exam</span>
+                <select value={reportExam} onChange={(e) => setReportExam(e.target.value)} className={selectClass}>
+                  {EXAM_TYPES.map((x) => (
+                    <option key={x} value={x}>
+                      {x} exam
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-[#10002b]">
+                <span>Compare</span>
+                <select value={compareFrom} onChange={(e) => setCompareFrom(e.target.value)} className={selectClass}>
+                  {EXAM_TYPES.map((x) => (
+                    <option key={x} value={x}>
+                      {x} exam
+                    </option>
+                  ))}
+                </select>
+                <span>with</span>
+                <select value={compareTo} onChange={(e) => setCompareTo(e.target.value)} className={selectClass}>
+                  {EXAM_TYPES.map((x) => (
+                    <option key={x} value={x}>
+                      {x} exam
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <p className={hintClass}>
+              {reportMode === 'single'
+                ? 'The form shows Marks and Performance Level for the chosen exam, with the class position.'
+                : 'The form shows both exams side by side with a position for each, and the remarks describe the change. The earlier exam is placed first.'}
+            </p>
+          </div>
+
           <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-4 pt-4 border-t border-[#c77dff]/30">
-            {/* Option 1: Primary Default School Template & Logo */}
+            {/* Option 1: School default template & logo */}
             <div className="p-3.5 border border-[#d8b4fe] rounded-lg bg-[#faf5ff] space-y-2.5">
               <div className="font-bold text-[#10002b] text-sm">
                 Option 1 (Default): Ngegu Primary &amp; Junior School Report Layout
               </div>
               <p className="text-xs text-gray-600">
-                Keeps the official school header, logo, CBC grading scale, and class ranks automatically.
+                Keeps the school header and crest, the Marks and Performance Level table, the class position, the CBC grading key, and the class teacher's remarks.
               </p>
 
-              {/* Logo Image Insertion Spot: Current / Selected Logo Preview */}
               <div className="flex items-center gap-3 p-2.5 bg-white border border-[#e9d5ff] rounded-md">
-                <img
-                  src={templateFile ? URL.createObjectURL(templateFile) : '/images/logo.jpg'}
-                  alt="Ngegu Primary & Junior School Logo"
-                  className="w-12 h-12 object-contain rounded border border-gray-200 bg-white shrink-0"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
+                {logoPreviewUrl ? (
+                  <img
+                    src={logoPreviewUrl}
+                    alt="Selected school logo"
+                    className="w-12 h-12 object-contain rounded border border-gray-200 bg-white shrink-0"
+                  />
+                ) : (
+                  <div className="w-12 h-12 rounded border border-dashed border-[#c77dff] shrink-0 flex items-center justify-center text-[9px] text-[#10002b]/60 text-center">
+                    School crest
+                  </div>
+                )}
                 <div className="min-w-0 flex-1">
                   <div className="text-xs font-semibold text-[#10002b]">
-                    Upload School Logo (PNG/JPG — optional)
+                    Replace the school logo (PNG/JPG, optional)
                   </div>
                   <input
                     key={`logo-file-${fileInputKey}`}
@@ -1566,7 +1761,7 @@ export default function TeacherDashboard({
               </div>
 
               <p className={hintClass}>
-                Place your default crest at <code>public/images/logo.jpg</code> or upload an image (PNG, JPG, JPEG, WEBP).
+                The school crest is already built in. Upload an image (PNG, JPG, JPEG, WEBP, up to 3 MB) only if you want to replace it.
               </p>
               {fileError && <p className={fileErrorClass}>{fileError}</p>}
 
@@ -1587,11 +1782,14 @@ export default function TeacherDashboard({
               <div className="font-bold text-[#10002b] mb-1.5 text-sm">
                 Option 2 (Optional): Customize Layout with AI
               </div>
+              <p className="text-xs text-gray-600 mb-2">
+                Describe one change at a time, for example "Add a performance chart under the marks table" or "Add the principal's remark below the class teacher's remarks". Your current layout is kept if the AI cannot apply the change safely.
+              </p>
               <textarea
                 rows={3}
                 value={aiEditInstruction}
                 onChange={(e) => setAiEditInstruction(e.target.value)}
-                placeholder="Optional: e.g. Add a parent signature line at the bottom"
+                placeholder="e.g. Add a performance chart under the marks table"
                 className="w-full p-2 rounded-lg border border-gray-300 text-xs text-[#10002b] focus:outline-none focus:border-[#10002b]"
               />
               <button
@@ -1600,10 +1798,36 @@ export default function TeacherDashboard({
                 onClick={() => handleSaveTemplate(true)}
                 className="mt-2.5 bg-[#6b21a8] text-white px-3.5 py-2 rounded-lg text-xs font-bold cursor-pointer disabled:opacity-50"
               >
-                Apply AI Edit (Option 2)
+                {reportsLoading ? 'Working...' : 'Apply AI Edit (Option 2)'}
               </button>
             </div>
           </div>
+
+          {/* Live preview of the saved layout, using a sample learner */}
+          {templatePreviewHtml && (
+            <div className="space-y-2 pt-4 border-t border-[#c77dff]/30">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="text-xs font-extrabold text-[#10002b]">
+                  Layout preview ({useDefaultTemplate ? 'school default' : 'AI-edited'}, sample learner, {reportMode === 'compare' ? 'two exams' : 'one exam'})
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setShowTemplatePreview((v) => !v)}
+                  className="text-[11px] font-bold underline text-[#10002b] cursor-pointer"
+                >
+                  {showTemplatePreview ? 'Hide preview' : 'Show preview'}
+                </button>
+              </div>
+              {showTemplatePreview && (
+                <iframe
+                  title="Report layout preview"
+                  sandbox=""
+                  srcDoc={reportMode === 'compare' ? templatePreviewCompareHtml || templatePreviewHtml : templatePreviewHtml}
+                  className="w-full h-[1000px] bg-white border border-[#c77dff] rounded-xl"
+                />
+              )}
+            </div>
+          )}
 
           {generatedReports.length > 0 && (
             <div className="space-y-3 pt-4 border-t border-[#c77dff]/30">
@@ -1626,18 +1850,43 @@ export default function TeacherDashboard({
                     className="rounded-xl border border-[#c77dff]/50 p-3 bg-gray-50 space-y-1.5"
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs font-extrabold text-[#10002b]">{r.name}</span>
+                      <span className="text-xs font-extrabold text-[#10002b]">
+                        {r.name}{' '}
+                        <span className="font-semibold text-[#10002b]/60">
+                          ({(r.exams || []).map((e) => r.positions?.[e] || '-').join(' → ') || r.position})
+                        </span>
+                      </span>
                       <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#c77dff]/25 text-[#10002b]">
-                        Mean: {r.mean_score}%
+                        Mean: {r.mean_score}% {r.level}
                       </span>
                     </div>
                     <p className="text-xs text-[#10002b]">{r.class_teacher_comment}</p>
                     <p className="text-[11px] text-[#10002b]/70">
                       <strong>Improvement:</strong> {r.areas_for_improvement}
                     </p>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[10px] font-bold text-[#10002b]/60">
+                        {r.ai_remarks ? 'AI remarks' : 'Template remarks'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setPreviewIdx(previewIdx === idx ? null : idx)}
+                        className="text-[11px] font-bold underline text-[#10002b] cursor-pointer"
+                      >
+                        {previewIdx === idx ? 'Hide form' : 'Preview form'}
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
+              {previewIdx !== null && generatedReports[previewIdx] && (
+                <iframe
+                  title="Report form preview"
+                  sandbox=""
+                  srcDoc={generatedReports[previewIdx].rendered_html}
+                  className="w-full h-[1000px] bg-white border border-[#c77dff] rounded-xl"
+                />
+              )}
             </div>
           )}
         </div>
@@ -1650,7 +1899,7 @@ export default function TeacherDashboard({
             <div>
               <h2 className="text-lg sm:text-xl font-extrabold text-[#10002b]">Class Marks Entry</h2>
               <p className="text-xs text-[#10002b]/70">
-                Record marks across all 9 subjects, then save them for the selected class and term.
+                Record marks across all 9 subjects, then save them for the selected class and term. Empty boxes are not saved.
               </p>
             </div>
 
@@ -1661,6 +1910,8 @@ export default function TeacherDashboard({
                 setSelectedClass={setClassName}
                 term={term}
                 setTerm={setTerm}
+                exam={examType}
+                setExam={setExamType}
               />
               <button type="button" onClick={handlePdfReportExport} className={smallBtn}>
                 Export PDF Report
@@ -1751,7 +2002,7 @@ export default function TeacherDashboard({
                 Class Performance & Analysis Report
               </h2>
               <p className="text-xs text-[#10002b]/70">
-                Review rankings, subject means, and grade levels (EE, ME, AE, BE).
+                Review rankings, subject means, and performance levels (EE, ME, AE, BE).
               </p>
             </div>
 
@@ -1762,6 +2013,8 @@ export default function TeacherDashboard({
                 setSelectedClass={setClassName}
                 term={term}
                 setTerm={setTerm}
+                exam={examType}
+                setExam={setExamType}
               />
               <button type="button" onClick={handlePdfReportExport} className={smallBtn}>
                 Download PDF Report
@@ -1778,7 +2031,7 @@ export default function TeacherDashboard({
           ) : analysisData && analysisData.student_performance_table.length === 0 ? (
             <div className="p-6 text-center border border-dashed border-[#c77dff] rounded-md space-y-3">
               <p className="text-xs text-[#10002b] font-bold">
-                No marks saved for {className}, {term} yet.
+                No {examType} marks saved for {className}, {term} yet.
               </p>
               <button
                 type="button"
@@ -1847,11 +2100,11 @@ export default function TeacherDashboard({
                         </td>
                         <td className="px-3 py-2 font-medium text-[#10002b] whitespace-nowrap">{student.name}</td>
                         {analysisData.subject_columns.map((sub) => {
-                          const subData = student.subjects[sub] || { score: 0, level: 'BE' };
+                          const subData = student.subjects[sub] || { score: null, level: '-' };
                           return (
                             <React.Fragment key={sub}>
                               <td className="px-2 py-2 text-center border-l border-[#10002b]/20 text-[#10002b]">
-                                {subData.score}
+                                {subData.score ?? '-'}
                               </td>
                               <td className="px-2 py-2 text-center font-extrabold text-[#10002b] bg-[#c77dff]/10">
                                 {subData.level}
@@ -1904,6 +2157,8 @@ export default function TeacherDashboard({
                 setSelectedClass={setClassName}
                 term={term}
                 setTerm={setTerm}
+                exam={examType}
+                setExam={setExamType}
               />
             </div>
           </div>
@@ -1957,7 +2212,7 @@ export default function TeacherDashboard({
                     </div>
                   ));
                 })()}
-                <p className="text-[11px] text-[#10002b]/60">EE 90+, ME 70-89, AE 40-69, BE below 40.</p>
+                <p className="text-[11px] text-[#10002b]/60">{LEVEL_KEY_TEXT}</p>
               </div>
             </div>
           ) : null}
