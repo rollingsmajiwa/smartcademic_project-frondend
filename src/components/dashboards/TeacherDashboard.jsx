@@ -46,6 +46,7 @@ const describeError = (err, fallback) => {
 // ---------- Accepted file types & client-side check ----------
 const ACCEPTED_DOC_TYPES = ['.pdf', '.ppt', '.pptx'];
 const ACCEPTED_LOGO_EXTS = ['.png', '.jpg', '.jpeg', '.webp'];
+const ACCEPTED_SCHEME_TYPES = ['.pdf', '.docx', '.txt', '.png', '.jpg', '.jpeg', '.webp'];
 
 const validateFileType = (file, allowedExts = ['.pdf']) => {
   if (!file) return { ok: true };
@@ -82,7 +83,7 @@ const fileInputClass =
 const bannerClass =
   'sa-card border border-[#c77dff] shadow-xs p-4 sm:p-6 rounded-2xl w-full flex flex-col gap-4 md:flex-row md:items-center md:justify-between';
 const gradingPanelClass =
-  'flex flex-col gap-3 p-4 rounded-xl border border-[#c77dff] bg-gray-50 shadow-xs w-full md:w-72 md:shrink-0';
+  'flex flex-col gap-3 p-4 rounded-xl border border-[#c77dff] bg-gray-50 shadow-xs w-full md:w-96 md:shrink-0';
 const errorBoxClass =
   'p-3 bg-[#10002b] text-[#c77dff] text-xs font-bold rounded-md border border-[#c77dff] break-words';
 const noticeBoxClass =
@@ -220,6 +221,15 @@ export default function TeacherDashboard({
   const [fileError, setFileError] = useState('');
   // Bumped after a successful post so uncontrolled file inputs reset visually
   const [fileInputKey, setFileInputKey] = useState(0);
+  // ---------- Marking scheme state ----------
+  const [assignmentScheme, setAssignmentScheme] = useState({ file: null, text: '' });
+  const [examScheme, setExamScheme] = useState({ file: null, text: '' });
+  const [schemeError, setSchemeError] = useState('');
+  const [schemeDrafts, setSchemeDrafts] = useState({});     // per task: { file, text }
+  const [schemeSaved, setSchemeSaved] = useState({});       // per task: true once saved
+  const [schemeMessages, setSchemeMessages] = useState({}); // per task: { type, message }
+  const [schemeBusyKey, setSchemeBusyKey] = useState(null);
+  const [schemeInputKey, setSchemeInputKey] = useState(0);
 
   // ---------- AI assistive marking state ----------
   const [markingKey, setMarkingKey] = useState(null);
@@ -458,6 +468,7 @@ export default function TeacherDashboard({
   // Clear any file error when switching tabs
   useEffect(() => {
     setFileError('');
+    setSchemeError('');
   }, [activeTab]);
 
   // Release blob URLs when the dashboard closes
@@ -517,8 +528,20 @@ export default function TeacherDashboard({
   // ---------- Post handlers ----------
   const handlePostAssignment = async (e) => {
     e.preventDefault();
+    setFileError('');
+    setSchemeError('');
+
     const check = validateFileType(assignmentForm.file, ['.pdf']);
-    if (!check.ok) { setFileError(check.message); return; }
+    if (!check.ok) {
+      setFileError(check.message);
+      return;
+    }
+
+    const schemeCheck = validateFileType(assignmentScheme.file, ACCEPTED_SCHEME_TYPES);
+    if (!schemeCheck.ok) {
+      setSchemeError(schemeCheck.message);
+      return;
+    }
 
     const formData = new FormData();
     formData.append('title', assignmentForm.title);
@@ -527,6 +550,8 @@ export default function TeacherDashboard({
     formData.append('deadline', assignmentForm.deadline);
     formData.append('teacher', assignmentForm.teacher);
     if (assignmentForm.file) formData.append('file', assignmentForm.file);
+    if (assignmentScheme.file) formData.append('marking_scheme_file', assignmentScheme.file);
+    if (assignmentScheme.text.trim()) formData.append('marking_scheme_text', assignmentScheme.text.trim());
 
     try {
       await axios.post(`${API}/assignment/`, formData, {
@@ -534,6 +559,8 @@ export default function TeacherDashboard({
       });
       alert('Assignment posted successfully!');
       setAssignmentForm({ title: '', description: '', class_name: '', deadline: '', teacher: '', file: null });
+      setAssignmentScheme({ file: null, text: '' });
+      setSchemeError('');
       setFileError('');
       setFileInputKey((k) => k + 1);
     } catch (err) {
@@ -544,8 +571,20 @@ export default function TeacherDashboard({
 
   const handlePostExam = async (e) => {
     e.preventDefault();
+    setFileError('');
+    setSchemeError('');
+
     const check = validateFileType(examForm.file, ['.pdf']);
-    if (!check.ok) { setFileError(check.message); return; }
+    if (!check.ok) {
+      setFileError(check.message);
+      return;
+    }
+
+    const schemeCheck = validateFileType(examScheme.file, ACCEPTED_SCHEME_TYPES);
+    if (!schemeCheck.ok) {
+      setSchemeError(schemeCheck.message);
+      return;
+    }
 
     const formData = new FormData();
     formData.append('title', examForm.title);
@@ -555,6 +594,8 @@ export default function TeacherDashboard({
     formData.append('start_time', examForm.start_time || new Date().toISOString());
     formData.append('end_time', examForm.end_time || new Date().toISOString());
     if (examForm.file) formData.append('file', examForm.file);
+    if (examScheme.file) formData.append('marking_scheme_file', examScheme.file);
+    if (examScheme.text.trim()) formData.append('marking_scheme_text', examScheme.text.trim());
 
     try {
       await axios.post(`${API}/exam/`, formData, {
@@ -562,6 +603,8 @@ export default function TeacherDashboard({
       });
       alert('Exam posted successfully!');
       setExamForm({ title: '', term: '', description: '', duration_mins: 60, start_time: '', end_time: '', file: null });
+      setExamScheme({ file: null, text: '' });
+      setSchemeError('');
       setFileError('');
       setFileInputKey((k) => k + 1);
     } catch (err) {
@@ -651,7 +694,7 @@ export default function TeacherDashboard({
       const res = await axios.post(
         `${API}/submissions/ai-mark/`,
         { submission_id: submissionId, submission_type: kind, max_score: 100 },
-        authConfig()
+        { ...authConfig(), timeout: 180000 }
       );
       const data = res.data || {};
       const score = data.suggested_score ?? ''; // null means "nothing the AI could read"
@@ -940,6 +983,148 @@ export default function TeacherDashboard({
     });
     return counts;
   };
+
+  const pickScheme = (e, onValid) => {
+  const file = e.target.files?.[0] || null;
+  const check = validateFileType(file, ACCEPTED_SCHEME_TYPES);
+  if (!check.ok) {
+    setSchemeError(check.message);
+    e.target.value = '';
+    onValid(null);
+    return;
+  }
+  setSchemeError('');
+  onValid(file);
+};
+
+// Used by BOTH the assignment form and the exam form
+const renderSchemeFields = (scheme, setScheme, keyPrefix) => (
+  <div className="p-3.5 rounded-xl border border-[#c77dff]/60 bg-[#faf5ff] space-y-3">
+    <div>
+      <label className="block text-xs font-bold mb-1.5 text-[#10002b]">
+        Marking Scheme / Answer Key (optional, recommended)
+      </label>
+      <input
+        key={`${keyPrefix}-${fileInputKey}`}
+        type="file"
+        accept={ACCEPTED_SCHEME_TYPES.join(',')}
+        onChange={(e) => pickScheme(e, (f) => setScheme((p) => ({ ...p, file: f })))}
+        className={fileInputClass}
+      />
+      <p className={hintClass}>
+        PDF, Word (.docx), text or image. Students never see this file. AI marking follows it.
+      </p>
+    </div>
+    <div>
+      <label className="block text-xs font-bold mb-1.5 text-[#10002b]">Or paste the answers</label>
+      <textarea
+        rows="4"
+        placeholder="e.g. 1.C 2.A 3.D ... and the Section B model answers"
+        value={scheme.text}
+        onChange={(e) => setScheme((p) => ({ ...p, text: e.target.value }))}
+        className={inputClass}
+      />
+    </div>
+    {schemeError && <p className={fileErrorClass}>{schemeError}</p>}
+  </div>
+);
+
+// Attach or replace the scheme of a task that is already posted
+const handleSaveScheme = async (kind, taskId) => {
+  const key = `${kind}-${taskId}`;
+  const draft = schemeDrafts[key] || {};
+  const text = (draft.text || '').trim();
+  const setMsg = (type, message) => setSchemeMessages((p) => ({ ...p, [key]: { type, message } }));
+
+  if (!draft.file && !text) {
+    setMsg('error', 'Choose a file or paste the answer key first.');
+    return;
+  }
+  const check = validateFileType(draft.file, ACCEPTED_SCHEME_TYPES);
+  if (!check.ok) {
+    setMsg('error', check.message);
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('task_type', kind);
+  formData.append('task_id', taskId);
+  if (draft.file) formData.append('marking_scheme_file', draft.file);
+  if (text) formData.append('marking_scheme_text', text);
+
+  setSchemeBusyKey(key);
+  try {
+    await axios.post(`${API}/marking-scheme/`, formData, {
+      headers: { ...authConfig().headers, 'Content-Type': 'multipart/form-data' },
+    });
+    setSchemeSaved((p) => ({ ...p, [key]: true }));
+    setSchemeDrafts((p) => ({ ...p, [key]: { file: null, text: '' } }));
+    setSchemeInputKey((k) => k + 1);
+    setMsg('ok', 'Marking scheme saved. AI Draft Mark will now follow it.');
+  } catch (err) {
+    if (handleAuthFailure(err)) return;
+    setMsg('error', describeError(err, 'Could not save the marking scheme'));
+  } finally {
+    setSchemeBusyKey(null);
+  }
+};
+
+const renderSchemePanel = (kind, sub) => {
+  const taskId = kind === 'exam' ? sub.exam : sub.assignment;
+  if (!taskId) return null;
+  const key = `${kind}-${taskId}`;
+  const draft = schemeDrafts[key] || { file: null, text: '' };
+  const hasScheme = schemeSaved[key] ?? Boolean(sub.has_marking_scheme);
+  const msg = schemeMessages[key];
+
+  return (
+    <details className="rounded-lg border border-[#c77dff]/60 bg-white p-2.5">
+      <summary className="cursor-pointer text-[11px] font-bold text-[#10002b]">
+        Marking scheme: {hasScheme ? 'uploaded' : 'not uploaded (AI will guess the answers)'}
+      </summary>
+      <div className="mt-2 space-y-2">
+        <input
+          key={`scheme-${key}-${schemeInputKey}`}
+          type="file"
+          accept={ACCEPTED_SCHEME_TYPES.join(',')}
+          onChange={(e) => {
+            const file = e.target.files?.[0] || null;
+            const check = validateFileType(file, ACCEPTED_SCHEME_TYPES);
+            if (!check.ok) {
+              setSchemeMessages((p) => ({ ...p, [key]: { type: 'error', message: check.message } }));
+              e.target.value = '';
+              return;
+            }
+            setSchemeDrafts((p) => ({ ...p, [key]: { ...(p[key] || { text: '' }), file } }));
+          }}
+          className={fileInputClass}
+        />
+        <textarea
+          rows="3"
+          placeholder="Or paste the answer key, e.g. 1.C 2.A 3.D ..."
+          value={draft.text}
+          onChange={(e) =>
+            setSchemeDrafts((p) => ({ ...p, [key]: { ...(p[key] || { file: null }), text: e.target.value } }))
+          }
+          className="w-full p-2 text-xs border border-[#c77dff] rounded-lg bg-white text-[#10002b] focus:outline-none"
+        />
+        <button
+          type="button"
+          disabled={schemeBusyKey === key}
+          onClick={() => handleSaveScheme(kind, taskId)}
+          className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#10002b] text-white hover:bg-[#c77dff] hover:text-[#10002b] transition cursor-pointer disabled:opacity-50"
+        >
+          {schemeBusyKey === key ? 'Saving...' : 'Save marking scheme'}
+        </button>
+        {msg && (
+          <p className={msg.type === 'ok' ? 'text-[11px] font-bold text-green-700 break-words' : fileErrorClass}>
+            {msg.message}
+          </p>
+        )}
+      </div>
+    </details>
+  );
+};
 
   const renderAIDraftRow = (kind, sub) => {
     const key = `${kind}-${sub.id}`;
@@ -1326,6 +1511,7 @@ export default function TeacherDashboard({
                 </p>
                 {fileError && <p className={fileErrorClass}>{fileError}</p>}
               </div>
+              {renderSchemeFields(assignmentScheme, setAssignmentScheme, 'assign-scheme')}
               <button type="submit" className={primaryBtn}>
                 Publish Assignment
               </button>
@@ -1395,6 +1581,7 @@ export default function TeacherDashboard({
                 </p>
                 {fileError && <p className={fileErrorClass}>{fileError}</p>}
               </div>
+              {renderSchemeFields(examScheme, setExamScheme, 'exam-scheme')}
               <button type="submit" className={primaryBtn}>
                 Publish Exam
               </button>
@@ -1475,6 +1662,7 @@ export default function TeacherDashboard({
                         </div>
 
                         <div className={gradingPanelClass}>
+                          {renderSchemePanel('assignment', sub)}
                           {renderAIDraftRow('assignment', sub)}
                           <div>
                             <label className="block text-[10px] font-bold mb-1 text-[#10002b]">
@@ -1560,6 +1748,7 @@ export default function TeacherDashboard({
                         </div>
 
                         <div className={gradingPanelClass}>
+                          {renderSchemePanel('exam', sub)}
                           {renderAIDraftRow('exam', sub)}
                           <label className="block text-[10px] font-bold text-[#10002b]">Exam Score</label>
                           <input
