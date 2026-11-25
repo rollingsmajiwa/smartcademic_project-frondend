@@ -48,17 +48,23 @@ export default function Sidebar({ userRole, baseRole, activeTab, setActiveTab, o
       { id: 'exams', label: 'Exams Portal', icon: GraduationCap },
       { id: 'results', label: 'Submissions & Grades', icon: CheckCircle2 },
     ],
+    parent: [
+      { id: 'home', label: 'Home', icon: Home },
+      { id: 'overview', label: 'Report Card', icon: Award },
+      { id: 'marks', label: 'Term & Exam Marks', icon: ClipboardList },
+      { id: 'submissions', label: 'Submissions & Feedback', icon: FileCheck },
+    ],
     admin: [
       { id: 'home', label: 'Home', icon: Home },
       { id: 'overview', label: 'System Overview', icon: ShieldCheck },
       { id: 'classrooms', label: 'Manage Classrooms', icon: Building2 },
       { id: 'students', label: 'Manage Students', icon: Users },
       { id: 'teachers', label: 'Manage Teachers', icon: UserCheck },
+      { id: 'parents', label: 'Manage Parents', icon: Users },
       { id: 'attendance', label: 'Teacher Attendance', icon: MapPin },
     ],
   };
 
-  // Automatically sync activeTab based on the URL path safely
   useEffect(() => {
     const pathSegments = location.pathname.split('/');
     const currentSubRoute = pathSegments[3];
@@ -76,12 +82,10 @@ export default function Sidebar({ userRole, baseRole, activeTab, setActiveTab, o
     }
   }, [location.pathname, userRole, navigate, setActiveTab]);
 
-  // Close the mobile drawer whenever the route changes
   useEffect(() => {
     setMobileOpen(false);
   }, [location.pathname]);
 
-  // While the drawer is open: lock page scroll and let Escape close it
   useEffect(() => {
     if (!mobileOpen) return undefined;
     const previousOverflow = document.body.style.overflow;
@@ -96,7 +100,6 @@ export default function Sidebar({ userRole, baseRole, activeTab, setActiveTab, o
     };
   }, [mobileOpen]);
 
-  // Reset the drawer if the window is resized up to desktop width
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 1024px)');
     const onChange = (e) => {
@@ -107,11 +110,13 @@ export default function Sidebar({ userRole, baseRole, activeTab, setActiveTab, o
   }, []);
 
   const handleSignOut = () => {
-    // Clear every key the dashboards may read the session from
     localStorage.removeItem('access_token');
     localStorage.removeItem('access');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('refresh');
+    if (typeof onLogout === 'function') {
+      onLogout();
+    }
     navigate('/signin');
   };
 
@@ -163,7 +168,7 @@ export default function Sidebar({ userRole, baseRole, activeTab, setActiveTab, o
         />
       )}
 
-      {/* Sidebar: slide-in drawer on mobile, sticky column on lg+ */}
+      {/* Sidebar */}
       <aside
         className={`fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] h-dvh overflow-y-auto flex flex-col justify-between p-4
           border-r border-[#c77dff]/30 shadow-xl font-sans
@@ -192,7 +197,6 @@ export default function Sidebar({ userRole, baseRole, activeTab, setActiveTab, o
               </div>
             </div>
 
-            {/* Close button (mobile only) */}
             <button
               onClick={() => setMobileOpen(false)}
               aria-label="Close menu"
@@ -227,7 +231,10 @@ export default function Sidebar({ userRole, baseRole, activeTab, setActiveTab, o
                       : 'text-gray-200 hover:text-[#c77dff] hover:bg-[#c77dff]/10'
                   }`}
                 >
-                  <Icon size={15} className={`shrink-0 ${isActive ? 'text-[#10002b]' : 'text-[#c77dff]'}`} />
+                  <Icon
+                    size={15}
+                    className={`shrink-0 ${isActive ? 'text-[#10002b]' : 'text-[#c77dff]'}`}
+                  />
                   <span>{tab.label}</span>
                 </button>
               );

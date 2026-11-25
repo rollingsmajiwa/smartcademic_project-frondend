@@ -7,6 +7,8 @@ import * as pdfjsLib from 'pdfjs-dist';
 // (check node_modules/pdfjs-dist/build/ for the exact name).
 import pdfWorkerSrc from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import { usePagination, Pagination } from './Pagination';
+import AdminParentLinks from '../Admin/AdminParentLinks';
+import { fetchAdminParents } from './parentPortal';
 
 const API_ORIGIN = import.meta.env.VITE_API_URL || 'https://smartcademic-project.onrender.com';
 const EMAIL_REGEX = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g;
@@ -26,6 +28,10 @@ const editBtnClass =
   'sa-btn-secondary py-1.5 px-3 text-xs bg-[#10002b] text-white border border-[#10002b] hover:bg-[#c77dff] hover:text-[#10002b] rounded-xl font-bold transition-all cursor-pointer';
 const deleteBtnClass =
   'py-1.5 px-3 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-xl border border-red-200 transition-colors cursor-pointer';
+
+// Single place that reads the JWT, so every request and child component agrees.
+const getAccessToken = () =>
+  localStorage.getItem('access_token') || localStorage.getItem('access') || '';
 
 async function extractEmailsFromPdf(file) {
   const arrayBuffer = await file.arrayBuffer();
@@ -60,6 +66,7 @@ export default function AdminDashboard() {
     if (path.includes('/classrooms')) return 'classrooms';
     if (path.includes('/attendance')) return 'attendance';
     if (path.includes('/submissions')) return 'submissions';
+    if (path.includes('/parents')) return 'parents';
     return 'overview';
   };
 
@@ -73,6 +80,7 @@ export default function AdminDashboard() {
   const [attendanceLogs, setAttendanceLogs] = useState([]);
   const [assignmentSubs, setAssignmentSubs] = useState([]);
   const [examSubs, setExamSubs] = useState([]);
+  const [parentsCount, setParentsCount] = useState(0);
   const [loading, setLoading] = useState(false);
 
   // ---------- Pagination ----------
@@ -99,6 +107,8 @@ export default function AdminDashboard() {
     return null;
   };
 
+  // Only teachers and students need admin approval after activation.
+  // Parents and admins can log in as soon as they set a password.
   const pendingApprovals = useMemo(
     () =>
       accountUsers.filter(
@@ -126,9 +136,10 @@ export default function AdminDashboard() {
       }
     });
 
-    const dates = Object.keys(byDate).length > 0
-      ? Object.keys(byDate).sort().reverse()
-      : [new Date().toISOString().split('T')[0]];
+    const dates =
+      Object.keys(byDate).length > 0
+        ? Object.keys(byDate).sort().reverse()
+        : [new Date().toISOString().split('T')[0]];
 
     const result = [];
     let currentWeekDates = [];
@@ -142,7 +153,10 @@ export default function AdminDashboard() {
           result.push({
             startDate: new Date(currentWeekDates[0]),
             dates: [...currentWeekDates],
-            monthYear: new Date(currentWeekDates[0]).toLocaleString('en-US', { month: 'long', year: 'numeric' }),
+            monthYear: new Date(currentWeekDates[0]).toLocaleString('en-US', {
+              month: 'long',
+              year: 'numeric',
+            }),
           });
           currentWeekDates = [];
         }
@@ -153,7 +167,10 @@ export default function AdminDashboard() {
       result.push({
         startDate: new Date(currentWeekDates[0]),
         dates: [...currentWeekDates],
-        monthYear: new Date(currentWeekDates[0]).toLocaleString('en-US', { month: 'long', year: 'numeric' }),
+        monthYear: new Date(currentWeekDates[0]).toLocaleString('en-US', {
+          month: 'long',
+          year: 'numeric',
+        }),
       });
     }
 
@@ -204,7 +221,7 @@ export default function AdminDashboard() {
   });
 
   const getAuthConfig = () => {
-    const token = localStorage.getItem('access_token') || localStorage.getItem('access');
+    const token = getAccessToken();
     return {
       headers: {
         Authorization: token ? `Bearer ${token}` : '',
@@ -228,23 +245,24 @@ export default function AdminDashboard() {
   const fetchAdminData = async () => {
     setLoading(true);
     try {
-      const [
-        teachersRes,
-        studentsRes,
-        classRes,
-        attRes,
-        asSubRes,
-        exSubRes,
-        usersRes,
-      ] = await Promise.all([
-        axios.get(`${API_ORIGIN}/api/admin/teachers/`, getAuthConfig()).catch(() => ({ data: [] })),
-        axios.get(`${API_ORIGIN}/api/admin/students/`, getAuthConfig()).catch(() => ({ data: [] })),
-        axios.get(`${API_ORIGIN}/api/admin/classrooms/`, getAuthConfig()).catch(() => ({ data: [] })),
-        axios.get(`${API_ORIGIN}/api/admin/attendance/teachers/`, getAuthConfig()).catch(() => ({ data: [] })),
-        axios.get(`${API_ORIGIN}/api/admin/submissions/assignments/`, getAuthConfig()).catch(() => ({ data: [] })),
-        axios.get(`${API_ORIGIN}/api/admin/submissions/exams/`, getAuthConfig()).catch(() => ({ data: [] })),
-        axios.get(`${API_ORIGIN}/api/accounts/admin/users/`, getAuthConfig()).catch(() => ({ data: [] })),
-      ]);
+      const [teachersRes, studentsRes, classRes, attRes, asSubRes, exSubRes, usersRes] =
+        await Promise.all([
+          axios.get(`${API_ORIGIN}/api/admin/teachers/`, getAuthConfig()).catch(() => ({ data: [] })),
+          axios.get(`${API_ORIGIN}/api/admin/students/`, getAuthConfig()).catch(() => ({ data: [] })),
+          axios.get(`${API_ORIGIN}/api/admin/classrooms/`, getAuthConfig()).catch(() => ({ data: [] })),
+          axios
+            .get(`${API_ORIGIN}/api/admin/attendance/teachers/`, getAuthConfig())
+            .catch(() => ({ data: [] })),
+          axios
+            .get(`${API_ORIGIN}/api/admin/submissions/assignments/`, getAuthConfig())
+            .catch(() => ({ data: [] })),
+          axios
+            .get(`${API_ORIGIN}/api/admin/submissions/exams/`, getAuthConfig())
+            .catch(() => ({ data: [] })),
+          axios
+            .get(`${API_ORIGIN}/api/accounts/admin/users/`, getAuthConfig())
+            .catch(() => ({ data: [] })),
+        ]);
 
       setTeachers(teachersRes.data);
       setStudents(studentsRes.data);
@@ -260,8 +278,23 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchParentsCount = () => {
+    const token = getAccessToken();
+    if (!token) return;
+
+    fetchAdminParents(token)
+      .then((data) => {
+        const list = Array.isArray(data) ? data : data.results || [];
+        setParentsCount(list.length);
+      })
+      .catch((err) => {
+        console.error('Failed to load parents count:', err);
+      });
+  };
+
   useEffect(() => {
     fetchAdminData();
+    fetchParentsCount();
   }, [activeTab, location.pathname]);
 
   const parsedBulkEmails = useMemo(() => {
@@ -277,8 +310,7 @@ export default function AdminDashboard() {
     setInviteError('');
     setPdfFileName(file.name);
 
-    const isPdf =
-      file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+    const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
     if (!isPdf) {
       setInviteError('Please select a valid PDF (.pdf) file.');
       return;
@@ -307,9 +339,7 @@ export default function AdminDashboard() {
   };
 
   const copyAllLinks = async () => {
-    const text = (bulkResult?.invites || [])
-      .map((i) => `${i.email}\t${i.invite_link}`)
-      .join('\n');
+    const text = (bulkResult?.invites || []).map((i) => `${i.email}\t${i.invite_link}`).join('\n');
     if (!text) return;
     try {
       await navigator.clipboard.writeText(text);
@@ -385,8 +415,12 @@ export default function AdminDashboard() {
       admission_number: obj.admission_number || '',
       gender: obj.gender || 'Male',
       classroom: currentClassroomId,
-      date_admitted: obj.date_admitted ? obj.date_admitted.split('T')[0] : new Date().toISOString().split('T')[0],
-      date_joined: obj.date_joined ? obj.date_joined.split('T')[0] : new Date().toISOString().split('T')[0],
+      date_admitted: obj.date_admitted
+        ? obj.date_admitted.split('T')[0]
+        : new Date().toISOString().split('T')[0],
+      date_joined: obj.date_joined
+        ? obj.date_joined.split('T')[0]
+        : new Date().toISOString().split('T')[0],
       name: obj.name || obj.class_name || '',
       teacher: currentTeacherId,
     });
@@ -489,11 +523,14 @@ export default function AdminDashboard() {
       }
 
       fetchAdminData();
+      fetchParentsCount();
     } catch (err) {
       console.error('Invite failed:', err.response?.data || err);
       setInviteError(
         err.response?.data?.error ||
-          (err.response ? `Failed to send invitation (HTTP ${err.response.status}).` : `Network error: ${err.message}`)
+          (err.response
+            ? `Failed to send invitation (HTTP ${err.response.status}).`
+            : `Network error: ${err.message}`)
       );
     } finally {
       setInviteLoading(false);
@@ -630,9 +667,12 @@ export default function AdminDashboard() {
           <span className="text-[10px] uppercase font-extrabold px-3 py-1 rounded-lg border tracking-wider bg-white border-[#c77dff] text-[#10002b]">
             System Administrator
           </span>
-          <h1 className="text-lg sm:text-xl font-extrabold mt-2 text-[#10002b]">SmartAcademic Management Portal</h1>
+          <h1 className="text-lg sm:text-xl font-extrabold mt-2 text-[#10002b]">
+            SmartAcademic Management Portal
+          </h1>
           <p className="text-xs mt-1 text-[#10002b]/70">
-            Invite users individually or via PDF batch upload, review activated profiles, and monitor weekly teacher attendance.
+            Invite users individually or via PDF batch upload, review activated profiles, and monitor
+            weekly teacher attendance.
           </p>
         </div>
         <button
@@ -657,12 +697,11 @@ export default function AdminDashboard() {
         <div className="p-4 rounded-2xl bg-amber-50 border border-amber-300 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <p className="text-xs font-extrabold text-amber-900">
-              Action Required: {pendingApprovals.length} newly activated account(s) need admin profile review before login
+              Action Required: {pendingApprovals.length} newly activated account(s) need admin profile
+              review before login
             </p>
             <p className="text-[11px] text-amber-800 mt-0.5">
-              {pendingApprovals
-                .map((u) => `${u.email || u.username} (${u.role})`)
-                .join(', ')}
+              {pendingApprovals.map((u) => `${u.email || u.username} (${u.role})`).join(', ')}
             </p>
           </div>
           <div className="flex flex-wrap gap-2 shrink-0">
@@ -691,12 +730,17 @@ export default function AdminDashboard() {
       {/* OVERVIEW TAB */}
       {activeTab === 'overview' && (
         <div className="space-y-6 w-full">
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 w-full">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4 w-full">
             {[
               { label: 'Teachers', value: teachers.length, to: '/dashboard/admin/teachers' },
               { label: 'Students', value: students.length, to: '/dashboard/admin/students' },
               { label: 'Classrooms', value: classrooms.length, to: '/dashboard/admin/classrooms' },
-              { label: 'Attendance Logs', value: attendanceLogs.length, to: '/dashboard/admin/attendance' },
+              {
+                label: 'Attendance Logs',
+                value: attendanceLogs.length,
+                to: '/dashboard/admin/attendance',
+              },
+              { label: 'Parents', value: parentsCount, to: '/dashboard/admin/parents' },
             ].map((card) => (
               <div
                 key={card.label}
@@ -704,8 +748,12 @@ export default function AdminDashboard() {
                 className={`${cardClass} p-5 cursor-pointer hover:border-[#10002b] transition-all`}
                 style={{ backgroundColor: 'var(--sa-surface)' }}
               >
-                <p className="sa-card-title text-[#10002b] text-xs font-bold uppercase tracking-wider">{card.label}</p>
-                <p className="sa-card-value text-[#10002b] text-2xl font-extrabold mt-2">{card.value}</p>
+                <p className="sa-card-title text-[#10002b] text-xs font-bold uppercase tracking-wider">
+                  {card.label}
+                </p>
+                <p className="sa-card-value text-[#10002b] text-2xl font-extrabold mt-2">
+                  {card.value}
+                </p>
               </div>
             ))}
           </div>
@@ -738,21 +786,31 @@ export default function AdminDashboard() {
               <tbody className="divide-y divide-[#c77dff]/40">
                 {teachers.length === 0 ? (
                   <tr>
-                    <td colSpan="7" className="p-6 text-center text-[#10002b]/70 bg-white">No teachers registered yet.</td>
+                    <td colSpan="7" className="p-6 text-center text-[#10002b]/70 bg-white">
+                      No teachers registered yet.
+                    </td>
                   </tr>
                 ) : (
                   teacherPager.pageItems.map((t) => {
                     const linkedAcc = getLinkedAccount(t);
-                    const needsApproval = linkedAcc && linkedAcc.is_active && linkedAcc.is_admin_approved === false;
+                    const needsApproval =
+                      linkedAcc && linkedAcc.is_active && linkedAcc.is_admin_approved === false;
 
                     return (
                       <tr key={t.id} className="bg-white hover:bg-[#c77dff]/10 transition-colors">
-                        <td className="p-4 font-mono font-bold text-[#10002b] whitespace-nowrap">{t.tsc_number || t.id}</td>
-                        <td className="p-4 font-bold text-[#10002b]">
-                          {t.first_name || t.user?.first_name || ''} {t.surname ? `, ${t.surname}` : ''} {t.last_name || t.user?.last_name || ''}
+                        <td className="p-4 font-mono font-bold text-[#10002b] whitespace-nowrap">
+                          {t.tsc_number || t.id}
                         </td>
-                        <td className="p-4 text-[#10002b]/80 break-all">{t.email || t.user?.email || 'N/A'}</td>
-                        <td className="p-4">{renderApprovalBadge(t) || <span className="text-[#10002b]/60">Active</span>}</td>
+                        <td className="p-4 font-bold text-[#10002b]">
+                          {t.first_name || t.user?.first_name || ''}{' '}
+                          {t.surname ? `, ${t.surname}` : ''} {t.last_name || t.user?.last_name || ''}
+                        </td>
+                        <td className="p-4 text-[#10002b]/80 break-all">
+                          {t.email || t.user?.email || 'N/A'}
+                        </td>
+                        <td className="p-4">
+                          {renderApprovalBadge(t) || <span className="text-[#10002b]/60">Active</span>}
+                        </td>
                         <td className="p-4 text-[#10002b]">{t.gender || 'N/A'}</td>
                         <td className="p-4 text-[#10002b]/80 font-mono whitespace-nowrap">
                           {t.date_joined ? new Date(t.date_joined).toLocaleDateString() : 'N/A'}
@@ -767,10 +825,18 @@ export default function AdminDashboard() {
                               Approve
                             </button>
                           )}
-                          <button type="button" onClick={() => openEditModal(t, 'teacher')} className={editBtnClass}>
+                          <button
+                            type="button"
+                            onClick={() => openEditModal(t, 'teacher')}
+                            className={editBtnClass}
+                          >
                             {needsApproval ? 'Update & Approve' : 'Edit'}
                           </button>
-                          <button type="button" onClick={() => handleDeleteUser(t.id, 'teacher')} className={deleteBtnClass}>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteUser(t.id, 'teacher')}
+                            className={deleteBtnClass}
+                          >
                             Delete
                           </button>
                         </td>
@@ -782,7 +848,9 @@ export default function AdminDashboard() {
             </table>
           </div>
           <Pagination pager={teacherPager} />
-          <p className="text-[11px] text-[#10002b]/60 sm:hidden">Swipe the table sideways to see all columns.</p>
+          <p className="text-[11px] text-[#10002b]/60 sm:hidden">
+            Swipe the table sideways to see all columns.
+          </p>
         </div>
       )}
 
@@ -813,7 +881,9 @@ export default function AdminDashboard() {
               <tbody className="divide-y divide-[#c77dff]/40">
                 {students.length === 0 ? (
                   <tr>
-                    <td colSpan="8" className="p-6 text-center text-[#10002b]/70 bg-white">No students registered yet.</td>
+                    <td colSpan="8" className="p-6 text-center text-[#10002b]/70 bg-white">
+                      No students registered yet.
+                    </td>
                   </tr>
                 ) : (
                   studentPager.pageItems.map((s) => {
@@ -828,18 +898,28 @@ export default function AdminDashboard() {
                     }
 
                     const linkedAcc = getLinkedAccount(s);
-                    const needsApproval = linkedAcc && linkedAcc.is_active && linkedAcc.is_admin_approved === false;
+                    const needsApproval =
+                      linkedAcc && linkedAcc.is_active && linkedAcc.is_admin_approved === false;
 
                     return (
                       <tr key={s.id} className="bg-white hover:bg-[#c77dff]/10 transition-colors">
-                        <td className="p-4 font-mono font-bold text-[#10002b] whitespace-nowrap">{s.admission_number || s.id}</td>
-                        <td className="p-4 font-bold text-[#10002b]">
-                          {s.first_name || s.user?.first_name || ''} {s.surname ? `, ${s.surname}` : ''} {s.last_name || s.user?.last_name || ''}
+                        <td className="p-4 font-mono font-bold text-[#10002b] whitespace-nowrap">
+                          {s.admission_number || s.id}
                         </td>
-                        <td className="p-4 font-mono text-[#10002b]">{s.username || s.user?.username || 'N/A'}</td>
-                        <td className="p-4">{renderApprovalBadge(s) || <span className="text-[#10002b]/60">Active</span>}</td>
+                        <td className="p-4 font-bold text-[#10002b]">
+                          {s.first_name || s.user?.first_name || ''}{' '}
+                          {s.surname ? `, ${s.surname}` : ''} {s.last_name || s.user?.last_name || ''}
+                        </td>
+                        <td className="p-4 font-mono text-[#10002b]">
+                          {s.username || s.user?.username || 'N/A'}
+                        </td>
+                        <td className="p-4">
+                          {renderApprovalBadge(s) || <span className="text-[#10002b]/60">Active</span>}
+                        </td>
                         <td className="p-4 text-[#10002b]">{s.gender || 'N/A'}</td>
-                        <td className="p-4 text-[#10002b] font-semibold whitespace-nowrap">{assignedClass}</td>
+                        <td className="p-4 text-[#10002b] font-semibold whitespace-nowrap">
+                          {assignedClass}
+                        </td>
                         <td className="p-4 text-[#10002b]/80 font-mono whitespace-nowrap">
                           {s.date_admitted ? new Date(s.date_admitted).toLocaleDateString() : 'N/A'}
                         </td>
@@ -853,10 +933,18 @@ export default function AdminDashboard() {
                               Approve
                             </button>
                           )}
-                          <button type="button" onClick={() => openEditModal(s, 'student')} className={editBtnClass}>
+                          <button
+                            type="button"
+                            onClick={() => openEditModal(s, 'student')}
+                            className={editBtnClass}
+                          >
                             {needsApproval ? 'Update & Approve' : 'Edit'}
                           </button>
-                          <button type="button" onClick={() => handleDeleteUser(s.id, 'student')} className={deleteBtnClass}>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteUser(s.id, 'student')}
+                            className={deleteBtnClass}
+                          >
                             Delete
                           </button>
                         </td>
@@ -868,7 +956,47 @@ export default function AdminDashboard() {
             </table>
           </div>
           <Pagination pager={studentPager} />
-          <p className="text-[11px] text-[#10002b]/60 sm:hidden">Swipe the table sideways to see all columns.</p>
+          <p className="text-[11px] text-[#10002b]/60 sm:hidden">
+            Swipe the table sideways to see all columns.
+          </p>
+        </div>
+      )}
+
+      {/* PARENTS & CHILD LINKING TAB */}
+      {activeTab === 'parents' && (
+        <div className="w-full space-y-6">
+          <div className="flex flex-wrap justify-between items-center gap-3 w-full">
+            <div>
+              <h2 className="text-base sm:text-lg font-extrabold text-[#10002b]">
+                Manage Parents & Linked Learners
+              </h2>
+              <p className="text-xs text-[#10002b]/70 mt-0.5">
+                Invite a parent with the Parent role, then link or unlink student accounts by
+                admission number or learner search.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setInviteRole('parent');
+                setInviteMode('single');
+                setInviteError('');
+                setInviteMessage('');
+                setInviteLink('');
+                setSingleEmailError('');
+                setBulkResult(null);
+                setPdfFileName('');
+                setShowInviteModal(true);
+              }}
+              className={addBtnClass}
+            >
+              Invite Parent
+            </button>
+          </div>
+
+          <div className={`${cardClass} p-2 sm:p-4`} style={{ backgroundColor: 'var(--sa-surface)' }}>
+            <AdminParentLinks token={getAccessToken()} />
+          </div>
         </div>
       )}
 
@@ -895,7 +1023,9 @@ export default function AdminDashboard() {
               <tbody className="divide-y divide-[#c77dff]/40">
                 {classrooms.length === 0 ? (
                   <tr>
-                    <td colSpan="4" className="p-6 text-center text-[#10002b]/70 bg-white">No classrooms configured yet.</td>
+                    <td colSpan="4" className="p-6 text-center text-[#10002b]/70 bg-white">
+                      No classrooms configured yet.
+                    </td>
                   </tr>
                 ) : (
                   classroomPager.pageItems.map((c) => {
@@ -904,8 +1034,12 @@ export default function AdminDashboard() {
                       if (typeof c.teacher === 'object') {
                         assignedTeacherName = getDisplayName(c.teacher);
                       } else {
-                        const foundTeacher = teachers.find((t) => t.id === c.teacher || t.id === Number(c.teacher));
-                        assignedTeacherName = foundTeacher ? getDisplayName(foundTeacher) : `Teacher ID: ${c.teacher}`;
+                        const foundTeacher = teachers.find(
+                          (t) => t.id === c.teacher || t.id === Number(c.teacher)
+                        );
+                        assignedTeacherName = foundTeacher
+                          ? getDisplayName(foundTeacher)
+                          : `Teacher ID: ${c.teacher}`;
                       }
                     }
 
@@ -915,10 +1049,18 @@ export default function AdminDashboard() {
                         <td className="p-4 font-bold text-[#10002b]">{c.name || c.class_name}</td>
                         <td className="p-4 text-[#10002b]/80">{assignedTeacherName}</td>
                         <td className="p-4 text-right whitespace-nowrap space-x-2">
-                          <button type="button" onClick={() => openEditModal(c, 'classroom')} className={editBtnClass}>
+                          <button
+                            type="button"
+                            onClick={() => openEditModal(c, 'classroom')}
+                            className={editBtnClass}
+                          >
                             Edit
                           </button>
-                          <button type="button" onClick={() => handleDeleteUser(c.id, 'classroom')} className={deleteBtnClass}>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteUser(c.id, 'classroom')}
+                            className={deleteBtnClass}
+                          >
                             Delete
                           </button>
                         </td>
@@ -937,9 +1079,12 @@ export default function AdminDashboard() {
       {activeTab === 'attendance' && (
         <div className="w-full space-y-8">
           <div className="w-full">
-            <h2 className="text-base sm:text-lg font-extrabold text-[#10002b]">Teacher Attendance Tracking & Analytics</h2>
+            <h2 className="text-base sm:text-lg font-extrabold text-[#10002b]">
+              Teacher Attendance Tracking & Analytics
+            </h2>
             <p className="text-xs text-[#10002b]/70 mt-0.5">
-              Evaluated against {teachers.length} registered teachers. Rules: On Time (&le; 7:00 AM), Late (&gt; 7:00 AM), Absent (Unclocked after 4:30 PM).
+              Evaluated against {teachers.length} registered teachers. Rules: On Time (&le; 7:00 AM),
+              Late (&gt; 7:00 AM), Absent (Unclocked after 4:30 PM).
             </p>
           </div>
 
@@ -1049,13 +1194,20 @@ export default function AdminDashboard() {
                     >
                       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-[#c77dff]/40 pb-3 gap-3">
                         <h3 className="text-sm sm:text-base font-extrabold text-[#10002b] uppercase tracking-wide">
-                          {week.monthYear} — Week {weeks.length - (weeksPager.startIndex + weekIndex)} (Mon to Fri)
+                          {week.monthYear} — Week {weeks.length - (weeksPager.startIndex + weekIndex)}{' '}
+                          (Mon to Fri)
                         </h3>
 
                         <div className="flex flex-wrap items-center gap-2 text-[11px] font-bold">
-                          <span className="px-3 py-1 rounded-lg bg-emerald-50 text-emerald-700">Present: {weekPresent}</span>
-                          <span className="px-3 py-1 rounded-lg bg-amber-50 text-amber-700">Late: {weekLate}</span>
-                          <span className="px-3 py-1 rounded-lg bg-red-50 text-red-700">Absent: {weekAbsent}</span>
+                          <span className="px-3 py-1 rounded-lg bg-emerald-50 text-emerald-700">
+                            Present: {weekPresent}
+                          </span>
+                          <span className="px-3 py-1 rounded-lg bg-amber-50 text-amber-700">
+                            Late: {weekLate}
+                          </span>
+                          <span className="px-3 py-1 rounded-lg bg-red-50 text-red-700">
+                            Absent: {weekAbsent}
+                          </span>
                         </div>
                       </div>
 
@@ -1075,11 +1227,19 @@ export default function AdminDashboard() {
                           <tbody className="divide-y divide-[#c77dff]/30">
                             {evaluatedRows.map((row, idx) => (
                               <tr key={idx} className="hover:bg-[#c77dff]/5 transition-colors">
-                                <td className="p-3.5 font-mono font-bold text-[#10002b] whitespace-nowrap">{row.tscNum}</td>
-                                <td className="p-3.5 font-bold text-[#10002b] whitespace-nowrap">{row.fullName}</td>
+                                <td className="p-3.5 font-mono font-bold text-[#10002b] whitespace-nowrap">
+                                  {row.tscNum}
+                                </td>
+                                <td className="p-3.5 font-bold text-[#10002b] whitespace-nowrap">
+                                  {row.fullName}
+                                </td>
                                 <td className="p-3.5 font-bold text-[#10002b]">{row.dayOfWeek}</td>
-                                <td className="p-3.5 font-mono text-emerald-800 font-semibold whitespace-nowrap">{row.clockInTime}</td>
-                                <td className="p-3.5 font-mono text-[#10002b]/70 font-semibold whitespace-nowrap">{row.clockOutTime}</td>
+                                <td className="p-3.5 font-mono text-emerald-800 font-semibold whitespace-nowrap">
+                                  {row.clockInTime}
+                                </td>
+                                <td className="p-3.5 font-mono text-[#10002b]/70 font-semibold whitespace-nowrap">
+                                  {row.clockOutTime}
+                                </td>
                                 <td className="p-3.5">
                                   <span
                                     className={`inline-block whitespace-nowrap px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider border ${row.badgeClass}`}
@@ -1087,13 +1247,17 @@ export default function AdminDashboard() {
                                     {row.status}
                                   </span>
                                 </td>
-                                <td className="p-3.5 font-mono text-[#10002b]/80 whitespace-nowrap">{row.exactDate}</td>
+                                <td className="p-3.5 font-mono text-[#10002b]/80 whitespace-nowrap">
+                                  {row.exactDate}
+                                </td>
                               </tr>
                             ))}
                           </tbody>
                         </table>
                       </div>
-                      <p className="text-[11px] text-[#10002b]/60 sm:hidden">Swipe the table sideways to see all columns.</p>
+                      <p className="text-[11px] text-[#10002b]/60 sm:hidden">
+                        Swipe the table sideways to see all columns.
+                      </p>
                     </div>
                   );
                 })}
@@ -1107,8 +1271,13 @@ export default function AdminDashboard() {
       {/* SUBMISSIONS TAB */}
       {activeTab === 'submissions' && (
         <div className="w-full space-y-6">
-          <h2 className="text-base sm:text-lg font-extrabold text-[#10002b]">All Student Submissions</h2>
-          <div className={`${cardClass} p-4 sm:p-6 space-y-4`} style={{ backgroundColor: 'var(--sa-surface)' }}>
+          <h2 className="text-base sm:text-lg font-extrabold text-[#10002b]">
+            All Student Submissions
+          </h2>
+          <div
+            className={`${cardClass} p-4 sm:p-6 space-y-4`}
+            style={{ backgroundColor: 'var(--sa-surface)' }}
+          >
             <p className="text-xs text-[#10002b]/80">
               Assignment Submissions Count: <strong>{assignmentSubs.length}</strong>
             </p>
@@ -1196,7 +1365,9 @@ export default function AdminDashboard() {
                 {inviteLink && (
                   <div className="mt-2 p-2 bg-white rounded border border-emerald-300 text-left">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="block text-[10px] text-gray-500 uppercase font-semibold">Activation Link:</span>
+                      <span className="block text-[10px] text-gray-500 uppercase font-semibold">
+                        Activation Link:
+                      </span>
                       <button
                         type="button"
                         onClick={() => copySingleLink(inviteLink)}
@@ -1230,7 +1401,9 @@ export default function AdminDashboard() {
 
                     {Array.isArray(bulkResult.skipped) && bulkResult.skipped.length > 0 && (
                       <div className="text-[11px] text-amber-800 bg-amber-50 p-2 rounded border border-amber-200">
-                        <span className="font-bold block mb-1">Skipped ({bulkResult.skipped.length}):</span>
+                        <span className="font-bold block mb-1">
+                          Skipped ({bulkResult.skipped.length}):
+                        </span>
                         <ul className="list-disc pl-4 space-y-0.5">
                           {bulkResult.skipped.map((item, i) => (
                             <li key={i} className="break-words">
@@ -1318,7 +1491,9 @@ export default function AdminDashboard() {
                   <textarea
                     rows={5}
                     required
-                    placeholder={'Upload a PDF file or paste emails here...\nuser1@school.ac.ke\nuser2@school.ac.ke'}
+                    placeholder={
+                      'Upload a PDF file or paste emails here...\nuser1@school.ac.ke\nuser2@school.ac.ke'
+                    }
                     value={bulkInviteText}
                     onChange={(e) => setBulkInviteText(e.target.value)}
                     className="w-full px-4 py-3 text-xs rounded-xl bg-gray-50 border border-gray-300 text-[#10002b] focus:outline-none focus:border-[#c77dff] font-mono"
@@ -1335,12 +1510,15 @@ export default function AdminDashboard() {
                 >
                   <option value="teacher">Teacher</option>
                   <option value="student">Student</option>
+                  <option value="parent">Parent</option>
                   <option value="admin">Administrator</option>
                 </select>
               </div>
 
               {inviteLoading && inviteProgress && (
-                <p className="text-[11px] font-semibold text-[#10002b]/70 text-center">{inviteProgress}</p>
+                <p className="text-[11px] font-semibold text-[#10002b]/70 text-center">
+                  {inviteProgress}
+                </p>
               )}
 
               <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2">
@@ -1437,7 +1615,9 @@ export default function AdminDashboard() {
                   </div>
 
                   <div>
-                    <label className="block font-bold mb-1 text-[#10002b]">Date Joined Institution</label>
+                    <label className="block font-bold mb-1 text-[#10002b]">
+                      Date Joined Institution
+                    </label>
                     <input
                       type="date"
                       value={formData.date_joined}
@@ -1470,7 +1650,9 @@ export default function AdminDashboard() {
                       type="text"
                       placeholder="e.g. ADM-2026-001"
                       value={formData.admission_number}
-                      onChange={(e) => setFormData({ ...formData, admission_number: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, admission_number: e.target.value })
+                      }
                       className={`${modalInput} font-mono`}
                       required
                     />
