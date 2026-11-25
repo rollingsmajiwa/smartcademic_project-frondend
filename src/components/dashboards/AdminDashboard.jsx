@@ -7,8 +7,8 @@ import * as pdfjsLib from 'pdfjs-dist';
 // (check node_modules/pdfjs-dist/build/ for the exact name).
 import pdfWorkerSrc from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import { usePagination, Pagination } from './Pagination';
-import AdminParentLinks from '../Admin/AdminParentLinks';
 import { fetchAdminParents } from './parentPortal';
+import AdminParentLinks from '../admin/AdminParentLinks'
 
 const API_ORIGIN = import.meta.env.VITE_API_URL || 'https://smartcademic-project.onrender.com';
 const EMAIL_REGEX = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g;
