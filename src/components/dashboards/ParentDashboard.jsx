@@ -3,8 +3,10 @@ import { useNavigate } from "react-router-dom";
 import {
   fetchParentChildren,
   fetchParentMarks,
+  fetchParentMe,
   fetchParentReportCard,
   fetchParentSubmissions,
+  updateParentMe,
 } from "./parentPortal";
 
 export default function ParentDashboard({
@@ -20,6 +22,16 @@ export default function ParentDashboard({
 
   const [localTab, setLocalTab] = useState("overview");
   const activeTab = propTab || localTab;
+
+  const [parentProfile, setParentProfile] = useState(null);
+  const [profileForm, setProfileForm] = useState({
+    full_name: "",
+    phone_number: "",
+  });
+  const [showProfileEditor, setShowProfileEditor] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileMessage, setProfileMessage] = useState("");
+  const [profileError, setProfileError] = useState("");
 
   const [children, setChildren] = useState([]);
   const [selectedChildId, setSelectedChildId] = useState(null);
@@ -43,6 +55,29 @@ export default function ParentDashboard({
     }
     navigate(`/dashboard/parent/${tabId}`);
   };
+
+  useEffect(() => {
+    let active = true;
+    fetchParentMe(token)
+      .then((me) => {
+        if (!active) return;
+        setParentProfile(me);
+        setProfileForm({
+          full_name: me.full_name || "",
+          phone_number: me.phone_number || "",
+        });
+        if (!me.phone_number) {
+          setShowProfileEditor(true);
+        }
+      })
+      .catch(() => {
+        // Non-blocking if profile endpoint isn't needed for basic view
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [token]);
 
   useEffect(() => {
     let active = true;
@@ -117,10 +152,131 @@ export default function ParentDashboard({
     };
   }, [token, selectedChildId, activeTab, term, year]);
 
-  const activeChild = children.find((c) => c.id === Number(selectedChildId)) || null;
+  async function handleProfileSave(e) {
+    e.preventDefault();
+    setSavingProfile(true);
+    setProfileMessage("");
+    setProfileError("");
+
+    try {
+      const updated = await updateParentMe(token, {
+        full_name: profileForm.full_name.trim(),
+        phone_number: profileForm.phone_number.trim(),
+      });
+      setParentProfile(updated);
+      setProfileForm({
+        full_name: updated.full_name || "",
+        phone_number: updated.phone_number || "",
+      });
+      setProfileMessage("Profile and WhatsApp number saved.");
+    } catch (err) {
+      setProfileError(err.message || "Failed to update profile.");
+    } finally {
+      setSavingProfile(false);
+    }
+  }
+
+  const activeChild =
+    children.find((c) => c.id === Number(selectedChildId)) || null;
 
   const controlClass =
     "rounded-xl border border-[#c77dff]/60 bg-white px-3 py-1.5 text-sm font-medium text-[#10002b] focus:border-[#7b2cbf] focus:outline-none focus:ring-2 focus:ring-[#c77dff]/40";
+
+  const profileCard = (
+    <div className="p-4 rounded-xl border border-[#c77dff]/60 bg-white space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="text-xs font-medium text-[#10002b]/85 space-y-0.5">
+          <p className="text-sm font-bold text-[#10002b]">
+            {parentProfile?.full_name || profileForm.full_name || "Parent Account"}
+          </p>
+          <p>
+            WhatsApp / Phone:{" "}
+            <strong className="text-[#5a189a]">
+              {parentProfile?.phone_number || "Not set yet"}
+            </strong>
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            setProfileMessage("");
+            setProfileError("");
+            setShowProfileEditor((prev) => !prev);
+          }}
+          className="px-3 py-1.5 rounded-xl border border-[#c77dff]/60 bg-[#faf5ff] text-xs font-bold text-[#5a189a] hover:bg-[#f3e8ff] cursor-pointer"
+        >
+          {showProfileEditor ? "Close Profile Form" : "Edit Name & WhatsApp"}
+        </button>
+      </div>
+
+      {showProfileEditor && (
+        <form
+          onSubmit={handleProfileSave}
+          className="pt-3 border-t border-[#c77dff]/30 grid grid-cols-1 sm:grid-cols-2 gap-3"
+        >
+          <div>
+            <label
+              htmlFor="parent-full-name"
+              className="block text-xs font-bold text-[#10002b] mb-1"
+            >
+              Parent Full Name
+            </label>
+            <input
+              id="parent-full-name"
+              type="text"
+              value={profileForm.full_name}
+              onChange={(e) =>
+                setProfileForm((prev) => ({
+                  ...prev,
+                  full_name: e.target.value,
+                }))
+              }
+              placeholder="e.g. Grace Wanjiku"
+              className={`${controlClass} w-full`}
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="parent-phone-number"
+              className="block text-xs font-bold text-[#10002b] mb-1"
+            >
+              WhatsApp / Phone Number
+            </label>
+            <input
+              id="parent-phone-number"
+              type="tel"
+              value={profileForm.phone_number}
+              onChange={(e) =>
+                setProfileForm((prev) => ({
+                  ...prev,
+                  phone_number: e.target.value,
+                }))
+              }
+              placeholder="e.g. 0712345678 or 254712345678"
+              className={`${controlClass} w-full`}
+            />
+          </div>
+
+          <div className="sm:col-span-2 flex flex-wrap items-center justify-between gap-2">
+            <div className="text-xs font-semibold">
+              {profileError && <span className="text-red-700">{profileError}</span>}
+              {profileMessage && (
+                <span className="text-emerald-700">{profileMessage}</span>
+              )}
+            </div>
+            <button
+              type="submit"
+              disabled={savingProfile}
+              className="px-4 py-2 rounded-xl bg-[#7b2cbf] text-white text-xs font-bold hover:bg-[#5a189a] disabled:opacity-60 cursor-pointer"
+            >
+              {savingProfile ? "Saving..." : "Save Profile"}
+            </button>
+          </div>
+        </form>
+      )}
+    </div>
+  );
 
   if (loadingChildren) {
     return (
@@ -132,16 +288,23 @@ export default function ParentDashboard({
 
   if (error && children.length === 0) {
     return (
-      <div className="p-4 rounded-xl border border-red-300 bg-red-50 text-sm font-medium text-red-700">
-        {error}
+      <div className="max-w-5xl mx-auto p-4 sm:p-6 space-y-4">
+        <div className="p-4 rounded-xl border border-red-300 bg-red-50 text-sm font-medium text-red-700">
+          {error}
+        </div>
+        {profileCard}
       </div>
     );
   }
 
   if (children.length === 0) {
     return (
-      <div className="p-4 rounded-xl border border-[#c77dff]/60 bg-[#faf5ff] text-sm font-medium text-[#10002b]">
-        No learners are linked to your parent account yet. Please contact the school administration.
+      <div className="max-w-5xl mx-auto p-4 sm:p-6 space-y-4 text-[#10002b]">
+        <div className="p-4 rounded-xl border border-[#c77dff]/60 bg-[#faf5ff] text-sm font-medium">
+          No learners are linked to your parent account yet. Please contact the
+          school administration.
+        </div>
+        {profileCard}
       </div>
     );
   }
@@ -154,15 +317,19 @@ export default function ParentDashboard({
           <h1 className="text-2xl font-bold text-[#10002b]">Parent Portal</h1>
           {activeChild && (
             <p className="text-xs font-medium text-[#10002b]/80 mt-1">
-              Viewing <strong className="text-[#5a189a]">{activeChild.full_name}</strong> · Adm:{" "}
-              <strong>{activeChild.admission_number}</strong> · Class:{" "}
+              Viewing{" "}
+              <strong className="text-[#5a189a]">{activeChild.full_name}</strong>{" "}
+              · Adm: <strong>{activeChild.admission_number}</strong> · Class:{" "}
               <strong>{activeChild.classroom_name || "Unassigned"}</strong>
             </p>
           )}
         </div>
 
         <div className="flex items-center gap-2">
-          <label htmlFor="child-select" className="text-xs font-bold text-[#10002b]">
+          <label
+            htmlFor="child-select"
+            className="text-xs font-bold text-[#10002b]"
+          >
             Select Child:
           </label>
           <select
@@ -179,6 +346,9 @@ export default function ParentDashboard({
           </select>
         </div>
       </div>
+
+      {/* Parent Name & WhatsApp Number Card */}
+      {profileCard}
 
       {/* Navigation Tabs & Term/Year Filters */}
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -269,16 +439,20 @@ function ReportCardPanel({ reportCard }) {
     <div className="space-y-4">
       <div className="flex flex-wrap gap-6 p-4 rounded-xl border border-[#c77dff]/60 bg-[#faf5ff] text-xs font-medium text-[#10002b]">
         <div>
-          <span className="font-bold text-[#5a189a]">Term:</span> {reportCard.term} ({reportCard.year})
+          <span className="font-bold text-[#5a189a]">Term:</span>{" "}
+          {reportCard.term} ({reportCard.year})
         </div>
         <div>
-          <span className="font-bold text-[#5a189a]">Subjects:</span> {reportCard.summary?.subject_count}
+          <span className="font-bold text-[#5a189a]">Subjects:</span>{" "}
+          {reportCard.summary?.subject_count}
         </div>
         <div>
-          <span className="font-bold text-[#5a189a]">Total Marks:</span> {reportCard.summary?.total_marks}
+          <span className="font-bold text-[#5a189a]">Total Marks:</span>{" "}
+          {reportCard.summary?.total_marks}
         </div>
         <div>
-          <span className="font-bold text-[#5a189a]">Average:</span> {reportCard.summary?.average_marks}
+          <span className="font-bold text-[#5a189a]">Average:</span>{" "}
+          {reportCard.summary?.average_marks}
         </div>
       </div>
 
@@ -385,7 +559,9 @@ function SubmissionsPanel({ submissions }) {
                     className="border-b border-[#c77dff]/30 last:border-b-0 hover:bg-[#faf5ff]/60"
                   >
                     <td className="p-3 font-semibold">{a.assignment_title}</td>
-                    <td className="p-3 font-bold text-[#5a189a]">{a.grade ?? "Pending"}</td>
+                    <td className="p-3 font-bold text-[#5a189a]">
+                      {a.grade ?? "Pending"}
+                    </td>
                     <td className="p-3">{a.feedback || "-"}</td>
                   </tr>
                 ))}
@@ -419,7 +595,9 @@ function SubmissionsPanel({ submissions }) {
                     className="border-b border-[#c77dff]/30 last:border-b-0 hover:bg-[#faf5ff]/60"
                   >
                     <td className="p-3 font-semibold">{ex.exam_title}</td>
-                    <td className="p-3 font-bold text-[#5a189a]">{ex.score ?? "-"}</td>
+                    <td className="p-3 font-bold text-[#5a189a]">
+                      {ex.score ?? "-"}
+                    </td>
                     <td className="p-3">{ex.status}</td>
                     <td className="p-3">{ex.feedback || "-"}</td>
                   </tr>

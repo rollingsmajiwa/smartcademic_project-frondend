@@ -37,9 +37,9 @@ async function requestJson(path, token) {
   return parseResponse(res);
 }
 
-async function mutateJson(path, token, body) {
+async function mutateJson(path, token, body, method = "POST") {
   const res = await fetch(`${API_BASE}${path}`, {
-    method: "POST",
+    method,
     headers: authHeaders(token),
     body: JSON.stringify(body),
   });
@@ -58,6 +58,14 @@ function buildQuery(paramsObj = {}) {
 }
 
 // ---------- Parent portal endpoints ----------
+export function fetchParentMe(token) {
+  return requestJson("/api/parents/me/", token);
+}
+
+export function updateParentMe(token, payload) {
+  return mutateJson("/api/parents/me/", token, payload, "PATCH");
+}
+
 export function fetchParentChildren(token) {
   return requestJson("/api/parents/me/children/", token);
 }
