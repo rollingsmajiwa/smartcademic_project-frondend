@@ -171,7 +171,7 @@ export default function AdminParentLinks({ token }) {
           Parent–Learner Account Linking
         </h2>
         <p className="text-xs font-medium text-[#10002b]/75 mt-1">
-          Select a parent profile and link one or more learners by admission number or search.
+          Select a parent profile to view their name, WhatsApp/phone number, and email, and link or unlink learners.
         </p>
       </div>
 
@@ -198,7 +198,7 @@ export default function AdminParentLinks({ token }) {
               type="text"
               value={parentQuery}
               onChange={(e) => setParentQuery(e.target.value)}
-              placeholder="Search name, username, phone, or adm..."
+              placeholder="Search name, username, phone, email, or adm..."
               className={inputClass}
             />
           </div>
@@ -237,8 +237,19 @@ export default function AdminParentLinks({ token }) {
                       }`}
                     >
                       @{parent.username}
-                      {parent.phone_number ? ` · ${parent.phone_number}` : ""}
+                      {parent.phone_number
+                        ? ` · ${parent.phone_number}`
+                        : " · No phone"}
                     </div>
+                    {parent.email && (
+                      <div
+                        className={`text-xs mt-0.5 truncate ${
+                          isSelected ? "text-white/80" : "text-[#10002b]/65"
+                        }`}
+                      >
+                        {parent.email}
+                      </div>
+                    )}
                     <div
                       className={`text-xs font-semibold mt-1 ${
                         isSelected ? "text-white" : "text-[#5a189a]"
@@ -253,7 +264,7 @@ export default function AdminParentLinks({ token }) {
           )}
         </div>
 
-        {/* Right Column: Linked Children & Add Controls */}
+        {/* Right Column: Parent Details, Linked Children & Add Controls */}
         <div className="md:col-span-7 space-y-4">
           {!selectedParent ? (
             <div className="p-4 rounded-xl border border-[#c77dff]/60 bg-[#faf5ff] text-xs font-medium text-[#10002b]/75">
@@ -261,8 +272,31 @@ export default function AdminParentLinks({ token }) {
             </div>
           ) : (
             <>
-              {/* Currently Linked Children */}
+              {/* Currently Linked Children + Parent Contact Summary */}
               <div className="p-4 rounded-xl border border-[#c77dff]/60 bg-[#faf5ff] space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-[#c77dff]/30 text-xs">
+                  <div>
+                    <span className="font-bold text-[#10002b]">
+                      {selectedParent.full_name}
+                    </span>
+                    <span className="text-[#10002b]/65">
+                      {" "}
+                      (@{selectedParent.username})
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3 text-[#10002b]/80">
+                    <span>
+                      WhatsApp / Phone:{" "}
+                      <strong className="text-[#5a189a]">
+                        {selectedParent.phone_number || "Not set"}
+                      </strong>
+                    </span>
+                    {selectedParent.email && (
+                      <span>Email: {selectedParent.email}</span>
+                    )}
+                  </div>
+                </div>
+
                 <div className="flex items-center justify-between">
                   <h3 className="text-xs font-bold text-[#10002b]">
                     Linked Learners for {selectedParent.full_name}
@@ -288,8 +322,11 @@ export default function AdminParentLinks({ token }) {
                             {child.full_name}
                           </div>
                           <div className="text-xs text-[#10002b]/75">
-                            Adm: <strong>{child.admission_number}</strong> · Class:{" "}
-                            <strong>{child.classroom_name || "Unassigned"}</strong>
+                            Adm: <strong>{child.admission_number}</strong> ·
+                            Class:{" "}
+                            <strong>
+                              {child.classroom_name || "Unassigned"}
+                            </strong>
                           </div>
                         </div>
                         <button
@@ -369,8 +406,11 @@ export default function AdminParentLinks({ token }) {
                               {student.full_name}
                             </div>
                             <div className="text-xs text-[#10002b]/75">
-                              Adm: <strong>{student.admission_number}</strong> · Class:{" "}
-                              <strong>{student.classroom_name || "Unassigned"}</strong>
+                              Adm: <strong>{student.admission_number}</strong> ·
+                              Class:{" "}
+                              <strong>
+                                {student.classroom_name || "Unassigned"}
+                              </strong>
                             </div>
                           </div>
                           <button
